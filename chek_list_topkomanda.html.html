@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Чек-лист топ-команды | EdTech инструмент</title>
+    <style>
+        /* ---------- переменные ---------- */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: #f8f5f0;  /* тёплый светлый фон */
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            line-height: 1.5;
+            color: #1e2b3a;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px 16px;
+        }
+
+        /* главная карточка */
+        .checklist-card {
+            max-width: 860px;
+            width: 100%;
+            background: #ffffff;
+            border-radius: 36px;
+            box-shadow: 0 25px 45px -18px rgba(0, 0, 0, 0.15), 0 10px 20px -10px rgba(0, 0, 0, 0.05);
+            padding: 48px 44px;
+            transition: box-shadow 0.3s ease;
+        }
+
+        @media (max-width: 600px) {
+            .checklist-card {
+                padding: 32px 20px;
+                border-radius: 28px;
+            }
+        }
+
+        /* заголовки */
+        h2 {
+            font-size: 2rem;
+            font-weight: 500;
+            letter-spacing: -0.02em;
+            color: #1e2b3a;
+            margin-bottom: 16px;
+            line-height: 1.2;
+        }
+
+        @media (max-width: 600px) {
+            h2 {
+                font-size: 1.8rem;
+            }
+        }
+
+        .subhead {
+            font-size: 1.1rem;
+            color: #546e7a;
+            margin-bottom: 40px;
+            font-weight: 400;
+            max-width: 80%;
+        }
+
+        @media (max-width: 600px) {
+            .subhead {
+                max-width: 100%;
+                font-size: 1rem;
+                margin-bottom: 32px;
+            }
+        }
+
+        /* прогресс-бар и счётчик */
+        .progress-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 18px;
+        }
+
+        .progress-counter {
+            font-size: 1.2rem;
+            font-weight: 450;
+            color: #2c3e50;
+            background: #f0ece5;
+            padding: 6px 16px;
+            border-radius: 60px;
+            letter-spacing: 0.01em;
+        }
+
+        .progress-bar-container {
+            width: 100%;
+            height: 8px;
+            background-color: #e9e2d8;
+            border-radius: 30px;
+            margin-bottom: 40px;
+            overflow: hidden;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            width: 0%;
+            background-color: #5FB9B0;  /* мягкий бирюзовый */
+            border-radius: 30px;
+            transition: width 0.4s cubic-bezier(0.2, 0.9, 0.3, 1);
+        }
+
+        /* секции и пункты */
+        .checklist-sections {
+            display: flex;
+            flex-direction: column;
+            gap: 28px;
+            margin-bottom: 40px;
+        }
+
+        .section h3 {
+            font-size: 1.3rem;
+            font-weight: 500;
+            color: #2e4053;
+            margin-bottom: 16px;
+            padding-left: 8px;
+            border-left: 4px solid #5FB9B0;
+            padding-left: 16px;
+        }
+
+        .items-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        /* индивидуальная карточка пункта */
+        .checklist-item {
+            display: flex;
+            align-items: center;
+            background: #ffffff;
+            border-radius: 24px;
+            padding: 16px 22px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02), 0 8px 18px -8px rgba(0, 0, 0, 0.05);
+            transition: background-color 0.2s ease, box-shadow 0.2s ease;
+            border: 1px solid rgba(0, 0, 0, 0.02);
+            cursor: pointer;
+        }
+
+        .checklist-item:hover {
+            background-color: #fcfaf7;
+            box-shadow: 0 8px 22px -10px rgba(0, 0, 0, 0.12);
+        }
+
+        /* чекбокс (кастомный) */
+        .checkbox-container {
+            position: relative;
+            margin-right: 20px;
+            flex-shrink: 0;
+        }
+
+        .checkbox-container input {
+            position: absolute;
+            opacity: 0;
+            cursor: pointer;
+            height: 0;
+            width: 0;
+        }
+
+        .checkmark {
+            display: block;
+            width: 26px;
+            height: 26px;
+            border: 2px solid #cbd5e0;
+            border-radius: 8px;
+            background-color: #fff;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+
+        .checkbox-container input:checked ~ .checkmark {
+            background-color: #5FB9B0;
+            border-color: #5FB9B0;
+        }
+
+        .checkmark::after {
+            content: "";
+            position: absolute;
+            display: none;
+            left: 8px;
+            top: 3px;
+            width: 8px;
+            height: 14px;
+            border: solid white;
+            border-width: 0 2px 2px 0;
+            transform: rotate(45deg);
+        }
+
+        .checkbox-container input:checked ~ .checkmark::after {
+            display: block;
+        }
+
+        /* текст пункта */
+        .item-text {
+            font-size: 1.05rem;
+            font-weight: 430;
+            color: #1e2b3a;
+            transition: color 0.2s ease, text-decoration 0.2s ease, opacity 0.2s ease;
+            line-height: 1.4;
+            flex: 1;
+        }
+
+        /* когда чекбокс отмечен — меняем фон карточки и внешний вид текста */
+        .checklist-item.checked {
+            background-color: #f1f9f8;
+        }
+
+        .checklist-item.checked .item-text {
+            color: #5f6c7a;
+            text-decoration: line-through;
+            opacity: 0.8;
+            text-decoration-color: #9aaebb;
+            text-decoration-thickness: 1px;
+        }
+
+        /* кнопка сброса */
+        .reset-button {
+            background: transparent;
+            border: 1.5px solid #d0d9e2;
+            border-radius: 60px;
+            padding: 14px 32px;
+            font-size: 1rem;
+            font-weight: 500;
+            color: #2e4053;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: 8px;
+            letter-spacing: 0.01em;
+        }
+
+        .reset-button:hover {
+            border-color: #5FB9B0;
+            background-color: #f0faf8;
+            color: #1d524b;
+        }
+
+        .reset-button:active {
+            transform: scale(0.97);
+        }
+
+        /* вспомогательные классы */
+        .footer {
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        /* адаптивность для мелких экранов */
+        @media (max-width: 500px) {
+            .checklist-item {
+                padding: 14px 16px;
+            }
+            .item-text {
+                font-size: 0.98rem;
+            }
+            .checkmark {
+                width: 24px;
+                height: 24px;
+            }
+            .checkbox-container {
+                margin-right: 16px;
+            }
+            .reset-button {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <main class="checklist-card">
+        <h2>Проверьте, не идет ли ваша топ-команда к распаду</h2>
+        <p class="subhead">Ниже чек-лист, с помощью которого вы можете проверить ситуацию у себя в компании. Отметьте пункты, которые наблюдаете регулярно.</p>
+
+        <!-- прогресс и счётчик -->
+        <div class="progress-header">
+            <span class="progress-counter" id="progressCounter">Совпадает: 0/13</span>
+            <button class="reset-button" id="resetBtn" aria-label="Снять все отметки">Сбросить</button>
+        </div>
+        <div class="progress-bar-container">
+            <div class="progress-bar-fill" id="progressBarFill" style="width: 0%;"></div>
+        </div>
+
+        <!-- чек-лист по секциям -->
+        <div class="checklist-sections" id="checklistSections">
+            <!-- секция 1: На совещаниях (пункты 1-3) -->
+            <div class="section">
+                <h3>На совещаниях</h3>
+                <div class="items-group">
+                    <div class="checklist-item" data-index="0">
+                        <label class="checkbox-container" aria-label="Топ-менеджеры перебивают друг друга и не дослушивают до конца">
+                            <input type="checkbox" class="item-checkbox">
+                            <span class="checkmark"></span>
+                        </label>
+                        <span class="item-text">Топ-менеджеры перебивают друг друга и не дослушивают до конца.</span>
+                    </div>
+                    <div class="checklist-item" data-index="1">
+                        <label class="checkbox-container" aria-label="Спор идет вокруг того, кто прав, а не какое решение лучше для бизнеса">
+                            <input type="checkbox" class="item-checkbox">
+                            <span class="checkmark"></span>
+                        </label>
+                        <span class="item-text">Спор идет вокруг того, кто прав, а не какое решение лучше для бизнеса.</span>
+                    </div>
+                    <div class="checklist-item" data-index="2">
+                        <label class="checkbox-container" aria-label="Участники разговаривают с вами, а не друг с другом">
+                            <input type="checkbox" class="item-checkbox">
+                            <span class="checkmark"></span>
+                        </label>
+                        <span class="item-text">Участники разговаривают с вами, а не друг с другом.</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- секция 2: В зонах ответственности (пункты 4-5) -->
+            <div class="section">
+                <h3>В зонах ответственности</h3>
+                <div class="items-group">
+                    <div class="checklist-item" data-index="3">
+                        <label class="checkbox-container" aria-label="При сбоях начинается поиск виноватого, а не совместный разбор причин">
+                            <input type="checkbox" class="item-checkbox">
+                            <span class="checkmark"></span>
+                        </label>
+                        <span class="item-text">При сбоях начинается поиск виноватого, а не совместный разбор причин.</span>
+                    </div>
+                    <div class="checklist-item" data-index="4">
+                        <label class="checkbox-container" aria-label="За кросс-функциональные результаты никто не отвечает">
+                            <input type="checkbox" class="item-checkbox">
+                            <span class="checkmark"></span>
+                        </label>
+                        <span class="item-text">За кросс-функциональные результаты никто не отвечает.</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- секция 3: В принятии решений (пункты 6-7) -->
+            <div class="section">
+                <h3>В принятии решений</h3>
+                <div class="items-group">
+                    <div class="checklist-item" data-index="5">
+                        <label class="checkbox-container" aria-label="Руководители редко приносят не только проблему, но и вариант решения">
+                            <input type="checkbox" class="item-checkbox">
+                            <span class="checkmark"></span>
+                        </label>
+                        <span class="item-text">Руководители редко приносят не только проблему, но и вариант решения.</span>
+                    </div>
+                    <div class="checklist-item" data-index="6">
+                        <label class="checkbox-container" aria-label="Люди боятся принимать решение без одобрения первого лица">
+                            <input type="checkbox" class="item-checkbox">
+                            <span class="checkmark"></span>
+                        </label>
+                        <span class="item-text">Люди боятся принимать решение без одобрения первого лица.</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- секция 4: В командной динамике (пункты 8-10) -->
+            <div class="section">
+                <h3>В командной динамике</h3>
+                <div class="items-group">
+                    <div class="checklist-item" data-index="7">
+                        <label class="checkbox-container" aria-label="Старые конфликты тянутся месяцами и не переходят в рабочие договоренности">
+                            <input type="checkbox" class="item-checkbox">
+                            <span class="checkmark"></span>
+                        </label>
+                        <span class="item-text">Старые конфликты тянутся месяцами и не переходят в рабочие договоренности.</span>
+                    </div>
+                    <div class="checklist-item" data-index="8">
+                        <label class="checkbox-container" aria-label="Генеральный директор все чаще вынужден быть арбитром в спорах между топами">
+                            <input type="checkbox" class="item-checkbox">
+                            <span class="checkmark"></span>
+                        </label>
+                        <span class="item-text">Генеральный директор все чаще вынужден быть арбитром в спорах между топами.</span>
+                    </div>
+                    <div class="checklist-item" data-index="9">
+                        <label class="checkbox-container" aria-label="В команде стало меньше живого управленческого обсуждения и больше формального согласования">
+                            <input type="checkbox" class="item-checkbox">
+                            <span class="checkmark"></span>
+                        </label>
+                        <span class="item-text">В команде стало меньше живого управленческого обсуждения и больше формального согласования.</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- секция 5: В управленческой культуре (пункты 11-13) -->
+            <div class="section">
+                <h3>В управленческой культуре</h3>
+                <div class="items-group">
+                    <div class="checklist-item" data-index="10">
+                        <label class="checkbox-container" aria-label="В компании терпят искажение информации, недоговоренность или двойные стандарты">
+                            <input type="checkbox" class="item-checkbox">
+                            <span class="checkmark"></span>
+                        </label>
+                        <span class="item-text">В компании терпят искажение информации, недоговоренность или двойные стандарты.</span>
+                    </div>
+                    <div class="checklist-item" data-index="11">
+                        <label class="checkbox-container" aria-label="Сильные люди постепенно становятся либо конфликтными, либо безынициативными">
+                            <input type="checkbox" class="item-checkbox">
+                            <span class="checkmark"></span>
+                        </label>
+                        <span class="item-text">Сильные люди постепенно становятся либо конфликтными, либо безынициативными.</span>
+                    </div>
+                    <div class="checklist-item" data-index="12">
+                        <label class="checkbox-container" aria-label="Правила существуют на словах, но не подкрепляются реальными последствиями">
+                            <input type="checkbox" class="item-checkbox">
+                            <span class="checkmark"></span>
+                        </label>
+                        <span class="item-text">Правила существуют на словах, но не подкрепляются реальными последствиями.</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        (function() {
+            // -------------------- элементы --------------------
+            const items = document.querySelectorAll('.checklist-item');
+            const checkboxes = document.querySelectorAll('.item-checkbox');
+            const progressCounter = document.getElementById('progressCounter');
+            const progressBarFill = document.getElementById('progressBarFill');
+            const resetBtn = document.getElementById('resetBtn');
+            const TOTAL = 13;
+
+            // -------------------- функции обновления --------------------
+            function updateProgress() {
+                let checkedCount = 0;
+                checkboxes.forEach(cb => {
+                    if (cb.checked) checkedCount++;
+                });
+                const percent = (checkedCount / TOTAL) * 100;
+
+                progressCounter.textContent = `Совпадает: ${checkedCount}/${TOTAL}`;
+                progressBarFill.style.width = percent + '%';
+
+                // добавить/удалить класс checked на родительском .checklist-item
+                items.forEach((item, index) => {
+                    if (checkboxes[index].checked) {
+                        item.classList.add('checked');
+                    } else {
+                        item.classList.remove('checked');
+                    }
+                });
+
+                // сохраняем в localStorage
+                const state = Array.from(checkboxes).map(cb => cb.checked);
+                localStorage.setItem('checklistState', JSON.stringify(state));
+            }
+
+            // -------------------- загрузка из localStorage --------------------
+            function loadFromStorage() {
+                const saved = localStorage.getItem('checklistState');
+                if (saved) {
+                    try {
+                        const state = JSON.parse(saved);
+                        if (Array.isArray(state) && state.length === TOTAL) {
+                            checkboxes.forEach((cb, i) => {
+                                cb.checked = state[i] === true;
+                            });
+                        }
+                    } catch (e) {
+                        // если ошибка парсинга — игнорируем
+                    }
+                }
+                updateProgress(); // обновить отображение и классы
+            }
+
+            // -------------------- сброс --------------------
+            function resetAll() {
+                checkboxes.forEach(cb => cb.checked = false);
+                updateProgress();
+            }
+
+            // -------------------- добавляем обработчики --------------------
+            checkboxes.forEach(cb => {
+                cb.addEventListener('change', updateProgress);
+            });
+
+            // также учитываем клик по карточке (чтобы можно было кликать на всю плашку)
+            items.forEach((item, index) => {
+                item.addEventListener('click', (e) => {
+                    // если клик был точно по чекбоксу или его лейблу — событие уже обработается change
+                    // но если клик по другой части, мы должны изменить состояние чекбокса
+                    const checkbox = checkboxes[index];
+                    if (e.target.tagName !== 'INPUT' && !e.target.classList.contains('checkmark') && e.target.tagName !== 'LABEL') {
+                        checkbox.checked = !checkbox.checked;
+                        updateProgress(); // вызываем вручную, т.к. change не сработает
+                    }
+                });
+            });
+
+            resetBtn.addEventListener('click', resetAll);
+
+            // -------------------- инициализация --------------------
+            loadFromStorage();
+
+            // дополнительная страховка: если клик произошёл по label, но мы уже повесили обработчик на item, 
+            // чтобы не было двойного срабатывания, но это не страшно.
+        })();
+    </script>
+</body>
+</html>
