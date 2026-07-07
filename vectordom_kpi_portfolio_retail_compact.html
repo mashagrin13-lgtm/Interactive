@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ВекторДом — KPI-портфель розницы</title>
+<style>
+  :root{
+    --bg:#eef2f8;
+    --card:#ffffff;
+    --ink:#162033;
+    --muted:#65738d;
+    --line:#d9e1ed;
+    --accent:#456cf6;
+    --accent-soft:#eef2ff;
+    --gold:#d38d1f;
+    --gold-soft:#fff6e8;
+    --good:#167a5d;
+    --good-soft:#e9f7f1;
+    --bad:#cb4757;
+    --bad-soft:#ffeff2;
+    --shadow:0 18px 40px rgba(17,33,67,.08);
+    --radius:24px;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;
+    font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background: linear-gradient(180deg,#edf2f9 0%,#f7f9fc 100%);
+    color:var(--ink);
+  }
+  .wrap{max-width:920px;margin:0 auto;padding:16px 12px 24px}
+  .shell{
+    background:rgba(255,255,255,.8);
+    border:1px solid rgba(217,225,237,.85);
+    box-shadow:var(--shadow);
+    border-radius:32px;
+    overflow:hidden;
+    backdrop-filter: blur(14px);
+  }
+  .hero{
+    padding:20px 20px 14px;
+    background:
+      radial-gradient(circle at 100% 0%, rgba(69,108,246,.14), transparent 28%),
+      radial-gradient(circle at 0% 0%, rgba(211,141,31,.12), transparent 20%),
+      linear-gradient(180deg,#ffffff 0%,#f8fbff 100%);
+    border-bottom:1px solid var(--line);
+  }
+  .eyebrow{
+    display:inline-flex;align-items:center;gap:8px;
+    padding:7px 12px;border-radius:999px;
+    background:var(--accent-soft);color:var(--accent);
+    font-size:12px;font-weight:800;letter-spacing:.03em;text-transform:uppercase;
+  }
+  h1{margin:10px 0 6px;font-size:28px;line-height:1.12}
+  .lead{margin:0;max-width:860px;color:var(--muted);font-size:15px;line-height:1.5}
+  .progress{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
+  .step-pill{
+    display:flex;align-items:center;gap:10px;padding:11px 13px;border-radius:16px;
+    border:1px solid var(--line);background:#fff;
+  }
+  .step-pill .num{
+    width:28px;height:28px;display:grid;place-items:center;border-radius:50%;
+    background:#edf1f7;color:#4a5874;font-weight:800;font-size:14px;flex:none;
+  }
+  .step-pill.active{background:linear-gradient(180deg,#fff 0%,#f6f8ff 100%);border-color:rgba(69,108,246,.28)}
+  .step-pill.active .num{background:var(--accent);color:#fff}
+  .step-pill.done .num{background:var(--good);color:#fff}
+  .step-pill strong{display:block;font-size:13px}
+  .step-pill small{display:block;color:var(--muted);font-size:11px;line-height:1.35}
+
+  .steps-shell{position:relative}
+  .stage{display:none;padding:16px 16px 18px}
+  .stage.active{display:block}
+  .grid{display:grid;grid-template-columns:1fr;gap:12px;align-items:start;max-width:860px;margin:0 auto}
+  .panel{
+    background:#fff;border:1px solid var(--line);border-radius:22px;padding:14px;
+    box-shadow:0 8px 24px rgba(29,40,67,.04);
+  }
+  .panel h2{margin:0 0 6px;font-size:20px}
+  .panel p.top{margin:0 0 12px;color:var(--muted);line-height:1.52;font-size:15px}
+  .chipline{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+  .chip{padding:6px 10px;border-radius:999px;background:#eef2f8;color:#4b5973;font-size:12px;font-weight:650}
+
+  table{width:100%;border-collapse:separate;border-spacing:0;overflow:hidden;border:1px solid var(--line);border-radius:16px;font-size:14px}
+  th,td{padding:9px 8px;border-bottom:1px solid var(--line);text-align:left}
+  th{background:#f6f8fb;color:#53627c;font-weight:750}
+  tr:last-child td{border-bottom:none}
+  tbody tr:nth-child(even){background:#fbfcff}
+  .note{margin-top:10px;padding:12px 14px;border-radius:16px;background:var(--gold-soft);border:1px solid rgba(211,141,31,.18);color:#6d4b17;font-size:14px;line-height:1.55}
+
+  .bank-title{display:flex;justify-content:space-between;gap:10px;align-items:center;margin-bottom:8px}
+  .bank-title h3{margin:0;font-size:17px}
+  .bank-title span{font-size:13px;color:var(--muted);line-height:1.42}
+  .bank{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+  .kpi-card,.effect-card,.scheme-chip{
+    position:relative;padding:10px 12px;border-radius:16px;border:1px solid var(--line);
+    background:#fff;box-shadow:0 10px 22px rgba(29,40,67,.05);
+    font-weight:700;color:#1b2740;cursor:grab;user-select:none;min-height:48px;display:flex;align-items:center;
+    transition:transform .15s ease, box-shadow .15s ease, border-color .15s ease, background .15s ease;
+  }
+  .kpi-card:hover,.effect-card:hover{transform:translateY(-2px);box-shadow:0 14px 24px rgba(29,40,67,.09)}
+  .kpi-card.dragging,.effect-card.dragging{opacity:.42}
+  .kpi-card::after,.effect-card::after{
+    content:"";position:absolute;inset:0;border-radius:18px;pointer-events:none;
+    background:linear-gradient(180deg,rgba(255,255,255,.42),transparent 48%);
+  }
+  .kpi-card.gold{background:linear-gradient(180deg,#ffffff 0%,#f5f7fb 100%);border-color:rgba(86,104,138,.18)}
+  .kpi-card.blue{background:linear-gradient(180deg,#ffffff 0%,#f3f6ff 100%);border-color:rgba(69,108,246,.18)}
+  .kpi-card.green{background:linear-gradient(180deg,#ffffff 0%,#f2fbf7 100%);border-color:rgba(22,122,93,.18)}
+
+  .portfolio-panel{background:linear-gradient(180deg,#fdfefe 0%,#f7faff 100%)}
+  .portfolio-top{display:flex;justify-content:space-between;gap:10px;align-items:end;margin-bottom:10px}
+  .portfolio-top h3{margin:0;font-size:17px}
+  .portfolio-top span{font-size:13px;color:var(--muted);line-height:1.4;max-width:520px;display:block}
+
+  .briefcase{
+    position:relative;
+    min-height:270px;
+    border-radius:24px;
+    padding:22px 14px 14px;
+    background:
+      linear-gradient(180deg,#f8fbff 0%,#e8eef8 14%,#d9e3f1 15%,#ccd8ea 100%);
+    box-shadow: inset 0 2px 0 rgba(255,255,255,.58), inset 0 -10px 18px rgba(63,88,126,.10), 0 16px 30px rgba(53,79,118,.14);
+    overflow:hidden;
+  }
+  .briefcase::before{
+    content:"";position:absolute;top:12px;left:50%;transform:translateX(-50%);
+    width:110px;height:32px;border-radius:14px 14px 10px 10px;
+    background:linear-gradient(180deg,#dfe7f4 0%,#bccae0 100%);
+    border:3px solid rgba(90,112,147,.34);
+  }
+  .briefcase::after{
+    content:"KPI-портфель CEO";position:absolute;top:54px;left:50%;transform:translateX(-50%);
+    font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:rgba(66,84,116,.74);font-weight:900;
+  }
+  .briefcase-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:42px}
+  .slot{
+    min-height:84px;border-radius:18px;padding:10px;background:rgba(255,255,255,.42);
+    border:1.6px dashed rgba(101,124,162,.34);display:flex;align-items:center;justify-content:center;
+    text-align:center;color:rgba(78,98,132,.76);position:relative;transition:.16s ease;
+  }
+  .slot::before{
+    content:attr(data-slot);position:absolute;top:6px;left:8px;font-size:10px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:rgba(78,98,132,.62)
+  }
+  .slot.hover{background:rgba(255,255,255,.32);border-color:rgba(69,108,246,.6);box-shadow:0 0 0 4px rgba(69,108,246,.11) inset}
+  .slot.filled{border-style:solid;color:transparent}
+  .slot .kpi-card{width:100%;cursor:pointer;padding-right:40px}
+  .slot .remove{
+    position:absolute;right:8px;top:8px;width:28px;height:28px;border-radius:999px;border:none;cursor:pointer;
+    background:rgba(255,255,255,.82);color:#536887;font-weight:900;box-shadow:0 4px 10px rgba(0,0,0,.08)
+  }
+
+  .actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+  button{
+    border:none;border-radius:12px;padding:10px 14px;font-weight:800;font-size:14px;cursor:pointer;
+    transition:transform .14s ease, opacity .14s ease, box-shadow .14s ease;
+  }
+  button:hover{transform:translateY(-1px)}
+  button.primary{background:var(--accent);color:#fff;box-shadow:0 10px 24px rgba(69,108,246,.24)}
+  button.secondary{background:#eef2f8;color:#31425e}
+  button:disabled{opacity:.48;cursor:not-allowed;transform:none;box-shadow:none}
+
+  .feedback{
+    display:none;margin-top:12px;padding:12px 14px;border-radius:16px;font-size:13px;line-height:1.5;
+  }
+  .feedback.show{display:block}
+  .feedback.good{background:var(--good-soft);border:1px solid rgba(22,122,93,.2);color:#135944}
+  .feedback.bad{background:var(--bad-soft);border:1px solid rgba(203,71,87,.18);color:#8d2433}
+  .feedback.mix{background:#eff4ff;border:1px solid rgba(69,108,246,.16);color:#25417a}
+  .feedback ul{margin:8px 0 0;padding-left:18px}
+
+  .scheme-bar{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+  .scheme-chip{cursor:default;padding:9px 11px;font-size:12px;font-weight:750}
+  .scheme-chip.good{background:var(--good-soft);border-color:rgba(22,122,93,.22);color:#135944}
+  .scheme-chip.bad{background:var(--bad-soft);border-color:rgba(203,71,87,.18);color:#8d2433}
+  .scheme-chip.neutral{background:#f3f6fb;color:#51617a}
+
+  .behavior-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}
+  .zone{
+    border:1px solid var(--line);border-radius:20px;padding:12px;min-height:250px;background:#fff;
+  }
+  .zone.good{background:linear-gradient(180deg,#ffffff 0%,#f7f9fc 100%);border-color:var(--line)}
+  .zone.bad{background:linear-gradient(180deg,#ffffff 0%,#f7f9fc 100%);border-color:var(--line)}
+  .zone.hover{outline:3px solid rgba(69,108,246,.13);outline-offset:1px}
+  .zone h3{margin:0 0 4px;font-size:17px}
+  .zone p{margin:0 0 8px;color:var(--muted);font-size:13px;line-height:1.4}
+  .zone-stack{min-height:150px;display:grid;gap:8px;align-content:start}
+  .effect-bank{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:8px}
+  .effect-card.correct{background:var(--good-soft);border-color:rgba(22,122,93,.22);color:#135944}
+  .effect-card.wrong{background:var(--bad-soft);border-color:rgba(203,71,87,.18);color:#8d2433}
+  .effect-card[data-zone="none"]{background:#fff}
+  .hint-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+  .hint-row span{font-size:13px;color:#46536d;background:#f1f4f9;border-radius:999px;padding:7px 10px;line-height:1.35;font-weight:600}
+
+  .final-box{display:none;margin-top:12px;padding:14px;border-radius:18px;border:1px solid rgba(69,108,246,.16);background:linear-gradient(180deg,#fff 0%,#f6f8ff 100%)}
+  .final-box.show{display:block}
+  .final-box h4{margin:0 0 6px;font-size:16px}
+  .final-box .actions{margin-top:14px}
+  .foot{margin-top:10px;color:#7d899f;font-size:11px;line-height:1.45}
+
+  @media (max-width: 720px){
+    .progress{grid-template-columns:1fr}
+    .bank,.effect-bank,.behavior-grid,.briefcase-grid{grid-template-columns:1fr}
+    .hero,.stage{padding-left:14px;padding-right:14px}
+    h1{font-size:24px}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="shell">
+    <div class="hero">
+      <div class="eyebrow">Розница • ВекторДом</div>
+      <h1>Соберите KPI-портфель шоурума</h1>
+      <p class="lead">Вы — CEO компании «ВекторДом». Ваша задача состоит из двух шагов: <strong>1. собрать KPI-портфель для розницы</strong>; <strong>2. проверить, какое поведение такая схема реально вызовет у продавцов шоурума</strong>.</p>
+      <div class="progress">
+        <div class="step-pill active" id="pill1">
+          <div class="num">1</div>
+          <div><strong>Соберите портфель</strong><small>Выберите 4 KPI-элемента для продавцов шоурума</small></div>
+        </div>
+        <div class="step-pill" id="pill2">
+          <div class="num">2</div>
+          <div><strong>Проверьте поведение</strong><small>Разнесите последствия и увидите силу или перекос схемы</small></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="steps-shell">
+      <section class="stage active" id="stage1">
+        <div class="grid">
+          <div class="panel">
+            <h2>Ситуация в шоурумах «ВекторДом»</h2>
+            <p class="top">По выручке шоурум «Север» выглядит сильнее. Но если смотреть как CEO, важно не только сколько продали, а как точка зарабатывает: через комплектацию покупки, возвраты и качество клиентского опыта.</p>
+            <div class="chipline">
+              <span class="chip">розница</span>
+              <span class="chip">допродажи</span>
+              <span class="chip">клиентский опыт</span>
+            </div>
+            <table>
+              <thead>
+                <tr>
+                  <th>Шоурум</th>
+                  <th>Выручка</th>
+                  <th>Средний чек</th>
+                  <th>UPT</th>
+                  <th>Возвраты</th>
+                  <th>Тайный покупатель</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>Север</strong></td>
+                  <td>9,8 млн</td>
+                  <td>18 400 ₽</td>
+                  <td>1,2</td>
+                  <td>7%</td>
+                  <td>74/100</td>
+                </tr>
+                <tr>
+                  <td><strong>Юг</strong></td>
+                  <td>9,1 млн</td>
+                  <td>16 200 ₽</td>
+                  <td>1,8</td>
+                  <td>3%</td>
+                  <td>91/100</td>
+                </tr>
+              </tbody>
+            </table>
+            <div class="note"><strong>Задание.</strong> Соберите схему KPI для продавцов шоурума на следующий квартал. В портфель нужно положить <strong>4 элемента</strong>. На этом шаге система не скажет, правы вы или нет: проверка начнется на шаге 2, когда вы увидите, какое поведение вызовет ваша схема.</div>
+          </div>
+
+          <div class="panel portfolio-panel">
+            <div class="bank-title">
+              <h3>Карта KPI-элементов</h3>
+              <span>Перетащите или выберите кликом 4 элемента</span>
+            </div>
+            <div class="bank" id="kpiBank"></div>
+
+            <div class="portfolio-top" style="margin-top:12px">
+              <div>
+                <h3>Портфель KPI</h3>
+                <span>Соберите 4 элемента для новой схемы мотивации. Для этого перетащите или выберите кликом 4 элемента.</span>
+              </div>
+              <span id="counter">Выбрано: 0 из 4</span>
+            </div>
+
+            <div class="briefcase" aria-label="Портфель KPI CEO">
+              <div class="briefcase-grid" id="slots">
+                <div class="slot" data-slot="Слот 1" data-slot-index="0">Перетащите карточку</div>
+                <div class="slot" data-slot="Слот 2" data-slot-index="1">Перетащите карточку</div>
+                <div class="slot" data-slot="Слот 3" data-slot-index="2">Перетащите карточку</div>
+                <div class="slot" data-slot="Слот 4" data-slot-index="3">Перетащите карточку</div>
+              </div>
+            </div>
+
+            <div class="actions">
+              <button class="primary" id="toStep2" disabled>Перейти к шагу 2</button>
+              <button class="secondary" id="reset1">Сбросить портфель</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="stage" id="stage2">
+        <div class="grid">
+          <div class="panel">
+            <h2>Какое поведение такая схема вызовет у продавцов?</h2>
+            <p class="top">Разнесите последствия по двум зонам. Здесь и выяснится, усиливает ли ваша схема экономику точки или все еще толкает команду к внешне красивому, но слабому росту.</p>
+
+            <div class="scheme-bar" id="schemeBar"></div>
+
+            <div class="hint-row">
+              <span>Перетаскивайте карточки в нужную зону</span>
+              <span>Или кликом: банк → Усилится → Ослабнет</span>
+            </div>
+
+            <div class="effect-bank" id="effectBank"></div>
+
+            <div class="behavior-grid">
+              <div class="zone good" id="zoneStrengthen" data-zone="strengthen">
+                <h3>Усилится</h3>
+                <p>То, что ваша схема будет поощрять сильнее.</p>
+                <div class="zone-stack" id="strengthenStack"></div>
+              </div>
+              <div class="zone bad" id="zoneWeaken" data-zone="weaken">
+                <h3>Ослабнет</h3>
+                <p>То, что такая схема будет сдерживать.</p>
+                <div class="zone-stack" id="weakenStack"></div>
+              </div>
+            </div>
+
+            <div class="actions">
+              <button class="secondary" id="backToStep1">Вернуться к шагу 1</button>
+              <button class="primary" id="check2">Проверить логику поведения</button>
+              <button class="secondary" id="reset2">Сбросить шаг 2</button>
+            </div>
+            <div class="feedback" id="feedback2"></div>
+
+            <div class="final-box" id="finalBox">
+              <h4>Что показала ваша конструкция</h4>
+              <div id="finalText"></div>
+              <div class="actions">
+                <button class="secondary" id="retryAll">Попробовать еще раз</button>
+              </div>
+            </div>
+
+            <div class="foot">Сильный KPI для розницы платит не просто за выручку, а за экономику точки: комплектацию покупки, устойчивость клиентского опыта и снижение скрытых потерь через возвраты и слабый сервис.</div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+</div>
+
+<script>
+(() => {
+  const KPI_ITEMS = [
+    { id:'revenue', label:'Выручка', tone:'gold' },
+    { id:'avg_check', label:'Средний чек', tone:'green' },
+    { id:'upt', label:'UPT', tone:'green' },
+    { id:'mystery', label:'Тайный покупатель', tone:'green' },
+    { id:'conversion', label:'Конверсия', tone:'blue' },
+    { id:'returns', label:'Доля возвратов', tone:'blue' },
+    { id:'display', label:'Стандарты выкладки', tone:'blue' },
+    { id:'discipline', label:'Ценники и кассовая дисциплина', tone:'gold' },
+    { id:'retention', label:'Удержание продавцов', tone:'gold' },
+    { id:'expensive', label:'Бонус за дорогие позиции', tone:'blue' }
+  ];
+
+  const CORRECT_SET = ['revenue','avg_check','upt','mystery'];
+
+  const EFFECTS = [
+    { id:'bundles', label:'Комплектация покупки и допродажи' },
+    { id:'client_exp', label:'Внимание к клиентскому опыту' },
+    { id:'gross_profit', label:'Работа на валовую прибыль точки' },
+    { id:'expensive_only', label:'Продвижение только дорогих моделей' },
+    { id:'ignore_addons', label:'Игнорирование сопутствующих товаров' },
+    { id:'revenue_any', label:'Работа на выручку любой ценой' }
+  ];
+
+  const state = {
+    selected: [],
+    dragKpiId: null,
+    dragEffectId: null,
+    effectPlacement: Object.fromEntries(EFFECTS.map(x => [x.id, 'none']))
+  };
+
+  const el = {
+    stage1: document.getElementById('stage1'),
+    stage2: document.getElementById('stage2'),
+    pill1: document.getElementById('pill1'),
+    pill2: document.getElementById('pill2'),
+    backToStep1: document.getElementById('backToStep1'),
+    kpiBank: document.getElementById('kpiBank'),
+    slots: document.getElementById('slots'),
+    counter: document.getElementById('counter'),
+    toStep2: document.getElementById('toStep2'),
+    reset1: document.getElementById('reset1'),
+    effectBank: document.getElementById('effectBank'),
+    strengthenStack: document.getElementById('strengthenStack'),
+    weakenStack: document.getElementById('weakenStack'),
+    feedback2: document.getElementById('feedback2'),
+    check2: document.getElementById('check2'),
+    reset2: document.getElementById('reset2'),
+    schemeBar: document.getElementById('schemeBar'),
+    finalBox: document.getElementById('finalBox'),
+    finalText: document.getElementById('finalText'),
+    retryAll: document.getElementById('retryAll')
+  };
+
+  function makeCard(item, type='kpi'){
+    const div = document.createElement('div');
+    const cls = type === 'kpi' ? 'kpi-card' : 'effect-card';
+    div.className = `${cls} ${item.tone || ''}`.trim();
+    div.textContent = item.label;
+    div.dataset.id = item.id;
+    div.draggable = true;
+    return div;
+  }
+
+  function updateCounter(){
+    el.counter.textContent = `Выбрано: ${state.selected.length} из 4`;
+    el.toStep2.disabled = state.selected.length !== 4;
+  }
+
+  function renderStep1(){
+    el.kpiBank.innerHTML = '';
+    KPI_ITEMS.forEach(item => {
+      if (!state.selected.includes(item.id)) {
+        const card = makeCard(item,'kpi');
+        attachKpiEvents(card);
+        el.kpiBank.appendChild(card);
+      }
+    });
+
+    [...el.slots.children].forEach((slot, i) => {
+      slot.classList.remove('filled','hover');
+      slot.innerHTML = 'Перетащите карточку';
+      const id = state.selected[i];
+      if (id) {
+        const item = KPI_ITEMS.find(x => x.id === id);
+        slot.innerHTML = '';
+        const card = makeCard(item,'kpi');
+        attachKpiEvents(card);
+        slot.appendChild(card);
+        const remove = document.createElement('button');
+        remove.className = 'remove';
+        remove.type = 'button';
+        remove.textContent = '×';
+        remove.title = 'Убрать из портфеля';
+        remove.addEventListener('click', (e) => {
+          e.stopPropagation();
+          state.selected = state.selected.filter(x => x !== id);
+          renderStep1();
+        });
+        slot.appendChild(remove);
+        slot.classList.add('filled');
+      }
+    });
+    updateCounter();
+  }
+
+  function attachKpiEvents(card){
+    card.addEventListener('dragstart', e => {
+      state.dragKpiId = card.dataset.id;
+      card.classList.add('dragging');
+      e.dataTransfer.setData('text/plain', card.dataset.id);
+    });
+    card.addEventListener('dragend', () => {
+      state.dragKpiId = null;
+      card.classList.remove('dragging');
+      [...el.slots.children].forEach(s => s.classList.remove('hover'));
+    });
+    card.addEventListener('click', () => {
+      const id = card.dataset.id;
+      if (state.selected.includes(id)) {
+        state.selected = state.selected.filter(x => x !== id);
+      } else if (state.selected.length < 4) {
+        state.selected.push(id);
+      }
+      renderStep1();
+    });
+  }
+
+  [...el.slots.children].forEach(slot => {
+    slot.addEventListener('dragover', e => {
+      e.preventDefault();
+      if (state.selected.length < 4 || slot.classList.contains('filled')) slot.classList.add('hover');
+    });
+    slot.addEventListener('dragleave', () => slot.classList.remove('hover'));
+    slot.addEventListener('drop', e => {
+      e.preventDefault();
+      slot.classList.remove('hover');
+      const id = e.dataTransfer.getData('text/plain') || state.dragKpiId;
+      if (!id) return;
+      const targetIndex = Number(slot.dataset.slotIndex);
+      let next = [...state.selected];
+      const existingIndex = next.indexOf(id);
+      if (existingIndex !== -1) next.splice(existingIndex,1);
+      while (next.length < 4) next.push(null);
+      if (!next[targetIndex] || next[targetIndex] === id) next[targetIndex] = id;
+      else next.push(id);
+      state.selected = next.filter(Boolean).slice(0,4);
+      renderStep1();
+    });
+  });
+
+  function goToStep2(){
+    if (state.selected.length !== 4) return;
+    el.stage1.classList.remove('active');
+    el.stage2.classList.add('active');
+    el.pill1.classList.remove('active');
+    el.pill1.classList.add('done');
+    el.pill2.classList.add('active');
+    renderSchemeBar();
+    renderEffects();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function backToStep1(){
+    el.stage2.classList.remove('active');
+    el.stage1.classList.add('active');
+    el.pill2.classList.remove('active');
+    el.pill1.classList.remove('done');
+    el.pill1.classList.add('active');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function renderSchemeBar(){
+    el.schemeBar.innerHTML = '';
+    state.selected.forEach(id => {
+      const item = KPI_ITEMS.find(x => x.id === id);
+      const chip = document.createElement('div');
+      chip.className = 'scheme-chip neutral';
+      chip.dataset.id = id;
+      chip.textContent = item.label;
+      el.schemeBar.appendChild(chip);
+    });
+  }
+
+  function computeBehaviorExpectation(){
+    const scores = { bundles:0, clientExp:0, grossProfit:0, expensiveOnly:0, ignoreAddons:0, revenueAny:0 };
+    state.selected.forEach(id => {
+      switch(id){
+        case 'revenue':
+          scores.grossProfit += 1; scores.revenueAny += 2; scores.expensiveOnly += 1; break;
+        case 'avg_check':
+          scores.bundles += 2; scores.grossProfit += 1; scores.ignoreAddons -= 1; break;
+        case 'upt':
+          scores.bundles += 3; scores.grossProfit += 2; scores.ignoreAddons -= 2; break;
+        case 'mystery':
+          scores.clientExp += 3; scores.grossProfit += 1; scores.revenueAny -= 1; break;
+        case 'conversion':
+          scores.revenueAny += 1; scores.expensiveOnly += 1; break;
+        case 'returns':
+          scores.clientExp += 1; scores.grossProfit += 1; scores.revenueAny -= 1; break;
+        case 'display':
+          scores.clientExp += 1; break;
+        case 'discipline':
+          scores.clientExp += 1; break;
+        case 'retention':
+          scores.clientExp += 1; break;
+        case 'expensive':
+          scores.expensiveOnly += 3; scores.ignoreAddons += 2; scores.revenueAny += 2; break;
+      }
+    });
+    return {
+      bundles: scores.bundles > 0 ? 'strengthen' : 'weaken',
+      client_exp: scores.clientExp > 0 ? 'strengthen' : 'weaken',
+      gross_profit: scores.grossProfit > 0 ? 'strengthen' : 'weaken',
+      expensive_only: scores.expensiveOnly > 0 ? 'strengthen' : 'weaken',
+      ignore_addons: scores.ignoreAddons > 0 ? 'strengthen' : 'weaken',
+      revenue_any: scores.revenueAny > 0 ? 'strengthen' : 'weaken'
+    };
+  }
+
+  function renderEffects(){
+    el.effectBank.innerHTML = '';
+    el.strengthenStack.innerHTML = '';
+    el.weakenStack.innerHTML = '';
+    EFFECTS.forEach(item => {
+      const card = makeCard(item,'effect');
+      attachEffectEvents(card);
+      const placement = state.effectPlacement[item.id];
+      card.dataset.zone = placement;
+      if (placement === 'strengthen') el.strengthenStack.appendChild(card);
+      else if (placement === 'weaken') el.weakenStack.appendChild(card);
+      else el.effectBank.appendChild(card);
+    });
+  }
+
+  function attachEffectEvents(card){
+    card.addEventListener('dragstart', e => {
+      state.dragEffectId = card.dataset.id;
+      card.classList.add('dragging');
+      e.dataTransfer.setData('text/plain', card.dataset.id);
+    });
+    card.addEventListener('dragend', () => {
+      state.dragEffectId = null;
+      card.classList.remove('dragging');
+      document.querySelectorAll('.zone').forEach(z => z.classList.remove('hover'));
+    });
+    card.addEventListener('click', () => {
+      const id = card.dataset.id;
+      const current = state.effectPlacement[id];
+      state.effectPlacement[id] = current === 'none' ? 'strengthen' : current === 'strengthen' ? 'weaken' : 'none';
+      resetStep2Feedback();
+      renderEffects();
+    });
+  }
+
+  document.querySelectorAll('.zone').forEach(zone => {
+    zone.addEventListener('dragover', e => {
+      e.preventDefault();
+      zone.classList.add('hover');
+    });
+    zone.addEventListener('dragleave', () => zone.classList.remove('hover'));
+    zone.addEventListener('drop', e => {
+      e.preventDefault();
+      zone.classList.remove('hover');
+      const id = e.dataTransfer.getData('text/plain') || state.dragEffectId;
+      if (!id) return;
+      state.effectPlacement[id] = zone.dataset.zone;
+      resetStep2Feedback();
+      renderEffects();
+    });
+  });
+
+  function resetStep2Feedback(){
+    el.feedback2.className = 'feedback';
+    el.feedback2.innerHTML = '';
+    el.finalBox.classList.remove('show');
+    [...document.querySelectorAll('.effect-card')].forEach(card => card.classList.remove('correct','wrong'));
+  }
+
+  function checkStep2(){
+    resetStep2Feedback();
+    const expected = computeBehaviorExpectation();
+    let right = 0;
+    EFFECTS.forEach(item => {
+      const actual = state.effectPlacement[item.id];
+      const correct = expected[item.id];
+      const card = document.querySelector(`.effect-card[data-id="${item.id}"]`);
+      if (!card) return;
+      if (actual === correct) { card.classList.add('correct'); right++; }
+      else card.classList.add('wrong');
+    });
+
+    const selectedSet = new Set(state.selected);
+    const goodPicked = state.selected.filter(id => CORRECT_SET.includes(id));
+    const wrongPicked = state.selected.filter(id => !CORRECT_SET.includes(id));
+    const missing = CORRECT_SET.filter(id => !selectedSet.has(id));
+
+    document.querySelectorAll('.scheme-chip').forEach(chip => {
+      chip.classList.remove('neutral','good','bad');
+      if (CORRECT_SET.includes(chip.dataset.id)) chip.classList.add('good');
+      else chip.classList.add('bad');
+    });
+
+    let mood = 'mix';
+    let title = 'Вы уже видите логику своей схемы';
+    if (goodPicked.length === 4 && wrongPicked.length === 0) { mood = 'good'; title = 'Для шоурума схема собрана сильно'; }
+    else if (goodPicked.length <= 1) { mood = 'bad'; title = 'Схема уводит розницу в опасный перекос'; }
+
+    const name = id => KPI_ITEMS.find(x => x.id === id).label;
+    const goodLabels = goodPicked.map(name);
+    const wrongLabels = wrongPicked.map(name);
+    const missingLabels = missing.map(name);
+
+    let riskText = [];
+    if (state.selected.includes('expensive')) riskText.push('бонус за дорогие позиции толкает продавцов к продаже самых дорогих моделей без заботы о составе покупки');
+    if (state.selected.includes('conversion')) riskText.push('конверсия без защитных показателей может смещать фокус на быстрые продажи, а не на качество опыта');
+    if (state.selected.includes('revenue') && !state.selected.includes('upt')) riskText.push('выручка без UPT не защищает допродажи и комплектацию покупки');
+
+    let supportText = [];
+    if (state.selected.includes('revenue')) supportText.push('выручка остается базовым коммерческим ориентиром');
+    if (state.selected.includes('avg_check')) supportText.push('средний чек помогает продавать не отдельный товар, а более цельное решение');
+    if (state.selected.includes('upt')) supportText.push('UPT усиливает комплектацию покупки и сервисные допродажи');
+    if (state.selected.includes('mystery')) supportText.push('тайный покупатель удерживает стандарт сервиса и клиентский опыт');
+
+    el.feedback2.className = `feedback show ${mood}`;
+    el.feedback2.innerHTML = `
+      <strong>${title}</strong>
+      <p>На шаге 1 вы собрали не просто набор карточек, а модель поведения продавцов. Шаг 2 показал, куда эта модель реально толкает команду.</p>
+      ${goodLabels.length ? `<p><strong>Что в вашей схеме работает в пользу экономики точки:</strong> ${goodLabels.join(', ')}.</p>` : ''}
+      ${wrongLabels.length ? `<p><strong>Что уводит схему в перекос:</strong> ${wrongLabels.join(', ')}.</p>` : ''}
+      ${missingLabels.length ? `<p><strong>Чего не хватает для кейса ВекторДом:</strong> ${missingLabels.join(', ')}.</p>` : ''}
+      ${supportText.length ? `<ul>${supportText.map(t => `<li>${t}</li>`).join('')}</ul>` : ''}
+      ${riskText.length ? `<ul>${riskText.map(t => `<li>${t}</li>`).join('')}</ul>` : ''}
+      <p><strong>Точность вашего разбора поведения:</strong> ${right} из 6.</p>
+    `;
+
+    const isCorrectSet = goodPicked.length === 4 && wrongPicked.length === 0;
+    el.finalText.innerHTML = isCorrectSet
+      ? `<p>Вы собрали для шоурума сильную базовую схему: <strong>выручка + средний чек + UPT + оценка тайного покупателя</strong>.</p><p>Такая конструкция помогает команде работать не только на сумму покупки, но и на валовую прибыль точки через комплектацию, сервис и более качественный клиентский опыт.</p>`
+      : `<p>Ваш портфель показывает важную вещь: даже если схема выглядит логично на уровне отдельных элементов, она может усиливать неправильное поведение продавцов.</p><p>Для кейса «ВекторДом» опорой должны стать <strong>выручка как база</strong>, а также <strong>средний чек, UPT и тайный покупатель</strong>, которые защищают экономику точки от иллюзии роста.</p>`;
+    el.finalBox.classList.add('show');
+  }
+
+  function resetStep1(){ state.selected = []; renderStep1(); }
+  function resetStep2(){ state.effectPlacement = Object.fromEntries(EFFECTS.map(x => [x.id, 'none'])); resetStep2Feedback(); renderEffects(); }
+  function retryAll(){ state.selected=[]; state.effectPlacement=Object.fromEntries(EFFECTS.map(x=>[x.id,'none'])); resetStep2Feedback(); backToStep1(); renderStep1(); renderEffects(); }
+
+  el.toStep2.addEventListener('click', goToStep2);
+  el.backToStep1.addEventListener('click', backToStep1);
+  el.reset1.addEventListener('click', resetStep1);
+  el.reset2.addEventListener('click', resetStep2);
+  el.check2.addEventListener('click', checkStep2);
+  el.retryAll.addEventListener('click', retryAll);
+
+  renderStep1();
+})();
+</script>
+</body>
+</html>
