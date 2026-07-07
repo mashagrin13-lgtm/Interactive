@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ВекторДом — KPI-портфель логистики</title>
+<style>
+  :root{
+    --bg:#eef2f8;
+    --card:#ffffff;
+    --ink:#162033;
+    --muted:#65738d;
+    --line:#d9e1ed;
+    --accent:#456cf6;
+    --accent-soft:#eef2ff;
+    --gold:#d38d1f;
+    --gold-soft:#fff6e8;
+    --good:#167a5d;
+    --good-soft:#e9f7f1;
+    --bad:#cb4757;
+    --bad-soft:#ffeff2;
+    --shadow:0 18px 40px rgba(17,33,67,.08);
+    --radius:24px;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:linear-gradient(180deg,#edf2f9 0%,#f7f9fc 100%);color:var(--ink)}
+  .wrap{max-width:920px;margin:0 auto;padding:16px 12px 24px}
+  .shell{background:rgba(255,255,255,.8);border:1px solid rgba(217,225,237,.85);box-shadow:var(--shadow);border-radius:32px;overflow:hidden;backdrop-filter:blur(14px)}
+  .hero{padding:20px 20px 14px;background:radial-gradient(circle at 100% 0%, rgba(69,108,246,.14), transparent 28%),radial-gradient(circle at 0% 0%, rgba(211,141,31,.12), transparent 20%),linear-gradient(180deg,#ffffff 0%,#f8fbff 100%);border-bottom:1px solid var(--line)}
+  .eyebrow{display:inline-flex;align-items:center;gap:8px;padding:7px 12px;border-radius:999px;background:var(--accent-soft);color:var(--accent);font-size:12px;font-weight:800;letter-spacing:.03em;text-transform:uppercase}
+  h1{margin:10px 0 6px;font-size:28px;line-height:1.12}
+  .lead{margin:0;max-width:860px;color:var(--muted);font-size:15px;line-height:1.5}
+  .progress{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
+  .step-pill{display:flex;align-items:center;gap:10px;padding:11px 13px;border-radius:16px;border:1px solid var(--line);background:#fff}
+  .step-pill .num{width:28px;height:28px;display:grid;place-items:center;border-radius:50%;background:#edf1f7;color:#4a5874;font-weight:800;font-size:14px;flex:none}
+  .step-pill.active{background:linear-gradient(180deg,#fff 0%,#f6f8ff 100%);border-color:rgba(69,108,246,.28)}
+  .step-pill.active .num{background:var(--accent);color:#fff}
+  .step-pill.done .num{background:var(--good);color:#fff}
+  .step-pill strong{display:block;font-size:13px}
+  .step-pill small{display:block;color:var(--muted);font-size:11px;line-height:1.35}
+  .steps-shell{position:relative}
+  .stage{display:none;padding:16px 16px 18px}
+  .stage.active{display:block}
+  .grid{display:grid;grid-template-columns:1fr;gap:12px;align-items:start;max-width:860px;margin:0 auto}
+  .panel{background:#fff;border:1px solid var(--line);border-radius:22px;padding:14px;box-shadow:0 8px 24px rgba(29,40,67,.04)}
+  .panel h2{margin:0 0 6px;font-size:20px}
+  .panel p.top{margin:0 0 12px;color:var(--muted);line-height:1.52;font-size:15px}
+  .chipline{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+  .chip{padding:6px 10px;border-radius:999px;background:#eef2f8;color:#4b5973;font-size:12px;font-weight:650}
+  table{width:100%;border-collapse:separate;border-spacing:0;overflow:hidden;border:1px solid var(--line);border-radius:16px;font-size:14px}
+  th,td{padding:9px 8px;border-bottom:1px solid var(--line);text-align:left}
+  th{background:#f6f8fb;color:#53627c;font-weight:750}
+  tr:last-child td{border-bottom:none}
+  tbody tr:nth-child(even){background:#fbfcff}
+  .note{margin-top:10px;padding:12px 14px;border-radius:16px;background:var(--gold-soft);border:1px solid rgba(211,141,31,.18);color:#6d4b17;font-size:14px;line-height:1.55}
+  .bank-title{display:flex;justify-content:space-between;gap:10px;align-items:center;margin-bottom:8px}
+  .bank-title h3{margin:0;font-size:17px}
+  .bank-title span{font-size:13px;color:var(--muted);line-height:1.42}
+  .bank{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+  .kpi-card,.effect-card,.scheme-chip{position:relative;padding:11px 12px;border-radius:16px;border:1px solid var(--line);background:#fff;box-shadow:0 8px 18px rgba(29,40,67,.05);font-weight:700;color:#1b2740;cursor:grab;user-select:none;transition:transform .15s ease,box-shadow .15s ease,border-color .15s ease,background .15s ease;font-size:14px;line-height:1.3}
+  .kpi-card:hover,.effect-card:hover{transform:translateY(-2px);box-shadow:0 12px 20px rgba(29,40,67,.09)}
+  .kpi-card.dragging,.effect-card.dragging{opacity:.42}
+  .kpi-card::after,.effect-card::after{content:"";position:absolute;inset:0;border-radius:16px;pointer-events:none;background:linear-gradient(180deg,rgba(255,255,255,.42),transparent 48%)}
+  .kpi-card.gold{background:linear-gradient(180deg,#ffffff 0%,#f5f7fb 100%);border-color:rgba(86,104,138,.18)}
+  .kpi-card.blue{background:linear-gradient(180deg,#ffffff 0%,#f3f6ff 100%);border-color:rgba(69,108,246,.18)}
+  .kpi-card.green{background:linear-gradient(180deg,#ffffff 0%,#f2fbf7 100%);border-color:rgba(22,122,93,.18)}
+  .portfolio-panel{background:linear-gradient(180deg,#fdfefe 0%,#f7faff 100%)}
+  .portfolio-top{display:flex;justify-content:space-between;gap:10px;align-items:flex-start;margin-bottom:8px}
+  .portfolio-top h3{margin:0;font-size:17px}
+  .portfolio-top span{font-size:13px;color:var(--muted);line-height:1.42}
+  .briefcase{position:relative;min-height:250px;border-radius:28px;padding:24px 14px 14px;background:linear-gradient(180deg,#f8fbff 0%,#e8eef8 14%,#d9e3f1 15%,#ccd8ea 100%);box-shadow:inset 0 2px 0 rgba(255,255,255,.58), inset 0 -10px 18px rgba(63,88,126,.10), 0 16px 30px rgba(53,79,118,.14);overflow:hidden}
+  .briefcase::before{content:"";position:absolute;top:10px;left:50%;transform:translateX(-50%);width:108px;height:32px;border-radius:14px 14px 10px 10px;background:linear-gradient(180deg,#dfe7f4 0%,#bccae0 100%);border:3px solid rgba(90,112,147,.34)}
+  .briefcase::after{content:"KPI-портфель CEO";position:absolute;top:54px;left:50%;transform:translateX(-50%);font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:rgba(66,84,116,.74);font-weight:900}
+  .briefcase-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:42px}
+  .slot{min-height:78px;border-radius:18px;padding:9px;background:rgba(255,255,255,.42);border:1.6px dashed rgba(101,124,162,.34);display:flex;align-items:center;justify-content:center;text-align:center;color:rgba(78,98,132,.76);position:relative;transition:.16s ease;font-size:13px;line-height:1.35}
+  .slot::before{content:attr(data-slot);position:absolute;top:7px;left:9px;font-size:10px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:rgba(78,98,132,.62)}
+  .slot.hover{background:rgba(255,255,255,.32);border-color:rgba(69,108,246,.6);box-shadow:0 0 0 4px rgba(69,108,246,.11) inset}
+  .slot.filled{border-style:solid;color:transparent}
+  .slot .kpi-card{width:100%;cursor:pointer;padding-right:34px;padding-top:10px;padding-bottom:10px;font-size:13px}
+  .slot .remove{position:absolute;right:7px;top:7px;width:24px;height:24px;border-radius:999px;border:none;cursor:pointer;background:rgba(255,255,255,.82);color:#536887;font-weight:900;box-shadow:0 4px 10px rgba(0,0,0,.08)}
+  .actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+  button{border:none;border-radius:13px;padding:10px 14px;font-weight:800;font-size:14px;cursor:pointer;transition:transform .14s ease,opacity .14s ease,box-shadow .14s ease}
+  button:hover{transform:translateY(-1px)}
+  button.primary{background:var(--accent);color:#fff;box-shadow:0 10px 24px rgba(69,108,246,.24)}
+  button.secondary{background:#eef2f8;color:#31425e}
+  button:disabled{opacity:.48;cursor:not-allowed;transform:none;box-shadow:none}
+  .feedback{display:none;margin-top:12px;padding:14px 15px;border-radius:16px;font-size:14px;line-height:1.56}
+  .feedback.show{display:block}
+  .feedback.good{background:var(--good-soft);border:1px solid rgba(22,122,93,.2);color:#135944}
+  .feedback.bad{background:var(--bad-soft);border:1px solid rgba(203,71,87,.18);color:#8d2433}
+  .feedback.mix{background:#eff4ff;border:1px solid rgba(69,108,246,.16);color:#25417a}
+  .feedback ul{margin:8px 0 0;padding-left:18px}
+  .scheme-bar{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+  .scheme-chip{cursor:default;padding:10px 12px;font-size:12.5px;font-weight:750}
+  .scheme-chip.good{background:var(--good-soft);border-color:rgba(22,122,93,.22);color:#135944}
+  .scheme-chip.bad{background:var(--bad-soft);border-color:rgba(203,71,87,.18);color:#8d2433}
+  .scheme-chip.neutral{background:#f3f6fb;color:#51617a}
+  .behavior-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}
+  .zone{border:1px solid var(--line);border-radius:22px;padding:14px;min-height:250px;background:#fff}
+  .zone.hover{outline:3px solid rgba(69,108,246,.13);outline-offset:1px}
+  .zone h3{margin:0 0 6px;font-size:17px}
+  .zone p{margin:0 0 10px;color:var(--muted);font-size:14px;line-height:1.45}
+  .zone-stack{min-height:150px;display:grid;gap:8px;align-content:start}
+  .effect-bank{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:10px}
+  .effect-card.correct{background:var(--good-soft);border-color:rgba(22,122,93,.22);color:#135944}
+  .effect-card.wrong{background:var(--bad-soft);border-color:rgba(203,71,87,.18);color:#8d2433}
+  .effect-card[data-zone="none"]{background:#fff}
+  .hint-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+  .hint-row span{font-size:12px;color:#5f6d87;background:#f1f4f9;border-radius:999px;padding:6px 9px}
+  .final-box{display:none;margin-top:14px;padding:14px;border-radius:18px;border:1px solid rgba(69,108,246,.16);background:linear-gradient(180deg,#fff 0%,#f6f8ff 100%)}
+  .final-box.show{display:block}
+  .final-box h4{margin:0 0 8px;font-size:16px}
+  .foot{margin-top:12px;color:#7d899f;font-size:12px;line-height:1.5}
+  @media (max-width: 720px){.progress,.bank,.effect-bank,.behavior-grid,.briefcase-grid{grid-template-columns:1fr}.hero,.stage{padding-left:14px;padding-right:14px}h1{font-size:24px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="shell">
+    <div class="hero">
+      <div class="eyebrow">Склад и логистика • ВекторДом</div>
+      <h1>Соберите KPI-портфель для склада и логистики</h1>
+      <p class="lead">Вы — CEO компании «ВекторДом». Ваша задача состоит из двух шагов: <strong>1. собрать KPI-портфель для склада и логистики</strong>; <strong>2. проверить, какое поведение такая схема реально вызовет в логистическом процессе</strong>.</p>
+      <div class="progress">
+        <div class="step-pill active" id="pill1">
+          <div class="num">1</div>
+          <div><strong>Соберите портфель</strong><small>Выберите 4 KPI-элемента для логистики</small></div>
+        </div>
+        <div class="step-pill" id="pill2">
+          <div class="num">2</div>
+          <div><strong>Проверьте поведение</strong><small>Разнесите последствия и увидите силу или перекос схемы</small></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="steps-shell">
+      <section class="stage active" id="stage1">
+        <div class="grid">
+          <div class="panel">
+            <h2>Ситуация в «ВекторДом»</h2>
+            <p class="top">Чтобы применить знания на практике, вам предстоит проверить логику KPI для склада и логистики у «ВекторДом».</p>
+            <div class="chipline">
+              <span class="chip">склад</span>
+              <span class="chip">логистика</span>
+              <span class="chip">не только скорость</span>
+            </div>
+            <table>
+              <thead>
+                <tr>
+                  <th>Показатель</th>
+                  <th>Факт</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><td><strong>OTD</strong></td><td>97%</td></tr>
+                <tr><td><strong>OTIF</strong></td><td>89%</td></tr>
+                <tr><td><strong>Perfect Order</strong></td><td>84%</td></tr>
+                <tr><td><strong>Точность комплектации</strong></td><td>91%</td></tr>
+                <tr><td><strong>Себестоимость доставки на заказ</strong></td><td>+12% к плану</td></tr>
+                <tr><td><strong>Претензии</strong></td><td>4,8%</td></tr>
+              </tbody>
+            </table>
+            <div class="note"><strong>Задание.</strong> Соберите базовую схему KPI для склада и логистики на следующий квартал. В портфель нужно положить <strong>4 элемента</strong>. На этом шаге система не покажет, правы вы или нет: проверка начнется на шаге 2, когда вы увидите, какое поведение поощряет ваша схема.</div>
+          </div>
+
+          <div class="panel portfolio-panel">
+            <div class="bank-title">
+              <h3>Карта KPI-элементов</h3>
+              <span>Перетащите или выберите кликом 4 элемента</span>
+            </div>
+            <div class="bank" id="kpiBank"></div>
+
+            <div class="portfolio-top" style="margin-top:12px">
+              <div>
+                <h3>Портфель KPI</h3>
+                <span>Соберите 4 элемента для новой схемы мотивации. Для этого перетащите их или выберите кликом.</span>
+              </div>
+              <span id="counter">Выбрано: 0 из 4</span>
+            </div>
+
+            <div class="briefcase" aria-label="Портфель KPI CEO">
+              <div class="briefcase-grid" id="slots">
+                <div class="slot" data-slot="Слот 1" data-slot-index="0">Перетащите карточку</div>
+                <div class="slot" data-slot="Слот 2" data-slot-index="1">Перетащите карточку</div>
+                <div class="slot" data-slot="Слот 3" data-slot-index="2">Перетащите карточку</div>
+                <div class="slot" data-slot="Слот 4" data-slot-index="3">Перетащите карточку</div>
+              </div>
+            </div>
+
+            <div class="actions">
+              <button class="primary" id="toStep2" disabled>Перейти к шагу 2</button>
+              <button class="secondary" id="reset1">Сбросить портфель</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="stage" id="stage2">
+        <div class="grid">
+          <div class="panel">
+            <h2>Какое поведение такая схема вызовет в отделе логистики?</h2>
+            <p class="top">Разнесите последствия по двум зонам. Здесь и выяснится, помогает ли ваша схема отгружать правильно и экономично или все еще подталкивает к скорости любой ценой.</p>
+
+            <div class="scheme-bar" id="schemeBar"></div>
+
+            <div class="hint-row">
+              <span>Перетаскивайте карточки в нужную зону</span>
+              <span>Или кликом: банк → Усилится → Ослабнет</span>
+            </div>
+
+            <div class="effect-bank" id="effectBank"></div>
+
+            <div class="behavior-grid">
+              <div class="zone" id="zoneStrengthen" data-zone="strengthen">
+                <h3>Усилится</h3>
+                <p>То, что ваша схема будет усиливать.</p>
+                <div class="zone-stack" id="strengthenStack"></div>
+              </div>
+              <div class="zone" id="zoneWeaken" data-zone="weaken">
+                <h3>Ослабнет</h3>
+                <p>То, что такая схема будет сдерживать.</p>
+                <div class="zone-stack" id="weakenStack"></div>
+              </div>
+            </div>
+
+            <div class="actions">
+              <button class="secondary" id="backToStep1">Вернуться к шагу 1</button>
+              <button class="primary" id="check2">Проверить логику поведения</button>
+              <button class="secondary" id="reset2">Сбросить шаг 2</button>
+            </div>
+            <div class="feedback" id="feedback2"></div>
+
+            <div class="final-box" id="finalBox">
+              <h4>Что показала ваша конструкция</h4>
+              <div id="finalText"></div>
+              <div class="actions">
+                <button class="secondary" id="retryAll">Попробовать еще раз</button>
+              </div>
+            </div>
+
+            <div class="foot">Эффективный KPI для склада и логистики учитывает не столько скорость отгрузки, а качество процесса в целом: полноту заказа, точность сборки, себестоимость доставки и уровень претензий.</div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+</div>
+
+<script>
+(() => {
+  const KPI_ITEMS = [
+    { id:'salary', label:'Оклад', tone:'gold' },
+    { id:'otif', label:'OTIF', tone:'green' },
+    { id:'pick_accuracy', label:'Точность комплектации', tone:'green' },
+    { id:'delivery_cost', label:'Себестоимость доставки на заказ', tone:'green' },
+    { id:'otd', label:'OTD', tone:'blue' },
+    { id:'perfect_order', label:'Perfect Order', tone:'blue' },
+    { id:'claims', label:'Процент претензий', tone:'blue' },
+    { id:'shipping_speed', label:'Скорость отгрузки', tone:'blue' },
+    { id:'urgent_runs', label:'Бонус за срочные рейсы', tone:'gold' },
+    { id:'shipment_count', label:'Количество отгрузок', tone:'gold' }
+  ];
+
+  const CORRECT_SET = ['salary','otif','pick_accuracy','delivery_cost'];
+
+  const EFFECTS = [
+    { id:'right_shipments', label:'Полная и точная отгрузка' },
+    { id:'cost_control', label:'Контроль себестоимости доставки' },
+    { id:'stable_process', label:'Стабильный процесс без авралов' },
+    { id:'partial_orders', label:'Неполные комплекты ради скорости' },
+    { id:'expensive_runs', label:'Срочные дорогие рейсы' },
+    { id:'claims_growth', label:'Рост претензий клиентов' }
+  ];
+
+  const state = {
+    selected: [],
+    dragKpiId: null,
+    dragEffectId: null,
+    effectPlacement: Object.fromEntries(EFFECTS.map(x => [x.id, 'none']))
+  };
+
+  const el = {
+    stage1: document.getElementById('stage1'),
+    stage2: document.getElementById('stage2'),
+    pill1: document.getElementById('pill1'),
+    pill2: document.getElementById('pill2'),
+    backToStep1: document.getElementById('backToStep1'),
+    kpiBank: document.getElementById('kpiBank'),
+    slots: document.getElementById('slots'),
+    counter: document.getElementById('counter'),
+    toStep2: document.getElementById('toStep2'),
+    reset1: document.getElementById('reset1'),
+    effectBank: document.getElementById('effectBank'),
+    strengthenStack: document.getElementById('strengthenStack'),
+    weakenStack: document.getElementById('weakenStack'),
+    feedback2: document.getElementById('feedback2'),
+    check2: document.getElementById('check2'),
+    reset2: document.getElementById('reset2'),
+    schemeBar: document.getElementById('schemeBar'),
+    finalBox: document.getElementById('finalBox'),
+    finalText: document.getElementById('finalText'),
+    retryAll: document.getElementById('retryAll')
+  };
+
+  function makeCard(item, type='kpi'){
+    const div = document.createElement('div');
+    const cls = type === 'kpi' ? 'kpi-card' : 'effect-card';
+    div.className = `${cls} ${item.tone || ''}`.trim();
+    div.textContent = item.label;
+    div.dataset.id = item.id;
+    div.draggable = true;
+    return div;
+  }
+
+  function updateCounter(){
+    el.counter.textContent = `Выбрано: ${state.selected.length} из 4`;
+    el.toStep2.disabled = state.selected.length !== 4;
+  }
+
+  function clearSlotHover(){ [...el.slots.children].forEach(s => s.classList.remove('hover')); }
+  function clearZoneHover(){ document.querySelectorAll('.zone').forEach(z => z.classList.remove('hover')); }
+
+  function renderStep1(){
+    el.kpiBank.innerHTML = '';
+    KPI_ITEMS.forEach(item => {
+      if (!state.selected.includes(item.id)) {
+        const card = makeCard(item,'kpi');
+        attachKpiEvents(card);
+        el.kpiBank.appendChild(card);
+      }
+    });
+
+    [...el.slots.children].forEach((slot, i) => {
+      slot.classList.remove('filled','hover');
+      slot.innerHTML = 'Перетащите карточку';
+      const id = state.selected[i];
+      if (id) {
+        const item = KPI_ITEMS.find(x => x.id === id);
+        slot.innerHTML = '';
+        const card = makeCard(item,'kpi');
+        attachKpiEvents(card);
+        slot.appendChild(card);
+        const remove = document.createElement('button');
+        remove.className = 'remove';
+        remove.type = 'button';
+        remove.textContent = '×';
+        remove.title = 'Убрать из портфеля';
+        remove.addEventListener('click', (e) => {
+          e.stopPropagation();
+          state.selected = state.selected.filter(x => x !== id);
+          renderStep1();
+        });
+        slot.appendChild(remove);
+        slot.classList.add('filled');
+      }
+    });
+    updateCounter();
+  }
+
+  function attachKpiEvents(card){
+    card.addEventListener('dragstart', e => {
+      state.dragKpiId = card.dataset.id;
+      card.classList.add('dragging');
+      e.dataTransfer.setData('text/plain', card.dataset.id);
+    });
+    card.addEventListener('dragend', () => {
+      state.dragKpiId = null;
+      card.classList.remove('dragging');
+      clearSlotHover();
+    });
+    card.addEventListener('click', () => {
+      const id = card.dataset.id;
+      if (state.selected.includes(id)) {
+        state.selected = state.selected.filter(x => x !== id);
+      } else if (state.selected.length < 4) {
+        state.selected.push(id);
+      }
+      renderStep1();
+    });
+  }
+
+  [...el.slots.children].forEach(slot => {
+    slot.addEventListener('dragover', e => {
+      e.preventDefault();
+      if (state.selected.length < 4 || slot.classList.contains('filled')) slot.classList.add('hover');
+    });
+    slot.addEventListener('dragleave', () => slot.classList.remove('hover'));
+    slot.addEventListener('drop', e => {
+      e.preventDefault();
+      slot.classList.remove('hover');
+      const id = e.dataTransfer.getData('text/plain') || state.dragKpiId;
+      if (!id) return;
+      const targetIndex = Number(slot.dataset.slotIndex);
+      let next = [...state.selected];
+      const existingIndex = next.indexOf(id);
+      if (existingIndex !== -1) next.splice(existingIndex,1);
+      while (next.length < 4) next.push(null);
+      if (!next[targetIndex] || next[targetIndex] === id) next[targetIndex] = id;
+      else next.push(id);
+      state.selected = next.filter(Boolean).slice(0,4);
+      renderStep1();
+    });
+  });
+
+  function goToStep2(){
+    if (state.selected.length !== 4) return;
+    el.stage1.classList.remove('active');
+    el.stage2.classList.add('active');
+    el.pill1.classList.remove('active');
+    el.pill1.classList.add('done');
+    el.pill2.classList.add('active');
+    renderSchemeBar();
+    renderEffects();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function backToStep1(){
+    el.stage2.classList.remove('active');
+    el.stage1.classList.add('active');
+    el.pill2.classList.remove('active');
+    el.pill1.classList.remove('done');
+    el.pill1.classList.add('active');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function renderSchemeBar(){
+    el.schemeBar.innerHTML = '';
+    state.selected.forEach(id => {
+      const item = KPI_ITEMS.find(x => x.id === id);
+      const chip = document.createElement('div');
+      chip.className = 'scheme-chip neutral';
+      chip.dataset.id = id;
+      chip.textContent = item.label;
+      el.schemeBar.appendChild(chip);
+    });
+  }
+
+  function computeBehaviorExpectation(){
+    const scores = { right:0, cost:0, stable:0, partial:0, expensive:0, claims:0 };
+    state.selected.forEach(id => {
+      switch(id){
+        case 'salary':
+          break;
+        case 'otif':
+          scores.right += 3; scores.partial -= 2; scores.claims -= 1; break;
+        case 'pick_accuracy':
+          scores.right += 3; scores.partial -= 3; scores.claims -= 1; break;
+        case 'delivery_cost':
+          scores.cost += 3; scores.expensive -= 3; scores.stable += 1; break;
+        case 'perfect_order':
+          scores.right += 2; scores.stable += 1; scores.claims -= 1; break;
+        case 'claims':
+          scores.claims -= 3; scores.right += 1; break;
+        case 'otd':
+          scores.stable += 1; scores.partial += 1; scores.expensive += 1; break;
+        case 'shipping_speed':
+          scores.partial += 3; scores.expensive += 2; scores.claims += 2; break;
+        case 'urgent_runs':
+          scores.expensive += 3; scores.stable -= 1; break;
+        case 'shipment_count':
+          scores.partial += 2; scores.claims += 1; scores.expensive += 1; break;
+      }
+    });
+    return {
+      right_shipments: scores.right > 0 ? 'strengthen' : 'weaken',
+      cost_control: scores.cost > 0 ? 'strengthen' : 'weaken',
+      stable_process: scores.stable > 0 ? 'strengthen' : 'weaken',
+      partial_orders: scores.partial > 0 ? 'strengthen' : 'weaken',
+      expensive_runs: scores.expensive > 0 ? 'strengthen' : 'weaken',
+      claims_growth: scores.claims > 0 ? 'strengthen' : 'weaken',
+      scores
+    };
+  }
+
+  function renderEffects(){
+    el.effectBank.innerHTML = '';
+    el.strengthenStack.innerHTML = '';
+    el.weakenStack.innerHTML = '';
+    EFFECTS.forEach(item => {
+      const card = makeCard(item,'effect');
+      attachEffectEvents(card);
+      const placement = state.effectPlacement[item.id];
+      card.dataset.zone = placement;
+      if (placement === 'strengthen') el.strengthenStack.appendChild(card);
+      else if (placement === 'weaken') el.weakenStack.appendChild(card);
+      else el.effectBank.appendChild(card);
+    });
+  }
+
+  function attachEffectEvents(card){
+    card.addEventListener('dragstart', e => {
+      state.dragEffectId = card.dataset.id;
+      card.classList.add('dragging');
+      e.dataTransfer.setData('text/plain', card.dataset.id);
+    });
+    card.addEventListener('dragend', () => {
+      state.dragEffectId = null;
+      card.classList.remove('dragging');
+      clearZoneHover();
+    });
+    card.addEventListener('click', () => {
+      const id = card.dataset.id;
+      const current = state.effectPlacement[id];
+      state.effectPlacement[id] = current === 'none' ? 'strengthen' : current === 'strengthen' ? 'weaken' : 'none';
+      resetStep2Feedback();
+      renderEffects();
+    });
+  }
+
+  document.querySelectorAll('.zone').forEach(zone => {
+    zone.addEventListener('dragover', e => {
+      e.preventDefault();
+      zone.classList.add('hover');
+    });
+    zone.addEventListener('dragleave', () => zone.classList.remove('hover'));
+    zone.addEventListener('drop', e => {
+      e.preventDefault();
+      zone.classList.remove('hover');
+      const id = e.dataTransfer.getData('text/plain') || state.dragEffectId;
+      if (!id) return;
+      state.effectPlacement[id] = zone.dataset.zone;
+      resetStep2Feedback();
+      renderEffects();
+    });
+  });
+
+  function resetStep2Feedback(){
+    el.feedback2.className = 'feedback';
+    el.feedback2.innerHTML = '';
+    el.finalBox.classList.remove('show');
+    [...document.querySelectorAll('.effect-card')].forEach(card => card.classList.remove('correct','wrong'));
+  }
+
+  function checkStep2(){
+    resetStep2Feedback();
+    const expected = computeBehaviorExpectation();
+    let right = 0;
+    EFFECTS.forEach(item => {
+      const actual = state.effectPlacement[item.id];
+      const correct = expected[item.id];
+      const card = document.querySelector(`.effect-card[data-id="${item.id}"]`);
+      if (!card) return;
+      if (actual === correct) {
+        card.classList.add('correct');
+        right++;
+      } else {
+        card.classList.add('wrong');
+      }
+    });
+
+    const selectedSet = new Set(state.selected);
+    const goodPicked = state.selected.filter(id => CORRECT_SET.includes(id));
+    const wrongPicked = state.selected.filter(id => !CORRECT_SET.includes(id));
+    const missing = CORRECT_SET.filter(id => !selectedSet.has(id));
+
+    document.querySelectorAll('.scheme-chip').forEach(chip => {
+      chip.classList.remove('neutral','good','bad');
+      if (CORRECT_SET.includes(chip.dataset.id)) chip.classList.add('good');
+      else chip.classList.add('bad');
+    });
+
+    let mood = 'mix';
+    let title = 'Вы уже видите логику своей схемы';
+    if (goodPicked.length === 4 && wrongPicked.length === 0) { mood = 'good'; title = 'Для «ВекторДом» схема собрана сильно'; }
+    else if (goodPicked.length <= 1) { mood = 'bad'; title = 'Схема уводит логистику в опасный перекос'; }
+
+    const goodLabels = goodPicked.map(id => KPI_ITEMS.find(x => x.id === id).label);
+    const wrongLabels = wrongPicked.map(id => KPI_ITEMS.find(x => x.id === id).label);
+    const missingLabels = missing.map(id => KPI_ITEMS.find(x => x.id === id).label);
+
+    const riskText = [];
+    if (state.selected.includes('shipping_speed')) riskText.push('скорость отгрузки сама по себе подталкивает к неполным комплектам и авралам');
+    if (state.selected.includes('urgent_runs')) riskText.push('бонус за срочные рейсы делает дорогие исключения нормой');
+    if (state.selected.includes('shipment_count')) riskText.push('количество отгрузок увеличивает объем, но не защищает качество процесса');
+    if (state.selected.includes('otd')) riskText.push('своевременность без полноты и точности создает обманчивый отчет');
+
+    const supportText = [];
+    if (state.selected.includes('otif')) supportText.push('OTIF удерживает фокус на полной и своевременной отгрузке');
+    if (state.selected.includes('pick_accuracy')) supportText.push('точность комплектации снижает ошибки сборки и неполные заказы');
+    if (state.selected.includes('delivery_cost')) supportText.push('себестоимость доставки не дает раздувать процессы из-за срочных рейсов');
+    if (state.selected.includes('salary')) supportText.push('оклад задает базовую устойчивость схемы');
+
+    el.feedback2.className = `feedback show ${mood}`;
+    el.feedback2.innerHTML = `
+      <strong>${title}</strong>
+      <p>На шаге 1 вы собрали не просто набор метрик, а модель поведения отдела логистики. Шаг 2 показал, будет ли эта модель усиливать качество процесса или поощрять скорость любой ценой.</p>
+      ${goodLabels.length ? `<p><strong>Что в вашей схеме работает в пользу бизнеса:</strong> ${goodLabels.join(', ')}.</p>` : ''}
+      ${wrongLabels.length ? `<p><strong>Что уводит схему в перекос:</strong> ${wrongLabels.join(', ')}.</p>` : ''}
+      ${missingLabels.length ? `<p><strong>Чего не хватает для кейса «ВекторДом»:</strong> ${missingLabels.join(', ')}.</p>` : ''}
+      ${supportText.length ? `<ul>${supportText.map(t => `<li>${t}</li>`).join('')}</ul>` : ''}
+      ${riskText.length ? `<ul>${riskText.map(t => `<li>${t}</li>`).join('')}</ul>` : ''}
+      <p><strong>Точность вашего разбора поведения:</strong> ${right} из 6.</p>
+    `;
+
+    const isCorrectSet = goodPicked.length === 4 && wrongPicked.length === 0;
+    el.finalText.innerHTML = isCorrectSet
+      ? `<p>Вы собрали для «ВекторДом» сильную базовую схему: <strong>оклад + OTIF + точность комплектации + себестоимость доставки на заказ</strong>.</p><p>Такая конструкция удерживает фокус не на скорости как таковой, а на качественной и экономически эффективной отгрузке.</p>`
+      : `<p>Ваш портфель показывает важную вещь: логистика может выглядеть эффективной в отчете и одновременно терять деньги на ошибках, срочных рейсах и претензиях.</p><p>Для кейса «ВекторДом» опорой должны стать <strong>OTIF</strong>, <strong>точность комплектации</strong> и <strong>себестоимость доставки</strong>, а не только скорость отгрузки.</p>`;
+    el.finalBox.classList.add('show');
+  }
+
+  function resetStep1(){
+    state.selected = [];
+    renderStep1();
+  }
+
+  function resetStep2(){
+    state.effectPlacement = Object.fromEntries(EFFECTS.map(x => [x.id, 'none']));
+    resetStep2Feedback();
+    renderEffects();
+  }
+
+  function retryAll(){
+    state.selected = [];
+    state.effectPlacement = Object.fromEntries(EFFECTS.map(x => [x.id, 'none']));
+    resetStep2Feedback();
+    el.stage2.classList.remove('active');
+    el.stage1.classList.add('active');
+    el.pill2.classList.remove('active');
+    el.pill1.classList.remove('done');
+    el.pill1.classList.add('active');
+    renderStep1();
+    renderEffects();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  el.toStep2.addEventListener('click', goToStep2);
+  el.backToStep1.addEventListener('click', backToStep1);
+  el.reset1.addEventListener('click', resetStep1);
+  el.reset2.addEventListener('click', resetStep2);
+  el.check2.addEventListener('click', checkStep2);
+  el.retryAll.addEventListener('click', retryAll);
+
+  renderStep1();
+})();
+</script>
+</body>
+</html>
