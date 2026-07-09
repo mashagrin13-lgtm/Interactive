@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Чек-лист оценки масштаба мышления топ-менеджера</title>
+  <style>
+    :root {
+      --bg: #f6f2ea;
+      --card: #fffaf2;
+      --ink: #202020;
+      --muted: #6f675c;
+      --line: #e4d8c7;
+      --accent: #6c4df6;
+      --accent-soft: #eee9ff;
+      --good: #1f8a5b;
+      --good-soft: #e6f5ee;
+      --warn: #bd7a12;
+      --warn-soft: #fff2d9;
+      --bad: #b5413a;
+      --bad-soft: #fae7e5;
+      --shadow: 0 20px 45px rgba(45, 35, 20, 0.12);
+      --radius: 22px;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Inter, Arial, sans-serif;
+      background:
+        radial-gradient(circle at top left, rgba(108, 77, 246, 0.12), transparent 34%),
+        linear-gradient(135deg, #f8f3ea 0%, #f0eadf 100%);
+      color: var(--ink);
+      min-height: 100vh;
+    }
+
+    .page {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 36px 18px 56px;
+    }
+
+    .hero {
+      background: rgba(255, 250, 242, 0.88);
+      border: 1px solid var(--line);
+      border-radius: 30px;
+      box-shadow: var(--shadow);
+      padding: 34px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero::after {
+      content: "";
+      position: absolute;
+      right: -80px;
+      top: -80px;
+      width: 220px;
+      height: 220px;
+      background: var(--accent-soft);
+      border-radius: 50%;
+      z-index: 0;
+    }
+
+    .hero > * { position: relative; z-index: 1; }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: var(--accent-soft);
+      color: var(--accent);
+      font-size: 13px;
+      font-weight: 700;
+      margin-bottom: 18px;
+    }
+
+    h1 {
+      margin: 0 0 14px;
+      font-size: clamp(28px, 4vw, 48px);
+      line-height: 1.05;
+      letter-spacing: -0.03em;
+    }
+
+    .lead {
+      max-width: 850px;
+      font-size: 18px;
+      line-height: 1.55;
+      color: var(--muted);
+      margin: 0;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 340px;
+      gap: 18px;
+      margin-top: 20px;
+      align-items: start;
+    }
+
+    .checklist {
+      display: grid;
+      gap: 10px;
+    }
+
+    .item {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 12px 14px;
+      box-shadow: 0 10px 22px rgba(45, 35, 20, 0.07);
+    }
+
+    .item-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 8px;
+    }
+
+    .criterion {
+      margin: 0;
+      font-size: 17px;
+      letter-spacing: -0.02em;
+    }
+
+    .hint {
+      margin: 3px 0 0;
+      color: var(--muted);
+      line-height: 1.35;
+      font-size: 13px;
+    }
+
+    .pill {
+      flex: 0 0 auto;
+      padding: 5px 8px;
+      border-radius: 999px;
+      background: #f3eadb;
+      color: #7b5a2a;
+      font-size: 12px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .choices {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .choice {
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: #fffdf8;
+      padding: 10px 12px;
+      min-height: 76px;
+      cursor: pointer;
+      transition: transform .14s ease, border-color .14s ease, box-shadow .14s ease, background .14s ease;
+      position: relative;
+    }
+
+    .choice:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 10px 18px rgba(45, 35, 20, 0.09);
+    }
+
+    .choice input {
+      position: absolute;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .choice-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 800;
+      margin-bottom: 5px;
+      font-size: 13px;
+    }
+
+    .marker {
+      width: 16px;
+      height: 16px;
+      border: 2px solid #c7baa7;
+      border-radius: 50%;
+      display: inline-block;
+      flex: 0 0 auto;
+      background: #fff;
+    }
+
+    .choice p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.35;
+    }
+
+    .choice.strong {
+      border-color: rgba(31, 138, 91, 0.3);
+    }
+
+    .choice.risk {
+      border-color: rgba(181, 65, 58, 0.28);
+    }
+
+    .choice.selected.strong {
+      background: var(--good-soft);
+      border-color: var(--good);
+    }
+
+    .choice.selected.risk {
+      background: var(--bad-soft);
+      border-color: var(--bad);
+    }
+
+    .choice.selected .marker {
+      border-color: currentColor;
+      box-shadow: inset 0 0 0 4px #fff;
+      background: currentColor;
+    }
+
+    .choice.strong .choice-title { color: var(--good); }
+    .choice.risk .choice-title { color: var(--bad); }
+
+    .panel {
+      position: sticky;
+      top: 18px;
+      background: rgba(255, 250, 242, 0.94);
+      border: 1px solid var(--line);
+      border-radius: 28px;
+      box-shadow: var(--shadow);
+      padding: 22px;
+    }
+
+    .score-label {
+      color: var(--muted);
+      font-size: 14px;
+      margin-bottom: 8px;
+    }
+
+    .score {
+      font-size: 54px;
+      line-height: 1;
+      font-weight: 900;
+      letter-spacing: -0.05em;
+      margin-bottom: 10px;
+    }
+
+    .bar {
+      width: 100%;
+      height: 12px;
+      border-radius: 999px;
+      background: #eee3d5;
+      overflow: hidden;
+      margin: 12px 0 18px;
+    }
+
+    .bar-fill {
+      width: 0%;
+      height: 100%;
+      border-radius: 999px;
+      background: var(--accent);
+      transition: width .2s ease;
+    }
+
+    .result-card {
+      border-radius: 20px;
+      padding: 16px;
+      background: var(--warn-soft);
+      border: 1px solid rgba(189, 122, 18, 0.22);
+      margin-bottom: 8px;
+    }
+
+    .result-card.good {
+      background: var(--good-soft);
+      border-color: rgba(31, 138, 91, 0.22);
+    }
+
+    .result-card.bad {
+      background: var(--bad-soft);
+      border-color: rgba(181, 65, 58, 0.22);
+    }
+
+    .result-title {
+      margin: 0 0 8px;
+      font-size: 18px;
+      font-weight: 900;
+    }
+
+    .result-text {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.35;
+      font-size: 13px;
+    }
+
+    .actions {
+      display: grid;
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    button {
+      border: 0;
+      border-radius: 16px;
+      padding: 13px 14px;
+      font-weight: 800;
+      cursor: pointer;
+      transition: transform .14s ease, opacity .14s ease;
+    }
+
+    button:hover { transform: translateY(-1px); }
+
+    .primary {
+      background: var(--accent);
+      color: #fff;
+    }
+
+    .secondary {
+      background: #efe5d7;
+      color: #513d27;
+    }
+
+    .notes {
+      margin-top: 18px;
+      padding-top: 16px;
+      border-top: 1px solid var(--line);
+    }
+
+    .notes h3 {
+      margin: 0 0 10px;
+      font-size: 16px;
+    }
+
+    .notes ul {
+      margin: 0;
+      padding-left: 18px;
+      color: var(--muted);
+      line-height: 1.35;
+      font-size: 13px;
+    }
+
+    .summary {
+      margin-top: 18px;
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 28px;
+      padding: 24px;
+      display: none;
+    }
+
+    .summary.show { display: block; }
+
+    .summary h2 {
+      margin: 0 0 12px;
+      font-size: 24px;
+    }
+
+    .summary-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .summary-box {
+      border-radius: 20px;
+      padding: 16px;
+      border: 1px solid var(--line);
+      background: #fffdf8;
+    }
+
+    .summary-box h3 {
+      margin: 0 0 10px;
+      font-size: 16px;
+    }
+
+    .summary-box ul {
+      margin: 0;
+      padding-left: 18px;
+      color: var(--muted);
+      line-height: 1.5;
+      font-size: 14px;
+    }
+
+    .empty {
+      color: var(--muted);
+      font-size: 14px;
+      margin: 0;
+    }
+
+    @media (max-width: 900px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+
+      .panel {
+        position: static;
+      }
+
+      .choices, .summary-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .hero {
+        padding: 24px;
+      }
+    }
+
+    @media print {
+      body { background: #fff; }
+      .actions, .bar { display: none; }
+      .panel, .hero, .item, .summary { box-shadow: none; }
+      .layout { grid-template-columns: 1fr; }
+      .panel { position: static; }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <section class="hero">
+      <div class="eyebrow">Интерактивный чек-лист</div>
+      <h1>Оценка масштаба мышления топ-менеджера</h1>
+      <p class="lead">
+        Отметьте, какие признаки вы регулярно видите в поведении и речи сотрудника.
+        В конце интерактив покажет предварительный уровень масштаба мышления и зоны, которые стоит проверить перед повышением или расширением ответственности.
+      </p>
+    </section>
+
+    <div class="layout">
+      <section class="checklist" id="checklist"></section>
+
+      <aside class="panel">
+        <div class="score-label">Индекс масштаба мышления</div>
+        <div class="score"><span id="score">0</span>/10</div>
+        <div class="bar"><div class="bar-fill" id="barFill"></div></div>
+
+        <div class="result-card bad" id="resultCard">
+          <p class="result-title" id="resultTitle">Оценка еще не начата</p>
+          <p class="result-text" id="resultText">
+            Выберите по одному варианту в каждом критерии. Оценивайте не потенциал в целом, а устойчивые рабочие проявления.
+          </p>
+        </div>
+
+        <div class="actions">
+          <button class="primary" onclick="showSummary()">Сформировать вывод</button>
+          <button class="secondary" onclick="resetChecklist()">Сбросить ответы</button>
+          <button class="secondary" onclick="window.print()">Распечатать</button>
+        </div>
+
+        <div class="notes">
+          <h3>Как использовать</h3>
+          <ul>
+            <li>Оценивайте регулярное поведение, а не разовый удачный кейс.</li>
+            <li>Если есть сомнения, выбирайте тревожный признак и проверяйте дальше.</li>
+            <li>Результат — не приговор, а повод обсудить масштаб роли и траекторию роста.</li>
+          </ul>
+        </div>
+      </aside>
+    </div>
+
+    <section class="summary" id="summary">
+      <h2>Вывод по оценке</h2>
+      <div class="summary-grid">
+        <div class="summary-box">
+          <h3>Сильные признаки</h3>
+          <ul id="strongList"></ul>
+          <p class="empty" id="strongEmpty">Пока не отмечены.</p>
+        </div>
+        <div class="summary-box">
+          <h3>Зоны риска</h3>
+          <ul id="riskList"></ul>
+          <p class="empty" id="riskEmpty">Пока не отмечены.</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const data = [
+      {
+        key: "planning",
+        criterion: "Горизонт планирования",
+        look: "На какой период человек смотрит в рассуждениях.",
+        strong: "Говорит о последствиях через год, два, пять лет.",
+        risk: "Думает про ближайшую неделю или месяц."
+      },
+      {
+        key: "questions",
+        criterion: "Качество вопросов",
+        look: "Какие вопросы задает на обсуждении.",
+        strong: "Спрашивает про цели, ограничения, ресурсы, риски и влияние на другие функции.",
+        risk: "Спрашивает только: «Что делать прямо сейчас?»"
+      },
+      {
+        key: "arguments",
+        criterion: "Аргументация решений",
+        look: "Как объясняет свою позицию.",
+        strong: "Связывает решение с цифрами, трендами, клиентами, командой и процессами.",
+        risk: "Говорит общими фразами: «так быстрее», «так проще», «все так делают»."
+      },
+      {
+        key: "causality",
+        criterion: "Причинно-следственные связи",
+        look: "Видит ли цепочку последствий.",
+        strong: "Понимает, что одно решение повлияет на другие отделы и будущий результат.",
+        risk: "Решает локальную проблему, но не видит всей системы."
+      },
+      {
+        key: "factors",
+        criterion: "Работа с факторами",
+        look: "Сколько факторов учитывает.",
+        strong: "Сопоставляет рынок, финансы, людей, сроки, риски и операционные ограничения.",
+        risk: "Упирается в один фактор и не видит общей картины."
+      },
+      {
+        key: "numbers",
+        criterion: "Отношение к цифрам",
+        look: "Использует ли данные в управлении.",
+        strong: "Опирается на показатели, динамику, сравнения и прогнозы.",
+        risk: "Принимает решения только на ощущениях."
+      },
+      {
+        key: "solutions",
+        criterion: "Тип решений",
+        look: "Как действует в сложной ситуации.",
+        strong: "Предлагает системное решение, которое меняет процесс.",
+        risk: "Тушит пожары вручную и каждый раз начинает заново."
+      },
+      {
+        key: "responsibility",
+        criterion: "Отношение к ответственности",
+        look: "Что делает при ошибке или сбое.",
+        strong: "Разбирает причины и предлагает, как исправить систему.",
+        risk: "Ищет виноватых, перекладывает ответственность, защищает свою позицию."
+      },
+      {
+        key: "future",
+        criterion: "Связь с будущим",
+        look: "Видит ли развитие событий.",
+        strong: "Говорит: «если мы сейчас сделаем это, через полгода получим…»",
+        risk: "Не просчитывает, что будет после первого шага."
+      },
+      {
+        key: "maturity",
+        criterion: "Уровень управленческой зрелости",
+        look: "Как реагирует на сильных людей рядом.",
+        strong: "Включает сильных сотрудников в работу, усиливает команду.",
+        risk: "Боится конкуренции, интригует, обесценивает других."
+      }
+    ];
+
+    const state = {};
+
+    function renderChecklist() {
+      const root = document.getElementById("checklist");
+      root.innerHTML = data.map((item, index) => `
+        <article class="item">
+          <div class="item-head">
+            <div>
+              <h2 class="criterion">${index + 1}. ${item.criterion}</h2>
+              <p class="hint">${item.look}</p>
+            </div>
+            <div class="pill">критерий ${index + 1}/10</div>
+          </div>
+
+          <div class="choices">
+            <label class="choice strong" data-key="${item.key}" data-value="strong">
+              <input type="radio" name="${item.key}" value="strong">
+              <div class="choice-title"><span class="marker"></span>Признак масштаба</div>
+              <p>${item.strong}</p>
+            </label>
+
+            <label class="choice risk" data-key="${item.key}" data-value="risk">
+              <input type="radio" name="${item.key}" value="risk">
+              <div class="choice-title"><span class="marker"></span>Тревожный признак</div>
+              <p>${item.risk}</p>
+            </label>
+          </div>
+        </article>
+      `).join("");
+
+      root.querySelectorAll(".choice").forEach(choice => {
+        choice.addEventListener("click", () => {
+          const key = choice.dataset.key;
+          const value = choice.dataset.value;
+          state[key] = value;
+
+          document.querySelectorAll(`.choice[data-key="${key}"]`).forEach(el => el.classList.remove("selected"));
+          choice.classList.add("selected");
+          updateScore();
+        });
+      });
+    }
+
+    function updateScore() {
+      const answered = Object.values(state);
+      const strongCount = answered.filter(v => v === "strong").length;
+      const score = strongCount;
+      const percent = (score / data.length) * 100;
+
+      document.getElementById("score").textContent = score;
+      document.getElementById("barFill").style.width = `${percent}%`;
+
+      const card = document.getElementById("resultCard");
+      const title = document.getElementById("resultTitle");
+      const text = document.getElementById("resultText");
+
+      card.classList.remove("good", "bad");
+
+      if (answered.length < data.length) {
+        title.textContent = `Заполнено ${answered.length} из ${data.length}`;
+        text.textContent = "Продолжайте оценку. Итог появится после выбора по всем критериям.";
+        if (score >= 6) card.classList.add("good");
+        else card.classList.add("bad");
+        return;
+      }
+
+      if (score >= 8) {
+        card.classList.add("good");
+        title.textContent = "Есть управленческий масштаб мышления";
+        text.textContent = "Человек демонстрирует признаки топовой роли: видит последствия, работает с факторами и предлагает системные решения. Можно рассматривать расширение управленческого контура.";
+      } else if (score >= 5) {
+        title.textContent = "Есть задатки, но требуется проверка";
+        text.textContent = "Есть сильные признаки, но часть поведения остается локальной. Стоит дать проект с межфункциональной ответственностью и посмотреть, как человек будет действовать.";
+      } else {
+        card.classList.add("bad");
+        title.textContent = "Пока рано давать стратегический контур";
+        text.textContent = "Человек чаще мыслит ближайшими задачами и локальными решениями. Лучше развивать через ограниченные управленческие задачи или оставить экспертную траекторию.";
+      }
+    }
+
+    function showSummary() {
+      const summary = document.getElementById("summary");
+      const strongList = document.getElementById("strongList");
+      const riskList = document.getElementById("riskList");
+      const strongEmpty = document.getElementById("strongEmpty");
+      const riskEmpty = document.getElementById("riskEmpty");
+
+      const strongItems = data.filter(item => state[item.key] === "strong");
+      const riskItems = data.filter(item => state[item.key] === "risk");
+
+      strongList.innerHTML = strongItems.map(item => `<li><strong>${item.criterion}:</strong> ${item.strong}</li>`).join("");
+      riskList.innerHTML = riskItems.map(item => `<li><strong>${item.criterion}:</strong> ${item.risk}</li>`).join("");
+
+      strongEmpty.style.display = strongItems.length ? "none" : "block";
+      riskEmpty.style.display = riskItems.length ? "none" : "block";
+
+      summary.classList.add("show");
+      summary.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+
+    function resetChecklist() {
+      Object.keys(state).forEach(key => delete state[key]);
+      document.querySelectorAll(".choice").forEach(el => el.classList.remove("selected"));
+      document.querySelectorAll("input[type=radio]").forEach(input => input.checked = false);
+      document.getElementById("summary").classList.remove("show");
+      updateScore();
+    }
+
+    renderChecklist();
+    updateScore();
+  </script>
+</body>
+</html>
