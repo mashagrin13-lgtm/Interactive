@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Что разрушает уважение в топ-команде?</title>
+  <style>
+    :root{
+      --bg: #f7f4ee;
+      --card: #ffffff;
+      --text: #2f2a24;
+      --muted: #6e655b;
+      --line: #e4ddd2;
+      --accent: #b88a44;
+      --accent-soft: #efe4d3;
+      --good: #23684a;
+      --good-soft: #e7f4ed;
+      --warn: #9d5f12;
+      --warn-soft: #fbefdf;
+      --bad: #8a2f2f;
+      --bad-soft: #f8e8e8;
+      --shadow: 0 12px 30px rgba(55, 41, 24, 0.08);
+      --radius: 22px;
+    }
+
+    * { box-sizing: border-box; }
+
+    body{
+      margin: 0;
+      font-family: Inter, Arial, sans-serif;
+      background: linear-gradient(180deg, #fbf9f5 0%, var(--bg) 100%);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    .wrap{
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 32px 20px 48px;
+    }
+
+    .hero{
+      margin-bottom: 20px;
+    }
+
+    .eyebrow{
+      display: inline-block;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: var(--accent-soft);
+      color: #7b5a28;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: .02em;
+      margin-bottom: 14px;
+    }
+
+    h1{
+      margin: 0 0 12px;
+      font-size: clamp(30px, 4vw, 42px);
+      line-height: 1.12;
+    }
+
+    .lead{
+      margin: 0;
+      max-width: 760px;
+      color: var(--muted);
+      font-size: 17px;
+      line-height: 1.55;
+    }
+
+    .card{
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 28px;
+    }
+
+    .topline{
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 18px;
+      flex-wrap: wrap;
+    }
+
+    .step{
+      font-size: 14px;
+      color: var(--muted);
+      font-weight: 600;
+    }
+
+    .score{
+      font-size: 14px;
+      color: var(--muted);
+      font-weight: 600;
+    }
+
+    .progress{
+      width: 100%;
+      height: 10px;
+      border-radius: 999px;
+      background: #eee7dc;
+      overflow: hidden;
+      margin-bottom: 26px;
+    }
+
+    .progress-bar{
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #c89b57 0%, #a8752d 100%);
+      transition: width .35s ease;
+      border-radius: 999px;
+    }
+
+    .scenario-label{
+      display: inline-block;
+      margin-bottom: 12px;
+      color: #7b5a28;
+      background: #f7efe2;
+      border-radius: 999px;
+      padding: 8px 12px;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .scenario{
+      font-size: 22px;
+      line-height: 1.45;
+      margin: 0 0 24px;
+      font-weight: 600;
+    }
+
+    .options{
+      display: grid;
+      gap: 14px;
+      margin-bottom: 22px;
+    }
+
+    .option{
+      width: 100%;
+      text-align: left;
+      border: 1px solid var(--line);
+      background: #fff;
+      border-radius: 18px;
+      padding: 16px 18px;
+      cursor: pointer;
+      transition: transform .16s ease, border-color .16s ease, box-shadow .16s ease, background .16s ease;
+      color: var(--text);
+    }
+
+    .option:hover:not(:disabled){
+      transform: translateY(-1px);
+      border-color: #cfb28a;
+      box-shadow: 0 8px 20px rgba(70, 50, 25, 0.08);
+    }
+
+    .option:disabled{
+      cursor: default;
+      opacity: 1;
+    }
+
+    .option-letter{
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 28px;
+      height: 28px;
+      border-radius: 999px;
+      background: #f4efe7;
+      font-weight: 800;
+      margin-right: 10px;
+      color: #664c24;
+      flex-shrink: 0;
+    }
+
+    .option-row{
+      display: flex;
+      align-items: flex-start;
+    }
+
+    .option.correct{
+      border-color: #92c4ab;
+      background: var(--good-soft);
+    }
+
+    .option.wrong{
+      border-color: #d8a6a6;
+      background: var(--bad-soft);
+    }
+
+    .feedback{
+      display: none;
+      border-radius: 18px;
+      padding: 18px 18px 16px;
+      margin-top: 6px;
+      line-height: 1.6;
+      font-size: 16px;
+    }
+
+    .feedback.show{
+      display: block;
+      animation: fade .2s ease;
+    }
+
+    .feedback.good{
+      background: var(--good-soft);
+      border: 1px solid #b7dbc9;
+    }
+
+    .feedback.warn{
+      background: var(--warn-soft);
+      border: 1px solid #e8c68f;
+    }
+
+    .feedback.bad{
+      background: var(--bad-soft);
+      border: 1px solid #dfb1b1;
+    }
+
+    .feedback-title{
+      font-weight: 800;
+      margin-bottom: 8px;
+    }
+
+    .actions{
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-top: 22px;
+      flex-wrap: wrap;
+    }
+
+    .hint{
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.5;
+      flex: 1 1 280px;
+    }
+
+    .btn{
+      appearance: none;
+      border: 0;
+      border-radius: 16px;
+      padding: 14px 18px;
+      font-weight: 700;
+      font-size: 15px;
+      cursor: pointer;
+      transition: transform .16s ease, box-shadow .16s ease, opacity .16s ease;
+    }
+
+    .btn:disabled{
+      opacity: .5;
+      cursor: default;
+      transform: none;
+      box-shadow: none;
+    }
+
+    .btn-primary{
+      background: linear-gradient(90deg, #c5944d 0%, #ab7930 100%);
+      color: #fff;
+      box-shadow: 0 10px 22px rgba(171, 121, 48, 0.22);
+    }
+
+    .btn-secondary{
+      background: #f2ece3;
+      color: var(--text);
+      border: 1px solid var(--line);
+    }
+
+    .btn:hover:not(:disabled){
+      transform: translateY(-1px);
+    }
+
+    .legend{
+      margin-top: 20px;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+    }
+
+    .legend-item{
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 14px 16px;
+      background: #fffdf9;
+    }
+
+    .legend-item strong{
+      display: block;
+      margin-bottom: 6px;
+      font-size: 15px;
+    }
+
+    .legend-item p{
+      margin: 0;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    .results{
+      display: none;
+      animation: fade .25s ease;
+    }
+
+    .results.show{
+      display: block;
+    }
+
+    .results-grid{
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+      margin: 18px 0 22px;
+    }
+
+    .metric{
+      border-radius: 18px;
+      padding: 18px;
+      border: 1px solid var(--line);
+      background: #fff;
+    }
+
+    .metric-value{
+      font-size: 30px;
+      font-weight: 800;
+      margin-bottom: 6px;
+    }
+
+    .metric-label{
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+
+    .metric-note{
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    .summary{
+      border-radius: 20px;
+      padding: 20px;
+      background: #fff9f0;
+      border: 1px solid #ecd9b8;
+      line-height: 1.65;
+    }
+
+    .summary h2{
+      margin: 0 0 10px;
+      font-size: 24px;
+    }
+
+    .summary p{
+      margin: 0 0 10px;
+    }
+
+    .summary p:last-child{
+      margin-bottom: 0;
+    }
+
+    .footer-note{
+      margin-top: 16px;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.55;
+    }
+
+    @keyframes fade {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (max-width: 760px){
+      .card { padding: 22px; }
+      .scenario { font-size: 19px; }
+      .legend,
+      .results-grid{
+        grid-template-columns: 1fr;
+      }
+      .actions{
+        align-items: stretch;
+      }
+      .actions .btn{
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <section class="hero">
+      <div class="eyebrow">Интерактив для курса</div>
+      <h1>Что разрушает уважение в топ-команде?</h1>
+      <p class="lead">
+        Прочитайте ситуацию и определите, что происходит в команде:
+        это просто разница стилей, столкновение жесткой установки или уже нарушение уважительного взаимодействия.
+      </p>
+    </section>
+
+    <section class="card" id="quizCard">
+      <div id="quizScreen">
+        <div class="topline">
+          <div class="step" id="stepText">Ситуация 1 из 8</div>
+          <div class="score" id="scoreText">Верно: 0/0</div>
+        </div>
+
+        <div class="progress" aria-hidden="true">
+          <div class="progress-bar" id="progressBar"></div>
+        </div>
+
+        <div class="scenario-label">Выберите один вариант</div>
+        <p class="scenario" id="scenarioText"></p>
+
+        <div class="options" id="optionsContainer"></div>
+
+        <div class="feedback" id="feedbackBox">
+          <div class="feedback-title" id="feedbackTitle"></div>
+          <div id="feedbackText"></div>
+        </div>
+
+        <div class="actions">
+          <div class="hint">
+            Смотрите не только на стиль поведения, но и на последствия для командной среды, договоренностей и качества решений.
+          </div>
+          <button class="btn btn-primary" id="nextBtn" disabled>Следующая ситуация</button>
+        </div>
+
+        <div class="legend">
+          <div class="legend-item">
+            <strong>А. Разница стилей</strong>
+            <p>Люди действуют по-разному, но не разрушают уважение и не создают управленческий риск.</p>
+          </div>
+          <div class="legend-item">
+            <strong>Б. Жесткая установка</strong>
+            <p>Кто-то считает свой стиль единственно правильным и начинает оценивать коллег по совпадению с собой.</p>
+          </div>
+          <div class="legend-item">
+            <strong>В. Нарушение уважения</strong>
+            <p>Поведение уже подрывает безопасность обсуждения, доверие, качество решений или общую рабочую среду.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="results" id="resultsScreen">
+        <div class="summary">
+          <h2>Итог</h2>
+          <p id="finalScore"></p>
+          <p id="finalMessage"></p>
+        </div>
+
+        <div class="results-grid">
+          <div class="metric">
+            <div class="metric-value" id="metricA">0</div>
+            <div class="metric-label">Разница стилей</div>
+            <div class="metric-note">Ситуации, где важно не путать непохожесть с проблемой.</div>
+          </div>
+          <div class="metric">
+            <div class="metric-value" id="metricB">0</div>
+            <div class="metric-label">Жесткая установка</div>
+            <div class="metric-note">Ситуации, где конфликт рождается из внутреннего "правильно только так".</div>
+          </div>
+          <div class="metric">
+            <div class="metric-value" id="metricV">0</div>
+            <div class="metric-label">Нарушение уважения</div>
+            <div class="metric-note">Ситуации, где гендиректору уже нужно управлять качеством взаимодействия топов.</div>
+          </div>
+        </div>
+
+        <div class="actions">
+          <div class="footer-note">
+            Этот результат нужен не для оценки "правильно или неправильно", а для тренировки управленческого взгляда: различать стиль, установку и реальную угрозу уважению в команде.
+          </div>
+          <button class="btn btn-secondary" id="restartBtn">Пройти заново</button>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    const questions = [
+      {
+        text: "Коммерческий директор говорит резко и коротко. Операционный директор считает, что в такой манере невозможно обсуждать стратегические вопросы. При этом решения принимаются вовремя, договоренности выполняются, команда понимает задачи.",
+        options: {
+          "A": "Это просто разница стилей",
+          "B": "Это жесткая установка, которая ведет к конфликту",
+          "V": "Это уже нарушение уважительного взаимодействия"
+        },
+        correct: "B",
+        feedbackType: "warn",
+        feedbackTitle: "Здесь сначала надо увидеть жесткую установку.",
+        feedback: "Сам по себе резкий стиль еще не означает проблему для команды. Если результат есть, договоренности соблюдаются, а раздражение рождается из идеи, что стратегию можно обсуждать только в одной манере, значит, конфликт подпитывает внутренняя норма о том, каким должен быть другой топ."
+      },
+      {
+        text: "На встрече директор по продажам несколько раз обрывает коллегу фразой «Это ерунда, не тратьте время». После этого часть топ-команды перестает поднимать риски и спорные вопросы.",
+        options: {
+          "A": "Это просто разница стилей",
+          "B": "Это жесткая установка, которая ведет к конфликту",
+          "V": "Это уже нарушение уважительного взаимодействия"
+        },
+        correct: "V",
+        feedbackType: "bad",
+        feedbackTitle: "Это уже нарушение уважительного взаимодействия.",
+        feedback: "Здесь проблема не в непохожести и не только во внутренней установке. Такое поведение закрывает обсуждение, снижает безопасность общения и ухудшает качество решений. Для гендиректора это уже вопрос управления командной средой."
+      },
+      {
+        text: "Один топ-менеджер долго собирает позиции и риски перед решением, а другой предпочитает действовать быстро. Каждый считает подход другого непрофессиональным.",
+        options: {
+          "A": "Это просто разница стилей",
+          "B": "Это жесткая установка, которая ведет к конфликту",
+          "V": "Это уже нарушение уважительного взаимодействия"
+        },
+        correct: "B",
+        feedbackType: "warn",
+        feedbackTitle: "Это типичное столкновение жестких установок.",
+        feedback: "Разные управленческие ритмы сами по себе допустимы. Напряжение возникает в тот момент, когда каждый превращает свой способ работы в единственно правильный и начинает мерить им другого."
+      },
+      {
+        text: "Финансовый директор ведет совещания спокойно и сухо. HR-директору не хватает тепла и включенности, но при этом обсуждения остаются рабочими, никто никого не обесценивает, решения фиксируются и исполняются.",
+        options: {
+          "A": "Это просто разница стилей",
+          "B": "Это жесткая установка, которая ведет к конфликту",
+          "V": "Это уже нарушение уважительного взаимодействия"
+        },
+        correct: "A",
+        feedbackType: "good",
+        feedbackTitle: "Это разница стилей.",
+        feedback: "Если уважение сохраняется, рабочая среда не разрушается, а задачи двигаются, гендиректору не нужно выравнивать всех под одну манеру. Здесь важнее удержать понимание, что сильные топы могут быть разными."
+      },
+      {
+        text: "Операционный директор регулярно комментирует идеи коллег в духе «Вы просто не понимаете, как работает реальный бизнес». После его реплик обсуждение становится все более личным.",
+        options: {
+          "A": "Это просто разница стилей",
+          "B": "Это жесткая установка, которая ведет к конфликту",
+          "V": "Это уже нарушение уважительного взаимодействия"
+        },
+        correct: "V",
+        feedbackType: "bad",
+        feedbackTitle: "Это уже подрывает уважение в команде.",
+        feedback: "Даже если за этим стоит жесткая установка, для гендиректора здесь важнее другое: манера обсуждения уже переводит спор в плоскость превосходства и обесценивания. Значит, нужно вмешиваться в способ взаимодействия топов."
+      },
+      {
+        text: "Директор по продукту считает, что хороший топ обязан спорить открыто и жестко. Когда коллега формулирует возражения мягко, он воспринимает это как слабость и перестает серьезно относиться к его мнению.",
+        options: {
+          "A": "Это просто разница стилей",
+          "B": "Это жесткая установка, которая ведет к конфликту",
+          "V": "Это уже нарушение уважительного взаимодействия"
+        },
+        correct: "B",
+        feedbackType: "warn",
+        feedbackTitle: "Здесь конфликт рождается из жесткой установки.",
+        feedback: "Пока человек считает только одну форму поведения признаком силы, он неизбежно начинает недооценивать коллег с другим стилем. Именно такие внутренние нормы разрушают уважение еще до открытого конфликта."
+      },
+      {
+        text: "Два топ-менеджера по-разному общаются с командами: один больше поддерживает, другой чаще требует и контролирует. Внутри топ-команды это обсуждается спокойно, без нападок, и оба держат результат в рамках общих правил.",
+        options: {
+          "A": "Это просто разница стилей",
+          "B": "Это жесткая установка, которая ведет к конфликту",
+          "V": "Это уже нарушение уважительного взаимодействия"
+        },
+        correct: "A",
+        feedbackType: "good",
+        feedbackTitle: "Это различие в стилях, а не проблема само по себе.",
+        feedback: "Гендиректору здесь важно не навязывать один правильный образ управленца, а следить за общими границами: соблюдаются ли правила, не страдает ли команда и ведут ли оба стиля к нужному результату."
+      },
+      {
+        text: "На стратегической сессии один из топов с улыбкой комментирует: «Ну да, у нас тут опять гуманитарный подход», когда выступает коллега. Формально это выглядит как шутка, но после таких реплик отдельные участники перестают активно включаться в дискуссию.",
+        options: {
+          "A": "Это просто разница стилей",
+          "B": "Это жесткая установка, которая ведет к конфликту",
+          "V": "Это уже нарушение уважительного взаимодействия"
+        },
+        correct: "V",
+        feedbackType: "bad",
+        feedbackTitle: "Это уже нарушение уважительного взаимодействия.",
+        feedback: "Даже завуалированное обесценивание меняет атмосферу в комнате. Если люди начинают замолкать, гендиректору важно видеть не форму шутки, а последствия для качества обсуждения и уважения внутри команды."
+      }
+    ];
+
+    let currentIndex = 0;
+    let score = 0;
+    let answered = false;
+    let selectedCounts = { A: 0, B: 0, V: 0 };
+
+    const stepText = document.getElementById('stepText');
+    const scoreText = document.getElementById('scoreText');
+    const scenarioText = document.getElementById('scenarioText');
+    const optionsContainer = document.getElementById('optionsContainer');
+    const feedbackBox = document.getElementById('feedbackBox');
+    const feedbackTitle = document.getElementById('feedbackTitle');
+    const feedbackText = document.getElementById('feedbackText');
+    const nextBtn = document.getElementById('nextBtn');
+    const progressBar = document.getElementById('progressBar');
+
+    const quizScreen = document.getElementById('quizScreen');
+    const resultsScreen = document.getElementById('resultsScreen');
+    const finalScore = document.getElementById('finalScore');
+    const finalMessage = document.getElementById('finalMessage');
+    const restartBtn = document.getElementById('restartBtn');
+    const metricA = document.getElementById('metricA');
+    const metricB = document.getElementById('metricB');
+    const metricV = document.getElementById('metricV');
+
+    function renderQuestion() {
+      const q = questions[currentIndex];
+      answered = false;
+      nextBtn.disabled = true;
+      feedbackBox.className = 'feedback';
+      feedbackTitle.textContent = '';
+      feedbackText.textContent = '';
+      stepText.textContent = `Ситуация ${currentIndex + 1} из ${questions.length}`;
+      scoreText.textContent = `Верно: ${score}/${currentIndex}`;
+      scenarioText.textContent = q.text;
+      progressBar.style.width = `${(currentIndex / questions.length) * 100}%`;
+
+      optionsContainer.innerHTML = '';
+      Object.entries(q.options).forEach(([key, label]) => {
+        const btn = document.createElement('button');
+        btn.className = 'option';
+        btn.type = 'button';
+        btn.dataset.key = key;
+        btn.innerHTML = `
+          <div class="option-row">
+            <span class="option-letter">${key}</span>
+            <span>${label}</span>
+          </div>
+        `;
+        btn.addEventListener('click', () => chooseAnswer(key, btn));
+        optionsContainer.appendChild(btn);
+      });
+    }
+
+    function chooseAnswer(key, clickedBtn) {
+      if (answered) return;
+      answered = true;
+      const q = questions[currentIndex];
+      selectedCounts[key] += 1;
+
+      const allButtons = [...document.querySelectorAll('.option')];
+      allButtons.forEach(btn => {
+        btn.disabled = true;
+        if (btn.dataset.key === q.correct) btn.classList.add('correct');
+      });
+
+      if (key === q.correct) {
+        score += 1;
+        feedbackTitle.textContent = 'Верно.';
+      } else {
+        clickedBtn.classList.add('wrong');
+        feedbackTitle.textContent = 'Не совсем.';
+      }
+
+      feedbackBox.classList.add('show', q.feedbackType);
+      feedbackText.textContent = q.feedback;
+      scoreText.textContent = `Верно: ${score}/${currentIndex + 1}`;
+      nextBtn.disabled = false;
+
+      if (currentIndex === questions.length - 1) {
+        nextBtn.textContent = 'Посмотреть итог';
+      }
+    }
+
+    function getFinalMessage() {
+      const ratio = score / questions.length;
+      if (ratio >= 0.875) {
+        return "Вы хорошо различаете, где в топ-команде просто сталкиваются разные стили, где конфликт подпитывают жесткие установки, а где уже разрушается уважительное взаимодействие. Это сильная основа для управленческой работы гендиректора с командой.";
+      }
+      if (ratio >= 0.625) {
+        return "Вы в целом верно видите логику ситуаций, но в нескольких кейсах могли смешать личную непохожесть с реальной угрозой для командной среды. На практике полезно чаще проверять последствия поведения: люди просто раздражают друг друга или команда уже теряет качество обсуждения и доверие.";
+      }
+      return "Сейчас вам стоит особенно внимательно тренировать различение трех уровней: разница стилей, жесткая установка и реальное нарушение уважения. Без этого гендиректору легко либо вмешиваться слишком рано, либо пропускать ситуации, где взаимодействие топов уже начинает разрушаться.";
+    }
+
+    function showResults() {
+      quizScreen.style.display = 'none';
+      resultsScreen.classList.add('show');
+      progressBar.style.width = '100%';
+
+      finalScore.textContent = `Ваш результат: ${score} из ${questions.length}.`;
+      finalMessage.textContent = getFinalMessage();
+
+      metricA.textContent = selectedCounts.A;
+      metricB.textContent = selectedCounts.B;
+      metricV.textContent = selectedCounts.V;
+    }
+
+    nextBtn.addEventListener('click', () => {
+      if (!answered) return;
+      if (currentIndex < questions.length - 1) {
+        currentIndex += 1;
+        renderQuestion();
+      } else {
+        showResults();
+      }
+    });
+
+    restartBtn.addEventListener('click', () => {
+      currentIndex = 0;
+      score = 0;
+      answered = false;
+      selectedCounts = { A: 0, B: 0, V: 0 };
+      nextBtn.textContent = 'Следующая ситуация';
+      quizScreen.style.display = 'block';
+      resultsScreen.classList.remove('show');
+      renderQuestion();
+    });
+
+    renderQuestion();
+  </script>
+</body>
+</html>
