@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Диагностика командных векторов</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #F7F5F0;
+            font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, sans-serif;
+            padding: 32px 24px;
+            color: #2C3A47;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        .vector-card {
+            background: #FFFFFF;
+            border-radius: 40px;
+            box-shadow: 0 20px 35px -12px rgba(0, 0, 0, 0.05), 0 8px 18px -6px rgba(0, 0, 0, 0.02);
+            padding: 32px 36px;
+            margin-bottom: 32px;
+            transition: all 0.2s;
+        }
+
+        @media (max-width: 650px) {
+            .vector-card {
+                padding: 24px 20px;
+            }
+        }
+
+        h2 {
+            font-size: 1.8rem;
+            font-weight: 550;
+            letter-spacing: -0.01em;
+            margin-bottom: 8px;
+            color: #2C3A47;
+        }
+
+        .subtitle {
+            font-size: 1rem;
+            color: #5F6F7E;
+            border-left: 3px solid #BBD4CE;
+            padding-left: 16px;
+            margin-bottom: 28px;
+        }
+
+        .items-list {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            margin-bottom: 28px;
+        }
+
+        .checklist-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: #FEFCF9;
+            border-radius: 24px;
+            padding: 16px 20px;
+            border: 1px solid #EFEAE2;
+            transition: all 0.2s;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .checklist-item:hover {
+            background: #FCF9F5;
+            border-color: #D9D2C5;
+            transform: translateY(-1px);
+        }
+
+        .item-text {
+            font-size: 1rem;
+            font-weight: 450;
+            line-height: 1.4;
+            flex: 1;
+            min-width: 200px;
+            color: #2C3A47;
+        }
+
+        .radio-group {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .radio-custom {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            user-select: none;
+            font-size: 0.95rem;
+            font-weight: 500;
+            color: #4A5B66;
+        }
+
+        .radio-custom input {
+            position: absolute;
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .radio-mark {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            background: #FFFFFF;
+            border: 2px solid #CBD5E0;
+            border-radius: 50%;
+            transition: all 0.2s;
+            position: relative;
+        }
+
+        .radio-custom input:checked + .radio-mark {
+            border-color: #5FB9B0;
+            background-color: #5FB9B0;
+            box-shadow: inset 0 0 0 4px white;
+        }
+
+        .radio-label {
+            font-weight: 500;
+        }
+
+        @media (max-width: 550px) {
+            .checklist-item {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .radio-group {
+                align-self: flex-end;
+            }
+        }
+
+        .vector-result {
+            background: #F8F6F2;
+            border-radius: 24px;
+            padding: 18px 24px;
+            margin-top: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .warning {
+            background: #FDF7E0;
+            color: #A67C2E;
+            border-left: 3px solid #E0B354;
+            padding: 12px 18px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+        }
+
+        .reset-button {
+            background: transparent;
+            border: 1.5px solid #D9D2C5;
+            padding: 12px 28px;
+            border-radius: 60px;
+            font-size: 1rem;
+            font-weight: 500;
+            color: #2C4A4A;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-block;
+            margin-top: 12px;
+            width: auto;
+        }
+
+        .reset-button:hover {
+            border-color: #5FB9B0;
+            background: #F0F9F7;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 16px;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <!-- Вектор 1: Уважение и доверие -->
+    <div class="vector-card" id="vector1">
+        <h2>Вектор "Уважение и доверие"</h2>
+        <div class="subtitle">Спросите себя:</div>
+        <div class="items-list" id="vector1Items"></div>
+        <div class="vector-result" id="vector1Result">
+            <div class="warning" id="vector1Warning"></div>
+        </div>
+    </div>
+
+    <!-- Вектор 2: Эмпатия и контакт -->
+    <div class="vector-card" id="vector2">
+        <h2>Вектор "Эмпатия и контакт"</h2>
+        <div class="subtitle">Спросите себя:</div>
+        <div class="items-list" id="vector2Items"></div>
+        <div class="vector-result" id="vector2Result">
+            <div class="warning" id="vector2Warning"></div>
+        </div>
+    </div>
+
+    <div class="footer">
+        <button class="reset-button" id="resetAllBtn">⟳ Сбросить все ответы</button>
+    </div>
+</div>
+
+<script>
+    // Данные: вопросы для вектора 1 и вектора 2
+    const vector1Questions = [
+        "Могут ли топ-менеджеры не соглашаться друг с другом без перехода на личности?",
+        "Выносят ли они сложные вопросы на обсуждение вовремя, а не в последний момент?",
+        "Верят ли они, что коллега со своей стороны действительно выполнит договоренность?"
+    ];
+
+    const vector2Questions = [
+        "Умеют ли топ-менеджеры прямо обсуждать, что именно их не устраивает во взаимодействии?",
+        "Учитывают ли они ограничения соседних функций, когда принимают бизнес-решения?",
+        "Обсуждают ли они общий результат или защищают только свой участок?",
+        "Можете ли вы убрать себя из части рабочих споров, или команда сразу разваливается?"
+    ];
+
+    // Состояние: для каждого вопроса храним значение: true = "Да", false = "Нет"
+    let vector1State = new Array(3).fill(null);  // null = не выбрано
+    let vector2State = new Array(4).fill(null);
+
+    // DOM элементы
+    const vector1ItemsDiv = document.getElementById('vector1Items');
+    const vector2ItemsDiv = document.getElementById('vector2Items');
+    const vector1WarningDiv = document.getElementById('vector1Warning');
+    const vector2WarningDiv = document.getElementById('vector2Warning');
+
+    // Сохранение в localStorage
+    function saveToStorage() {
+        const data = {
+            vector1: vector1State,
+            vector2: vector2State
+        };
+        localStorage.setItem('vectorChecklist', JSON.stringify(data));
+    }
+
+    // Загрузка из localStorage
+    function loadFromStorage() {
+        const saved = localStorage.getItem('vectorChecklist');
+        if (saved) {
+            try {
+                const data = JSON.parse(saved);
+                if (data.vector1 && data.vector1.length === 3) vector1State = data.vector1;
+                if (data.vector2 && data.vector2.length === 4) vector2State = data.vector2;
+            } catch(e) {}
+        }
+    }
+
+    // Подсчёт количества ответов "Нет" (false)
+    function countNo(vectorState) {
+        return vectorState.filter(v => v === false).length;
+    }
+
+    // Обновление UI для конкретного вектора
+    function updateVectorUI(vectorId) {
+        const state = vectorId === 1 ? vector1State : vector2State;
+        const total = state.length;
+        const noCount = countNo(state);
+        const isMajorityNo = noCount > total / 2;
+
+        if (vectorId === 1) {
+            if (isMajorityNo) {
+                vector1WarningDiv.innerHTML = '⚠️ Если ответов «Нет» больше — команда уже проседает по первому вектору.';
+                vector1WarningDiv.style.display = 'block';
+            } else {
+                vector1WarningDiv.innerHTML = '';
+                vector1WarningDiv.style.display = 'none';
+            }
+        } else if (vectorId === 2) {
+            if (isMajorityNo) {
+                vector2WarningDiv.innerHTML = '⚠️ Если ответов «Нет» больше — значит есть проблема во втором векторе.';
+                vector2WarningDiv.style.display = 'block';
+            } else {
+                vector2WarningDiv.innerHTML = '';
+                vector2WarningDiv.style.display = 'none';
+            }
+        }
+    }
+
+    // Обновление всех счетчиков
+    function updateAllCounters() {
+        updateVectorUI(1);
+        updateVectorUI(2);
+    }
+
+    // Рендер всех вопросов
+    function renderQuestions() {
+        // Вектор 1
+        vector1ItemsDiv.innerHTML = '';
+        vector1Questions.forEach((q, idx) => {
+            const itemDiv = document.createElement('div');
+            itemDiv.className = 'checklist-item';
+            itemDiv.dataset.vector = '1';
+            itemDiv.dataset.idx = idx;
+            
+            const textSpan = document.createElement('span');
+            textSpan.className = 'item-text';
+            textSpan.textContent = q;
+            
+            const radioGroup = document.createElement('div');
+            radioGroup.className = 'radio-group';
+            
+            // Да
+            const yesLabel = document.createElement('label');
+            yesLabel.className = 'radio-custom';
+            const yesRadio = document.createElement('input');
+            yesRadio.type = 'radio';
+            yesRadio.name = `v1_q${idx}`;
+            yesRadio.value = 'yes';
+            yesRadio.checked = (vector1State[idx] === true);
+            const yesSpan = document.createElement('span');
+            yesSpan.className = 'radio-mark';
+            const yesText = document.createElement('span');
+            yesText.className = 'radio-label';
+            yesText.textContent = 'Да';
+            yesLabel.appendChild(yesRadio);
+            yesLabel.appendChild(yesSpan);
+            yesLabel.appendChild(yesText);
+            
+            // Нет
+            const noLabel = document.createElement('label');
+            noLabel.className = 'radio-custom';
+            const noRadio = document.createElement('input');
+            noRadio.type = 'radio';
+            noRadio.name = `v1_q${idx}`;
+            noRadio.value = 'no';
+            noRadio.checked = (vector1State[idx] === false);
+            const noSpan = document.createElement('span');
+            noSpan.className = 'radio-mark';
+            const noText = document.createElement('span');
+            noText.className = 'radio-label';
+            noText.textContent = 'Нет';
+            noLabel.appendChild(noRadio);
+            noLabel.appendChild(noSpan);
+            noLabel.appendChild(noText);
+            
+            radioGroup.appendChild(yesLabel);
+            radioGroup.appendChild(noLabel);
+            
+            itemDiv.appendChild(textSpan);
+            itemDiv.appendChild(radioGroup);
+            
+            // Обработчики
+            yesRadio.addEventListener('change', (e) => {
+                if (e.target.checked) {
+                    vector1State[idx] = true;
+                    saveToStorage();
+                    updateVectorUI(1);
+                }
+            });
+            noRadio.addEventListener('change', (e) => {
+                if (e.target.checked) {
+                    vector1State[idx] = false;
+                    saveToStorage();
+                    updateVectorUI(1);
+                }
+            });
+            
+            vector1ItemsDiv.appendChild(itemDiv);
+        });
+        
+        // Вектор 2
+        vector2ItemsDiv.innerHTML = '';
+        vector2Questions.forEach((q, idx) => {
+            const itemDiv = document.createElement('div');
+            itemDiv.className = 'checklist-item';
+            itemDiv.dataset.vector = '2';
+            itemDiv.dataset.idx = idx;
+            
+            const textSpan = document.createElement('span');
+            textSpan.className = 'item-text';
+            textSpan.textContent = q;
+            
+            const radioGroup = document.createElement('div');
+            radioGroup.className = 'radio-group';
+            
+            const yesLabel = document.createElement('label');
+            yesLabel.className = 'radio-custom';
+            const yesRadio = document.createElement('input');
+            yesRadio.type = 'radio';
+            yesRadio.name = `v2_q${idx}`;
+            yesRadio.value = 'yes';
+            yesRadio.checked = (vector2State[idx] === true);
+            const yesSpan = document.createElement('span');
+            yesSpan.className = 'radio-mark';
+            const yesText = document.createElement('span');
+            yesText.className = 'radio-label';
+            yesText.textContent = 'Да';
+            yesLabel.appendChild(yesRadio);
+            yesLabel.appendChild(yesSpan);
+            yesLabel.appendChild(yesText);
+            
+            const noLabel = document.createElement('label');
+            noLabel.className = 'radio-custom';
+            const noRadio = document.createElement('input');
+            noRadio.type = 'radio';
+            noRadio.name = `v2_q${idx}`;
+            noRadio.value = 'no';
+            noRadio.checked = (vector2State[idx] === false);
+            const noSpan = document.createElement('span');
+            noSpan.className = 'radio-mark';
+            const noText = document.createElement('span');
+            noText.className = 'radio-label';
+            noText.textContent = 'Нет';
+            noLabel.appendChild(noRadio);
+            noLabel.appendChild(noSpan);
+            noLabel.appendChild(noText);
+            
+            radioGroup.appendChild(yesLabel);
+            radioGroup.appendChild(noLabel);
+            
+            itemDiv.appendChild(textSpan);
+            itemDiv.appendChild(radioGroup);
+            
+            yesRadio.addEventListener('change', (e) => {
+                if (e.target.checked) {
+                    vector2State[idx] = true;
+                    saveToStorage();
+                    updateVectorUI(2);
+                }
+            });
+            noRadio.addEventListener('change', (e) => {
+                if (e.target.checked) {
+                    vector2State[idx] = false;
+                    saveToStorage();
+                    updateVectorUI(2);
+                }
+            });
+            
+            vector2ItemsDiv.appendChild(itemDiv);
+        });
+    }
+    
+    // Сброс всех ответов
+    function resetAll() {
+        vector1State = new Array(3).fill(null);
+        vector2State = new Array(4).fill(null);
+        saveToStorage();
+        renderQuestions(); // перерисовываем, чтобы сбросить radio
+        updateAllCounters();
+    }
+    
+    // Инициализация
+    function init() {
+        loadFromStorage();
+        renderQuestions();
+        updateAllCounters();
+        document.getElementById('resetAllBtn').addEventListener('click', resetAll);
+    }
+    
+    init();
+</script>
+</body>
+</html>
