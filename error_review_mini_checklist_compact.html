@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Чек-лист разбора ошибки</title>
+  <style>
+    :root {
+      --bg: #f7f2ea;
+      --card: #fffaf2;
+      --ink: #202020;
+      --muted: #6d6458;
+      --line: #e4d8c7;
+      --accent: #5f4cf2;
+      --accent-soft: #eeeaff;
+      --good: #1f8a5b;
+      --good-soft: #e8f6ef;
+      --warn: #bd7a12;
+      --warn-soft: #fff1d6;
+      --bad: #b5413a;
+      --bad-soft: #fae7e5;
+      --shadow: 0 18px 42px rgba(45, 35, 20, 0.12);
+      --radius: 22px;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Inter, Arial, sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 10% 0%, rgba(95, 76, 242, .13), transparent 30%),
+        linear-gradient(135deg, #f8f3ea 0%, #eee6d9 100%);
+    }
+
+    .page {
+      max-width: 1080px;
+      margin: 0 auto;
+      padding: 34px 18px 54px;
+    }
+
+    .hero {
+      background: rgba(255, 250, 242, .9);
+      border: 1px solid var(--line);
+      border-radius: 30px;
+      padding: 30px;
+      box-shadow: var(--shadow);
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: var(--accent-soft);
+      color: var(--accent);
+      font-size: 13px;
+      font-weight: 800;
+      margin-bottom: 16px;
+    }
+
+    h1 {
+      margin: 0 0 12px;
+      font-size: clamp(28px, 4vw, 44px);
+      line-height: 1.06;
+      letter-spacing: -0.03em;
+    }
+
+    .lead {
+      max-width: 860px;
+      margin: 0;
+      color: var(--muted);
+      font-size: 17px;
+      line-height: 1.52;
+    }
+
+    .layout {
+      margin-top: 18px;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 320px;
+      gap: 16px;
+      align-items: start;
+    }
+
+    .checklist {
+      display: grid;
+      gap: 7px;
+    }
+
+    .item {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 10px 12px;
+      box-shadow: 0 10px 22px rgba(45, 35, 20, .07);
+    }
+
+    .item-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 14px;
+      margin-bottom: 6px;
+    }
+
+    .criterion {
+      margin: 0;
+      font-size: 16px;
+      letter-spacing: -.02em;
+    }
+
+    .why {
+      margin: 2px 0 0;
+      color: var(--muted);
+      line-height: 1.28;
+      font-size: 12px;
+    }
+
+    .tag {
+      flex: 0 0 auto;
+      border-radius: 999px;
+      background: #f1e6d7;
+      color: #75562a;
+      padding: 4px 7px;
+      font-size: 12px;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .choices {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+    }
+
+    .choice {
+      position: relative;
+      cursor: pointer;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: #fffdf8;
+      padding: 8px 10px;
+      min-height: unset;
+      transition: transform .14s ease, border-color .14s ease, background .14s ease, box-shadow .14s ease;
+    }
+
+    .choice:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 10px 18px rgba(45, 35, 20, .09);
+    }
+
+    .choice input {
+      position: absolute;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .choice-title {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+      font-size: 12px;
+      font-weight: 900;
+      margin-bottom: 3px;
+    }
+
+    .marker {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      border: 2px solid #c7baa7;
+      background: #fff;
+      flex: 0 0 auto;
+    }
+
+    .choice p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.25;
+    }
+
+    .choice.good .choice-title { color: var(--good); }
+    .choice.bad .choice-title { color: var(--bad); }
+
+    .choice.selected.good {
+      border-color: var(--good);
+      background: var(--good-soft);
+    }
+
+    .choice.selected.bad {
+      border-color: var(--bad);
+      background: var(--bad-soft);
+    }
+
+    .choice.selected .marker {
+      border-color: currentColor;
+      background: currentColor;
+      box-shadow: inset 0 0 0 4px #fff;
+    }
+
+    .panel {
+      position: sticky;
+      top: 18px;
+      background: rgba(255, 250, 242, .95);
+      border: 1px solid var(--line);
+      border-radius: 28px;
+      padding: 22px;
+      box-shadow: var(--shadow);
+    }
+
+    .score-label {
+      color: var(--muted);
+      font-size: 14px;
+      margin-bottom: 8px;
+    }
+
+    .score {
+      font-size: 52px;
+      line-height: 1;
+      font-weight: 950;
+      letter-spacing: -.05em;
+    }
+
+    .bar {
+      height: 12px;
+      border-radius: 999px;
+      background: #eee3d5;
+      overflow: hidden;
+      margin: 13px 0 16px;
+    }
+
+    .bar-fill {
+      height: 100%;
+      width: 0%;
+      border-radius: 999px;
+      background: var(--accent);
+      transition: width .22s ease;
+    }
+
+    .result-card {
+      border-radius: 20px;
+      padding: 15px;
+      background: var(--warn-soft);
+      border: 1px solid rgba(189, 122, 18, .25);
+    }
+
+    .result-card.good {
+      background: var(--good-soft);
+      border-color: rgba(31, 138, 91, .24);
+    }
+
+    .result-card.bad {
+      background: var(--bad-soft);
+      border-color: rgba(181, 65, 58, .24);
+    }
+
+    .result-title {
+      margin: 0 0 8px;
+      font-size: 17px;
+      font-weight: 950;
+    }
+
+    .result-text {
+      margin: 0;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.42;
+    }
+
+    .actions {
+      margin-top: 12px;
+      display: grid;
+      gap: 9px;
+    }
+
+    button {
+      border: 0;
+      border-radius: 16px;
+      padding: 12px 14px;
+      font-weight: 900;
+      cursor: pointer;
+      transition: transform .14s ease, opacity .14s ease;
+    }
+
+    button:hover { transform: translateY(-1px); }
+
+    .primary { background: var(--accent); color: white; }
+    .secondary { background: #efe5d7; color: #4f3c25; }
+
+    .note {
+      margin-top: 14px;
+      padding-top: 14px;
+      border-top: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.42;
+    }
+
+    .summary {
+      display: none;
+      margin-top: 18px;
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 28px;
+      padding: 22px;
+      box-shadow: 0 10px 24px rgba(45, 35, 20, .07);
+    }
+
+    .summary.show { display: block; }
+
+    .summary h2 {
+      margin: 0 0 12px;
+      font-size: 24px;
+    }
+
+    .summary-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .summary-box {
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      padding: 15px;
+      background: #fffdf8;
+    }
+
+    .summary-box h3 {
+      margin: 0 0 9px;
+      font-size: 16px;
+    }
+
+    .summary-box ul {
+      margin: 0;
+      padding-left: 18px;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.48;
+    }
+
+    .empty {
+      color: var(--muted);
+      font-size: 14px;
+      margin: 0;
+    }
+
+
+    .checklist .item {
+      padding-block: 9px;
+    }
+
+    .checklist .choice {
+      align-content: start;
+    }
+
+    .checklist .choice-title {
+      min-height: unset;
+    }
+
+    .checklist .choice p {
+      max-width: 100%;
+    }
+
+    @media (max-width: 860px) {
+      .layout { grid-template-columns: 1fr; }
+      .panel { position: static; }
+      .choices, .summary-grid { grid-template-columns: 1fr; }
+      .hero { padding: 24px; }
+    }
+
+    @media print {
+      body { background: #fff; }
+      .hero, .item, .panel, .summary { box-shadow: none; }
+      .layout { grid-template-columns: 1fr; }
+      .panel { position: static; }
+      .actions, .bar { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <section class="hero">
+      <div class="eyebrow">Интерактивный чек-лист</div>
+      <h1>Разбор ошибки с топ-менеджером</h1>
+      <p class="lead">
+        Перед разговором проверьте, сохраняете ли вы управленческую рамку:
+        разбираете факты, ответственность и процесс или уходите в поиск виноватого.
+      </p>
+    </section>
+
+    <div class="layout">
+      <section class="checklist" id="checklist"></section>
+
+      <aside class="panel">
+        <div class="score-label">Готовность к зрелому разбору</div>
+        <div class="score"><span id="score">0</span>/5</div>
+        <div class="bar"><div class="bar-fill" id="barFill"></div></div>
+
+        <div class="result-card bad" id="resultCard">
+          <p class="result-title" id="resultTitle">Оценка еще не начата</p>
+          <p class="result-text" id="resultText">
+            Выберите по одному варианту в каждом пункте. Оценивайте не то, как «правильно», а реально обстоят дела.
+          </p>
+        </div>
+
+        <div class="actions">
+          <button class="primary" onclick="showSummary()">Сформировать вывод</button>
+          <button class="secondary" onclick="resetChecklist()">Сбросить ответы</button>
+          <button class="secondary" onclick="window.print()">Распечатать</button>
+        </div>
+
+        <div class="note">
+          Право на ошибку есть у ответственного человека. Если проблему скрывают, вину перекладывают или сбой повторяется без выводов — это уже не ошибка, а управленческий сигнал.
+        </div>
+      </aside>
+    </div>
+
+    <section class="summary" id="summary">
+      <h2>Вывод перед разговором</h2>
+      <div class="summary-grid">
+        <div class="summary-box">
+          <h3>Рамка зрелого разбора</h3>
+          <ul id="goodList"></ul>
+          <p class="empty" id="goodEmpty">Пока не отмечена.</p>
+        </div>
+        <div class="summary-box">
+          <h3>Риски разговора</h3>
+          <ul id="badList"></ul>
+          <p class="empty" id="badEmpty">Пока не отмечены.</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const data = [
+      {
+        key: "cause",
+        question: "Я хочу найти виноватого или понять причину?",
+        why: "Чтобы не убить инициативу.",
+        good: "Я разбираю, почему возник сбой и как снизить риск повторения.",
+        bad: "Я иду в разговор, чтобы определить, кто виноват."
+      },
+      {
+        key: "facts",
+        question: "Я говорю о фактах или о личности человека?",
+        why: "Чтобы не перевести разбор в нападение.",
+        good: "Я опираюсь на сроки, решения, последствия, цифры и конкретные действия.",
+        bad: "Я начинаю с оценок: «ты невнимательный», «ты опять подвел», «ты не справляешься»."
+      },
+      {
+        key: "responsibility",
+        question: "Человек понимает свою зону ответственности?",
+        why: "Чтобы не размывать ответственность.",
+        good: "Мы фиксируем, где была зона влияния топа и что он должен был удержать.",
+        bad: "Разговор уходит в общие обстоятельства, смежные отделы и внешние причины."
+      },
+      {
+        key: "plan",
+        question: "У нас есть план исправления?",
+        why: "Чтобы ошибка не осталась просто разговором.",
+        good: "После разбора есть конкретные действия, сроки и ответственные.",
+        bad: "Мы эмоционально обсудили ситуацию, но не договорились, что меняем дальше."
+      },
+      {
+        key: "process",
+        question: "Мы меняем процесс или только ругаем людей?",
+        why: "Чтобы сбой не повторился.",
+        good: "Мы смотрим, какой процесс, правило или контрольная точка должны измениться.",
+        bad: "Мы ограничиваемся критикой человека и надеемся, что он «будет внимательнее»."
+      }
+    ];
+
+    const state = {};
+
+    function renderChecklist() {
+      const root = document.getElementById("checklist");
+      root.innerHTML = data.map((item, index) => `
+        <article class="item">
+          <div class="item-head">
+            <div>
+              <h2 class="criterion">${index + 1}. ${item.question}</h2>
+              <p class="why">${item.why}</p>
+            </div>
+            <div class="tag">пункт ${index + 1}/5</div>
+          </div>
+          <div class="choices">
+            <label class="choice good" data-key="${item.key}" data-value="good">
+              <input type="radio" name="${item.key}" value="good">
+              <div class="choice-title"><span class="marker"></span>Зрелый разбор</div>
+              <p>${item.good}</p>
+            </label>
+            <label class="choice bad" data-key="${item.key}" data-value="bad">
+              <input type="radio" name="${item.key}" value="bad">
+              <div class="choice-title"><span class="marker"></span>Риск обвинения</div>
+              <p>${item.bad}</p>
+            </label>
+          </div>
+        </article>
+      `).join("");
+
+      root.querySelectorAll(".choice").forEach(choice => {
+        choice.addEventListener("click", () => {
+          const key = choice.dataset.key;
+          const value = choice.dataset.value;
+          state[key] = value;
+
+          document.querySelectorAll(`.choice[data-key="${key}"]`).forEach(el => el.classList.remove("selected"));
+          choice.classList.add("selected");
+          updateScore();
+        });
+      });
+    }
+
+    function updateScore() {
+      const answers = Object.values(state);
+      const goodCount = answers.filter(v => v === "good").length;
+      const percent = (goodCount / data.length) * 100;
+
+      document.getElementById("score").textContent = goodCount;
+      document.getElementById("barFill").style.width = `${percent}%`;
+
+      const card = document.getElementById("resultCard");
+      const title = document.getElementById("resultTitle");
+      const text = document.getElementById("resultText");
+
+      card.classList.remove("good", "bad");
+
+      if (answers.length < data.length) {
+        title.textContent = `Заполнено ${answers.length} из ${data.length}`;
+        text.textContent = "Продолжайте оценку. Итог появится после выбора по всем пунктам.";
+        if (goodCount >= 3) card.classList.add("good");
+        else card.classList.add("bad");
+        return;
+      }
+
+      if (goodCount === 5) {
+        card.classList.add("good");
+        title.textContent = "Можно проводить зрелый разбор";
+        text.textContent = "Вы удерживаете фокус на фактах, ответственности, плане исправления и изменении процесса. Это сохраняет и доверие, и дисциплину.";
+      } else if (goodCount >= 3) {
+        title.textContent = "Рамка существует, но есть риски";
+        text.textContent = "Перед разговором настройте себя на конструктив. Иначе разбор может частично уйти в обвинения или остаться без системного исправления.";
+      } else {
+        card.classList.add("bad");
+        title.textContent = "Высокий риск обвинительного разговора";
+        text.textContent = "Лучше не начинать разговор в такой рамке. Сначала переформулируйте цель: не наказать человека, а понять причину, закрепить ответственность и изменить процесс.";
+      }
+    }
+
+    function showSummary() {
+      const summary = document.getElementById("summary");
+      const goodList = document.getElementById("goodList");
+      const badList = document.getElementById("badList");
+      const goodEmpty = document.getElementById("goodEmpty");
+      const badEmpty = document.getElementById("badEmpty");
+
+      const goodItems = data.filter(item => state[item.key] === "good");
+      const badItems = data.filter(item => state[item.key] === "bad");
+
+      goodList.innerHTML = goodItems.map(item => `<li><strong>${item.question}</strong><br>${item.good}</li>`).join("");
+      badList.innerHTML = badItems.map(item => `<li><strong>${item.question}</strong><br>${item.bad}</li>`).join("");
+
+      goodEmpty.style.display = goodItems.length ? "none" : "block";
+      badEmpty.style.display = badItems.length ? "none" : "block";
+
+      summary.classList.add("show");
+      summary.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+
+    function resetChecklist() {
+      Object.keys(state).forEach(key => delete state[key]);
+      document.querySelectorAll(".choice").forEach(el => el.classList.remove("selected"));
+      document.querySelectorAll("input[type=radio]").forEach(input => input.checked = false);
+      document.getElementById("summary").classList.remove("show");
+      updateScore();
+    }
+
+    renderChecklist();
+    updateScore();
+  </script>
+</body>
+</html>
