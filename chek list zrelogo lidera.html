@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Чек-лист: зрелое лидерство</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: #F6F4F0;  /* тёплый светлый фон */
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            line-height: 1.45;
+            color: #1f2c3c;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem 1.5rem;
+        }
+
+        /* центральная карточка */
+        .checklist-container {
+            max-width: 920px;
+            width: 100%;
+            background: #ffffff;
+            border-radius: 42px;
+            box-shadow: 0 25px 45px -15px rgba(0, 0, 0, 0.08), 0 8px 18px rgba(0, 0, 0, 0.02);
+            padding: 2.5rem 2rem;
+            transition: box-shadow 0.2s ease;
+        }
+
+        @media (max-width: 640px) {
+            .checklist-container {
+                padding: 1.8rem 1.5rem;
+                border-radius: 32px;
+            }
+        }
+
+        /* заголовок и подзаголовок */
+        h1 {
+            font-size: 1.9rem;
+            font-weight: 550;
+            letter-spacing: -0.02em;
+            color: #1f2c3c;
+            margin-bottom: 1rem;
+            line-height: 1.2;
+        }
+
+        @media (max-width: 600px) {
+            h1 {
+                font-size: 1.65rem;
+            }
+        }
+
+        .intro-text {
+            font-size: 1rem;
+            color: #5c6f7e;
+            margin-bottom: 2.2rem;
+            border-left: 3px solid #C5DFDA;
+            padding-left: 1rem;
+            font-weight: 400;
+        }
+
+        /* прогресс-блок */
+        .progress-section {
+            margin-bottom: 2.5rem;
+        }
+
+        .progress-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            margin-bottom: 0.7rem;
+        }
+
+        .counter {
+            font-size: 1rem;
+            font-weight: 500;
+            background: #F0EFEA;
+            padding: 0.3rem 1rem;
+            border-radius: 60px;
+            color: #2c3e44;
+        }
+
+        .reset-btn {
+            background: transparent;
+            border: 1px solid #D9D4CA;
+            padding: 0.4rem 1.2rem;
+            border-radius: 60px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: #4d6272;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .reset-btn:hover {
+            border-color: #489E9E;
+            background-color: #F4F9F8;
+            color: #2c6b6b;
+        }
+
+        .progress-bar-bg {
+            background-color: #E9E5DE;
+            height: 8px;
+            border-radius: 20px;
+            overflow: hidden;
+            width: 100%;
+        }
+
+        .progress-fill {
+            background-color: #489E9E;  /* мягкий бирюзово-зелёный */
+            width: 0%;
+            height: 100%;
+            border-radius: 20px;
+            transition: width 0.4s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+        }
+
+        /* карточки пунктов */
+        .items-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1.2rem;
+            margin-top: 0.2rem;
+        }
+
+        .checklist-card {
+            background: #ffffff;
+            border-radius: 28px;
+            padding: 1.4rem 1.6rem;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02), 0 5px 14px rgba(0, 0, 0, 0.03);
+            border: 1px solid #f0ede8;
+            transition: all 0.25s ease;
+            cursor: pointer;
+        }
+
+        .checklist-card:hover {
+            background-color: #FEFDFB;
+            box-shadow: 0 12px 24px -12px rgba(0, 0, 0, 0.1);
+            border-color: #e2dbd1;
+        }
+
+        /* чекбокс + контент */
+        .card-content {
+            display: flex;
+            gap: 1rem;
+            align-items: flex-start;
+        }
+
+        /* кастомный чекбокс */
+        .custom-check {
+            flex-shrink: 0;
+            margin-top: 0.2rem;
+        }
+
+        .custom-check input {
+            position: absolute;
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .checkmark {
+            display: inline-block;
+            width: 24px;
+            height: 24px;
+            background-color: #fff;
+            border: 2px solid #CFD8DC;
+            border-radius: 8px;
+            transition: all 0.2s;
+            position: relative;
+            cursor: pointer;
+        }
+
+        .custom-check input:checked + .checkmark {
+            background-color: #489E9E;
+            border-color: #489E9E;
+        }
+
+        .checkmark:after {
+            content: "";
+            position: absolute;
+            display: none;
+            left: 8px;
+            top: 3px;
+            width: 6px;
+            height: 12px;
+            border: solid white;
+            border-width: 0 2px 2px 0;
+            transform: rotate(45deg);
+        }
+
+        .custom-check input:checked + .checkmark:after {
+            display: block;
+        }
+
+        /* текстовый блок */
+        .text-block {
+            flex: 1;
+        }
+
+        .item-title {
+            font-size: 1.18rem;
+            font-weight: 530;
+            color: #1F2C3C;
+            margin-bottom: 0.5rem;
+            transition: color 0.2s, text-decoration 0.2s;
+            letter-spacing: -0.2px;
+        }
+
+        .item-comment {
+            font-size: 0.92rem;
+            color: #5d6f7e;
+            line-height: 1.45;
+            transition: color 0.2s;
+        }
+
+        /* стили отмеченного пункта */
+        .checklist-card.checked {
+            background-color: #F9FCFB;
+            border-left: 4px solid #489E9E;
+            border-radius: 28px;
+        }
+
+        .checklist-card.checked .item-title {
+            text-decoration: line-through;
+            text-decoration-thickness: 1.5px;
+            text-decoration-color: #a1b9b5;
+            color: #8b9aa6;
+        }
+
+        .checklist-card.checked .item-comment {
+            color: #93a3b0;
+        }
+
+        /* анимация при загрузке */
+        .checklist-card {
+            animation: fadeSlideUp 0.25s ease-out;
+        }
+
+        @keyframes fadeSlideUp {
+            from {
+                opacity: 0;
+                transform: translateY(8px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @media (max-width: 550px) {
+            .checklist-card {
+                padding: 1.2rem;
+            }
+            .card-content {
+                gap: 0.75rem;
+            }
+            .item-title {
+                font-size: 1.05rem;
+            }
+            .item-comment {
+                font-size: 0.85rem;
+            }
+            .reset-btn {
+                padding: 0.3rem 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="checklist-container">
+    <h1>Как понять, что вы действительно готовы внедрять зрелое лидерство</h1>
+    <div class="intro-text">
+        Ниже чек-лист, с помощью которого вы можете проверить свою готовность. Отметьте пункты, с которыми согласны.
+    </div>
+
+    <div class="progress-section">
+        <div class="progress-header">
+            <span class="counter" id="progressCounter">Совпадает: 0/4</span>
+            <button class="reset-btn" id="resetButton" aria-label="Сбросить все отметки">Сбросить</button>
+        </div>
+        <div class="progress-bar-bg">
+            <div class="progress-fill" id="progressFill"></div>
+        </div>
+    </div>
+
+    <div class="items-list" id="itemsList">
+        <!-- пункт 1 -->
+        <div class="checklist-card" data-idx="0">
+            <div class="card-content">
+                <div class="custom-check">
+                    <input type="checkbox" id="chk0" aria-label="Готовность передавать не только работу, но и власть">
+                    <span class="checkmark"></span>
+                </div>
+                <div class="text-block">
+                    <div class="item-title">Вы готовы передавать не только работу, но и власть.</div>
+                    <div class="item-comment">Если вы оставляете у себя право окончательного выбора почти по всем значимым вопросам, команда не повзрослеет.</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- пункт 2 -->
+        <div class="checklist-card" data-idx="1">
+            <div class="card-content">
+                <div class="custom-check">
+                    <input type="checkbox" id="chk1" aria-label="Готовность, чтобы топы взаимодействовали не через вас">
+                    <span class="checkmark"></span>
+                </div>
+                <div class="text-block">
+                    <div class="item-title">Вы готовы, чтобы топы взаимодействовали не через вас.</div>
+                    <div class="item-comment">Если между функциями все ключевые стыки проходят только через первое лицо, значит, вы пока не управляете взаимодействием. Вы сами и есть это взаимодействие.</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- пункт 3 -->
+        <div class="checklist-card" data-idx="2">
+            <div class="card-content">
+                <div class="custom-check">
+                    <input type="checkbox" id="chk2" aria-label="Вы не боитесь сильных менеджеров рядом">
+                    <span class="checkmark"></span>
+                </div>
+                <div class="text-block">
+                    <div class="item-title">Вы не боитесь сильных менеджеров рядом.</div>
+                    <div class="item-comment">Вам не нужно, чтобы все дороги вели только к вам. Вы не путаете собственную незаменимость со зрелым лидерством.</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- пункт 4 -->
+        <div class="checklist-card" data-idx="3">
+            <div class="card-content">
+                <div class="custom-check">
+                    <input type="checkbox" id="chk3" aria-label="Вы строите воспроизводство лидерства">
+                    <span class="checkmark"></span>
+                </div>
+                <div class="text-block">
+                    <div class="item-title">Вы строите воспроизводство лидерства.</div>
+                    <div class="item-comment">У зрелого руководителя фокус не только на текущем результате, но и на том, кто еще вырастет внутри системы. Если после нескольких лет работы с вами в компании нет новых сильных лидеров — это повод задуматься.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    (function() {
+        // Данные
+        const TOTAL = 4;
+        const checkboxes = [];
+        const cards = document.querySelectorAll('.checklist-card');
+        const progressCounterSpan = document.getElementById('progressCounter');
+        const progressFillDiv = document.getElementById('progressFill');
+        const resetBtn = document.getElementById('resetButton');
+
+        // получаем чекбоксы
+        for (let i = 0; i < TOTAL; i++) {
+            const cb = document.getElementById(`chk${i}`);
+            if (cb) checkboxes.push(cb);
+        }
+
+        // Функция обновления прогресса, классов и localStorage
+        function updateProgressAndUI() {
+            let checkedCount = 0;
+            checkboxes.forEach(cb => {
+                if (cb.checked) checkedCount++;
+            });
+
+            const percent = (checkedCount / TOTAL) * 100;
+            progressCounterSpan.textContent = `Совпадает: ${checkedCount}/${TOTAL}`;
+            progressFillDiv.style.width = `${percent}%`;
+
+            // Обновляем классы у карточек (checked визуал)
+            cards.forEach((card, idx) => {
+                if (checkboxes[idx] && checkboxes[idx].checked) {
+                    card.classList.add('checked');
+                } else {
+                    card.classList.remove('checked');
+                }
+            });
+
+            // Сохраняем в localStorage
+            const state = checkboxes.map(cb => cb.checked);
+            localStorage.setItem('matureLeadershipChecklist', JSON.stringify(state));
+        }
+
+        // Загрузка из localStorage
+        function loadFromStorage() {
+            const saved = localStorage.getItem('matureLeadershipChecklist');
+            if (saved) {
+                try {
+                    const stateArray = JSON.parse(saved);
+                    if (Array.isArray(stateArray) && stateArray.length === TOTAL) {
+                        checkboxes.forEach((cb, idx) => {
+                            cb.checked = !!stateArray[idx];
+                        });
+                    }
+                } catch(e) { /* не критично */ }
+            }
+            updateProgressAndUI();
+        }
+
+        // Обработчик изменения чекбокса
+        function bindCheckboxEvents() {
+            checkboxes.forEach(cb => {
+                cb.addEventListener('change', () => {
+                    updateProgressAndUI();
+                });
+            });
+        }
+
+        // Клик по карточке (чтобы удобно отмечать)
+        function attachCardClick() {
+            cards.forEach((card, idx) => {
+                card.addEventListener('click', (e) => {
+                    // Если клик был по самому чекбоксу или его метке (custom-check), не дублируем
+                    const target = e.target;
+                    const isCheckboxArea = target.closest('.custom-check') || target.tagName === 'INPUT' || target.classList.contains('checkmark');
+                    if (!isCheckboxArea) {
+                        // Переключаем чекбокс
+                        const cb = checkboxes[idx];
+                        if (cb) {
+                            cb.checked = !cb.checked;
+                            updateProgressAndUI();
+                        }
+                    }
+                });
+            });
+        }
+
+        // Сброс всех отметок
+        function resetAll() {
+            checkboxes.forEach(cb => {
+                cb.checked = false;
+            });
+            updateProgressAndUI();
+        }
+
+        // Инициализация
+        function init() {
+            loadFromStorage();
+            bindCheckboxEvents();
+            attachCardClick();
+            resetBtn.addEventListener('click', resetAll);
+        }
+
+        init();
+    })();
+</script>
+</body>
+</html>
