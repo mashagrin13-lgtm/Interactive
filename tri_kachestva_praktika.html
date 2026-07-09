@@ -1,0 +1,823 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Упражнение «Три качества, которые бесят»</title>
+  <style>
+    :root{
+      --bg: #f7f4ee;
+      --card: #ffffff;
+      --text: #2f2a24;
+      --muted: #6c645c;
+      --line: #e6ddd0;
+      --accent: #b88a44;
+      --accent-dark: #9e722f;
+      --accent-soft: #f4eadb;
+      --success-soft: #e9f4ec;
+      --shadow: 0 14px 36px rgba(70, 50, 25, 0.08);
+      --radius: 24px;
+    }
+
+    * { box-sizing: border-box; }
+
+    body{
+      margin:0;
+      font-family: Inter, Arial, sans-serif;
+      color: var(--text);
+      background: linear-gradient(180deg, #fcfaf7 0%, var(--bg) 100%);
+      min-height: 100vh;
+    }
+
+    .wrap{
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 28px 20px 56px;
+    }
+
+    .hero{
+      margin-bottom: 20px;
+    }
+
+    .eyebrow{
+      display:inline-block;
+      margin-bottom: 14px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: var(--accent-soft);
+      color: #7d5a25;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: .02em;
+    }
+
+    h1{
+      margin:0 0 12px;
+      font-size: clamp(30px, 4vw, 42px);
+      line-height: 1.1;
+    }
+
+    .lead{
+      margin:0;
+      color: var(--muted);
+      font-size: 17px;
+      line-height: 1.55;
+      max-width: 820px;
+    }
+
+    .card{
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 28px;
+    }
+
+    .topline{
+      display:flex;
+      align-items:center;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+      margin-bottom: 16px;
+    }
+
+    .step{
+      font-size: 14px;
+      color: var(--muted);
+      font-weight: 700;
+    }
+
+    .progress-wrap{
+      width: 100%;
+      height: 10px;
+      background: #eee7dd;
+      border-radius: 999px;
+      overflow:hidden;
+      margin-bottom: 28px;
+    }
+
+    .progress{
+      width: 0%;
+      height: 100%;
+      background: linear-gradient(90deg, #c89b57 0%, #ab7930 100%);
+      transition: width .3s ease;
+    }
+
+    .screen{
+      display:none;
+      animation: fade .2s ease;
+    }
+
+    .screen.active{
+      display:block;
+    }
+
+    .section-title{
+      margin: 0 0 10px;
+      font-size: clamp(24px, 3vw, 30px);
+      line-height: 1.2;
+    }
+
+    .section-text{
+      margin: 0 0 22px;
+      color: var(--muted);
+      font-size: 16px;
+      line-height: 1.6;
+      max-width: 820px;
+    }
+
+    .chips{
+      display:grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+
+    .chip{
+      position: relative;
+      border: 1px solid var(--line);
+      background: #fffdf9;
+      border-radius: 18px;
+      padding: 16px 14px;
+      cursor: pointer;
+      transition: transform .16s ease, border-color .16s ease, box-shadow .16s ease, background .16s ease;
+      min-height: 74px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      text-align:center;
+      font-weight: 700;
+      line-height: 1.35;
+      color: var(--text);
+    }
+
+    .chip:hover{
+      transform: translateY(-1px);
+      border-color: #d4b48a;
+      box-shadow: 0 8px 20px rgba(70, 50, 25, 0.06);
+    }
+
+    .chip.selected{
+      border-color: #c79a56;
+      background: var(--accent-soft);
+      color: #6f4f1e;
+    }
+
+    .chip-radio{
+      background: #fff;
+    }
+
+    .chip-radio.active{
+      border-color: #96c5af;
+      background: var(--success-soft);
+      color: #234f3b;
+    }
+
+    .counter{
+      margin-bottom: 24px;
+      font-size: 15px;
+      color: var(--muted);
+      font-weight: 700;
+    }
+
+    .question-block{
+      margin-bottom: 26px;
+      padding: 22px;
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      background: #fffdf9;
+    }
+
+    .question-block h3{
+      margin: 0 0 8px;
+      font-size: 22px;
+      line-height: 1.3;
+    }
+
+    .question-hint{
+      margin: 0 0 18px;
+      color: var(--muted);
+      line-height: 1.55;
+      font-size: 15px;
+    }
+
+    .check-grid{
+      display:grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    label.option{
+      display:flex;
+      gap: 12px;
+      align-items:flex-start;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 14px 14px;
+      background: #fff;
+      cursor:pointer;
+      transition: border-color .16s ease, background .16s ease, transform .16s ease;
+      min-height: 72px;
+    }
+
+    label.option:hover{
+      transform: translateY(-1px);
+      border-color: #d4b48a;
+    }
+
+    label.option.checked{
+      border-color: #c79a56;
+      background: #fbf3e6;
+    }
+
+    input[type="checkbox"]{
+      margin-top: 2px;
+      accent-color: var(--accent-dark);
+      width: 18px;
+      height: 18px;
+      flex-shrink: 0;
+    }
+
+    .textarea-wrap{
+      margin-top: 18px;
+    }
+
+    textarea{
+      width: 100%;
+      min-height: 110px;
+      padding: 14px 16px;
+      border-radius: 18px;
+      border: 1px solid var(--line);
+      resize: vertical;
+      font: inherit;
+      color: var(--text);
+      background: #fff;
+    }
+
+    textarea:focus{
+      outline: none;
+      border-color: #c79a56;
+      box-shadow: 0 0 0 4px rgba(199,154,86,0.12);
+    }
+
+    .actions{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 8px;
+    }
+
+    .small-note{
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.5;
+      flex: 1 1 260px;
+    }
+
+    .btns{
+      display:flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .btn{
+      appearance:none;
+      border: 0;
+      border-radius: 16px;
+      padding: 14px 18px;
+      font-weight: 700;
+      font-size: 15px;
+      cursor:pointer;
+      transition: transform .16s ease, box-shadow .16s ease, opacity .16s ease;
+    }
+
+    .btn:hover:not(:disabled){
+      transform: translateY(-1px);
+    }
+
+    .btn:disabled{
+      opacity:.5;
+      cursor: default;
+      transform:none;
+      box-shadow:none;
+    }
+
+    .btn-primary{
+      color:#fff;
+      background: linear-gradient(90deg, #c5944d 0%, #ab7930 100%);
+      box-shadow: 0 10px 22px rgba(171,121,48,0.22);
+    }
+
+    .btn-secondary{
+      background:#f2ece3;
+      color:var(--text);
+      border:1px solid var(--line);
+    }
+
+    .summary{
+      border:1px solid #ead7b3;
+      background:#fff9ee;
+      border-radius:22px;
+      padding: 22px;
+      margin-bottom: 20px;
+    }
+
+    .summary h2{
+      margin:0 0 12px;
+      font-size: 28px;
+      line-height:1.2;
+    }
+
+    .summary p{
+      margin: 0 0 10px;
+      line-height:1.65;
+    }
+
+    .summary p:last-child{
+      margin-bottom:0;
+    }
+
+    .result-grid{
+      display:grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+      margin-bottom: 18px;
+    }
+
+    .result-card{
+      border:1px solid var(--line);
+      border-radius:20px;
+      padding: 18px;
+      background:#fff;
+    }
+
+    .result-card h3{
+      margin:0 0 10px;
+      font-size: 18px;
+      line-height:1.35;
+    }
+
+    .result-card p{
+      margin:0;
+      color:var(--muted);
+      line-height:1.6;
+      font-size:15px;
+      white-space: pre-wrap;
+    }
+
+    .reflection{
+      border:1px solid #c8dfd0;
+      background: #f2faf5;
+      border-radius: 20px;
+      padding: 18px;
+      line-height: 1.65;
+    }
+
+    .reflection strong{
+      display:block;
+      margin-bottom: 8px;
+      font-size: 17px;
+    }
+
+    .footer-note{
+      margin-top: 14px;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.55;
+    }
+
+    @keyframes fade{
+      from { opacity:0; transform: translateY(4px); }
+      to { opacity:1; transform: translateY(0); }
+    }
+
+    @media (max-width: 860px){
+      .chips,
+      .check-grid,
+      .result-grid{
+        grid-template-columns: 1fr;
+      }
+      .card{
+        padding: 22px;
+      }
+      .actions{
+        align-items: stretch;
+      }
+      .btns{
+        width:100%;
+      }
+      .btn{
+        flex: 1 1 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <section class="hero">
+      <div class="eyebrow">Урок-практика</div>
+      <h1>Упражнение «Три качества, которые бесят»</h1>
+      <p class="lead">
+        Это упражнение помогает увидеть, где вы действительно сталкиваетесь с рабочей проблемой,
+        а где слишком быстро ставите ярлык. Сначала выберите три качества, которые сильнее всего раздражают вас в других людях.
+      </p>
+    </section>
+
+    <section class="card">
+      <div class="topline">
+        <div class="step" id="stepText">Шаг 1 из 3</div>
+      </div>
+      <div class="progress-wrap" aria-hidden="true">
+        <div class="progress" id="progressBar"></div>
+      </div>
+
+      <div class="screen active" id="screen1">
+        <h2 class="section-title">Выберите три качества</h2>
+        <p class="section-text">
+          Отметьте три качества, которые чаще всего вызывают у вас раздражение в коллегах, подчиненных или других руководителях.
+          Не ищите правильные ответы. Выбирайте то, что действительно задевает вас сильнее всего.
+        </p>
+
+        <div class="chips" id="qualitiesGrid"></div>
+        <div class="counter" id="qualityCounter">Выбрано: 0 из 3</div>
+
+        <div class="actions">
+          <div class="small-note">
+            Хорошо, если вы выбираете не абстрактно, а вспоминаете реальные рабочие ситуации.
+          </div>
+          <div class="btns">
+            <button class="btn btn-primary" id="toStep2" disabled>Перейти к разбору</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="screen" id="screen2">
+        <h2 class="section-title">Разберите одно качество глубже</h2>
+        <p class="section-text">
+          Теперь выберите одно качество из трех и проведите его через два вопроса:
+          где оно недопустимо и где может оказаться уместным или даже полезным.
+        </p>
+
+        <div class="question-block">
+          <h3>1. С каким качеством вы хотите поработать?</h3>
+          <p class="question-hint">Выберите одно качество, которое цепляет вас сильнее всего.</p>
+          <div class="chips" id="focusQualityGrid"></div>
+        </div>
+
+        <div class="question-block">
+          <h3>2. Где это качество действительно недопустимо?</h3>
+          <p class="question-hint">
+            Выберите ситуации, в которых это качество реально бьет по результату, людям или договоренностям.
+          </p>
+          <div class="check-grid" id="inadmissibleGrid"></div>
+        </div>
+
+        <div class="question-block">
+          <h3>3. Где это качество может оказаться уместным или полезным?</h3>
+          <p class="question-hint">
+            Здесь важно не оправдать плохое поведение, а увидеть контекст. Иногда качество в своей мягкой форме
+            дает гибкость или помогает не уходить в крайность.
+          </p>
+          <div class="check-grid" id="usefulGrid"></div>
+        </div>
+
+        <div class="question-block">
+          <h3>4. Короткая фиксация</h3>
+          <p class="question-hint">
+            Ответьте одной-двумя фразами: что именно в этом качестве раздражает вас сильнее всего?
+          </p>
+          <div class="textarea-wrap">
+            <textarea id="reflectionInput" placeholder="Например: меня раздражает не только само поведение, а то, что человек не совпадает с моей нормой ответственности и темпа."></textarea>
+          </div>
+        </div>
+
+        <div class="actions">
+          <div class="small-note">
+            Смысл этого шага — увидеть, что даже сильное раздражение не всегда означает, что перед вами однозначно плохое качество.
+          </div>
+          <div class="btns">
+            <button class="btn btn-secondary" id="backTo1">Назад</button>
+            <button class="btn btn-primary" id="toStep3" disabled>Посмотреть вывод</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="screen" id="screen3">
+        <div class="summary">
+          <h2>Ваш вывод по упражнению</h2>
+          <p id="summaryText"></p>
+          <p>
+            Это не означает, что качество надо поощрять. Это означает, что теперь у вас есть более точная рамка:
+            где поведение действительно недопустимо, а где стоит сначала разобраться в контексте.
+          </p>
+        </div>
+
+        <div class="result-grid">
+          <div class="result-card">
+            <h3>Где у вас проходит граница недопустимого</h3>
+            <p id="resultBad"></p>
+          </div>
+          <div class="result-card">
+            <h3>Где вы можете реагировать слишком быстро</h3>
+            <p id="resultUseful"></p>
+          </div>
+          <div class="result-card">
+            <h3>Что стоит проверить в своем управлении</h3>
+            <p id="resultAction"></p>
+          </div>
+        </div>
+
+        <div class="reflection">
+          <strong>Вопрос после упражнения</strong>
+          <div id="reflectionOutput"></div>
+        </div>
+
+        <div class="actions" style="margin-top:20px;">
+          <div class="small-note">
+            Сохранение работает автоматически в браузере. Вы можете закрыть страницу и вернуться позже.
+          </div>
+          <div class="btns">
+            <button class="btn btn-secondary" id="backTo2">Назад</button>
+            <button class="btn btn-primary" id="restartBtn">Пройти заново</button>
+          </div>
+        </div>
+
+        <div class="footer-note">
+          Следующий шаг после упражнения — взять один повторяющийся конфликт в вашей топ-команде и проверить:
+          это действительно проблема результата или столкновение жестких представлений о том, каким должен быть другой человек.
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    const qualityOptions = [
+      "Безответственность",
+      "Неуважительность",
+      "Медлительность",
+      "Неинициативность",
+      "Неправдивость",
+      "Жесткость",
+      "Пассивность",
+      "Излишний контроль",
+      "Резкость",
+      "Хаотичность",
+      "Избегание решений",
+      "Самоуверенность"
+    ];
+
+    const inadmissibleOptions = [
+      "Стратегически важная задача",
+      "Риск для людей или безопасности",
+      "Критичный срок",
+      "Деньги компании",
+      "Репутационный риск",
+      "Нарушение договоренности",
+      "Управление кризисом",
+      "Задача без права на ошибку"
+    ];
+
+    const usefulOptions = [
+      "Нужно перестать тащить все на себе",
+      "Нужно передать ответственность вниз",
+      "Задача уже вне зоны влияния",
+      "Нужно не контролировать каждую мелочь",
+      "Нужно дать ситуации развернуться",
+      "Нужно не принимать решение слишком быстро",
+      "Нужно снизить избыточное давление",
+      "Нужно не делать за других их работу"
+    ];
+
+    const state = {
+      selectedQualities: [],
+      focusQuality: "",
+      inadmissible: [],
+      useful: [],
+      reflection: ""
+    };
+
+    const storageKey = "three_qualities_practice_v1";
+
+    const stepText = document.getElementById("stepText");
+    const progressBar = document.getElementById("progressBar");
+
+    const screens = {
+      1: document.getElementById("screen1"),
+      2: document.getElementById("screen2"),
+      3: document.getElementById("screen3")
+    };
+
+    const qualitiesGrid = document.getElementById("qualitiesGrid");
+    const focusQualityGrid = document.getElementById("focusQualityGrid");
+    const inadmissibleGrid = document.getElementById("inadmissibleGrid");
+    const usefulGrid = document.getElementById("usefulGrid");
+
+    const qualityCounter = document.getElementById("qualityCounter");
+    const toStep2 = document.getElementById("toStep2");
+    const toStep3 = document.getElementById("toStep3");
+    const backTo1 = document.getElementById("backTo1");
+    const backTo2 = document.getElementById("backTo2");
+    const restartBtn = document.getElementById("restartBtn");
+    const reflectionInput = document.getElementById("reflectionInput");
+
+    const summaryText = document.getElementById("summaryText");
+    const resultBad = document.getElementById("resultBad");
+    const resultUseful = document.getElementById("resultUseful");
+    const resultAction = document.getElementById("resultAction");
+    const reflectionOutput = document.getElementById("reflectionOutput");
+
+    function saveState(){
+      localStorage.setItem(storageKey, JSON.stringify(state));
+    }
+
+    function loadState(){
+      try{
+        const saved = JSON.parse(localStorage.getItem(storageKey));
+        if(saved){
+          state.selectedQualities = Array.isArray(saved.selectedQualities) ? saved.selectedQualities : [];
+          state.focusQuality = saved.focusQuality || "";
+          state.inadmissible = Array.isArray(saved.inadmissible) ? saved.inadmissible : [];
+          state.useful = Array.isArray(saved.useful) ? saved.useful : [];
+          state.reflection = saved.reflection || "";
+        }
+      } catch(e){}
+    }
+
+    function renderQualitySelection(){
+      qualitiesGrid.innerHTML = "";
+      qualityOptions.forEach(item => {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "chip" + (state.selectedQualities.includes(item) ? " selected" : "");
+        btn.textContent = item;
+        btn.addEventListener("click", () => {
+          if(state.selectedQualities.includes(item)){
+            state.selectedQualities = state.selectedQualities.filter(q => q !== item);
+            if(state.focusQuality === item){
+              state.focusQuality = "";
+            }
+          } else {
+            if(state.selectedQualities.length >= 3) return;
+            state.selectedQualities.push(item);
+          }
+          saveState();
+          renderQualitySelection();
+          renderFocusQualitySelection();
+          updateButtons();
+        });
+        qualitiesGrid.appendChild(btn);
+      });
+
+      qualityCounter.textContent = `Выбрано: ${state.selectedQualities.length} из 3`;
+    }
+
+    function renderFocusQualitySelection(){
+      focusQualityGrid.innerHTML = "";
+      state.selectedQualities.forEach(item => {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "chip chip-radio" + (state.focusQuality === item ? " active" : "");
+        btn.textContent = item;
+        btn.addEventListener("click", () => {
+          state.focusQuality = item;
+          saveState();
+          renderFocusQualitySelection();
+          updateButtons();
+        });
+        focusQualityGrid.appendChild(btn);
+      });
+    }
+
+    function createCheckboxGrid(container, options, stateKey){
+      container.innerHTML = "";
+      options.forEach(item => {
+        const label = document.createElement("label");
+        label.className = "option" + (state[stateKey].includes(item) ? " checked" : "");
+
+        const input = document.createElement("input");
+        input.type = "checkbox";
+        input.checked = state[stateKey].includes(item);
+        input.addEventListener("change", () => {
+          if(input.checked){
+            if(!state[stateKey].includes(item)) state[stateKey].push(item);
+          } else {
+            state[stateKey] = state[stateKey].filter(v => v !== item);
+          }
+          saveState();
+          createCheckboxGrid(container, options, stateKey);
+          updateButtons();
+        });
+
+        const span = document.createElement("span");
+        span.textContent = item;
+
+        label.appendChild(input);
+        label.appendChild(span);
+        container.appendChild(label);
+      });
+    }
+
+    function updateButtons(){
+      toStep2.disabled = state.selectedQualities.length !== 3;
+      const reflectionReady = reflectionInput.value.trim().length > 0;
+      toStep3.disabled = !state.focusQuality || state.inadmissible.length === 0 || state.useful.length === 0 || !reflectionReady;
+    }
+
+    function showScreen(n){
+      Object.values(screens).forEach(s => s.classList.remove("active"));
+      screens[n].classList.add("active");
+      stepText.textContent = `Шаг ${n} из 3`;
+      progressBar.style.width = `${(n / 3) * 100}%`;
+      if(n === 3){
+        buildResults();
+      }
+    }
+
+    function formatList(arr){
+      if(!arr || arr.length === 0) return "Пока вы ничего не выбрали.";
+      return arr.map(item => "• " + item).join("\n");
+    }
+
+    function inferAction(){
+      const q = (state.focusQuality || "").toLowerCase();
+      if(q.includes("безответствен")) {
+        return "Проверьте, не забираете ли вы слишком много ответственности на себя и не лишаете ли команду пространства для решений.";
+      }
+      if(q.includes("медл")) {
+        return "Проверьте, не требуете ли вы от всех одного темпа и не путаете ли скорость с качеством решения.";
+      }
+      if(q.includes("неинициатив")) {
+        return "Проверьте, достаточно ли у людей полномочий и права на ошибку, чтобы действительно проявлять инициативу.";
+      }
+      if(q.includes("неуваж")) {
+        return "Проверьте, где проходит четкая граница между допустимой разницей стилей и реальным нарушением уважения в команде.";
+      }
+      if(q.includes("неправдив")) {
+        return "Проверьте, не создаете ли вы среду, в которой людям безопаснее скрывать проблемы, чем говорить о них прямо.";
+      }
+      if(q.includes("жестк") || q.includes("резк")) {
+        return "Проверьте, не оцениваете ли вы слишком быстро форму подачи вместо того, чтобы сначала смотреть на последствия для дела и людей.";
+      }
+      if(q.includes("контрол")) {
+        return "Проверьте, не поддерживаете ли вы сами ту модель избыточного контроля, которая потом вызывает у вас раздражение в других.";
+      }
+      return "Проверьте, не ставите ли вы слишком быстрый ярлык там, где сначала стоит разобраться в контексте и последствиях поведения.";
+    }
+
+    function buildResults(){
+      state.reflection = reflectionInput.value.trim();
+      saveState();
+
+      summaryText.textContent = `Вы выбрали качество «${(state.focusQuality || "").toLowerCase()}» и увидели, что его нельзя оценивать только как однозначно плохое. У вас появилась более точная рамка: где это поведение действительно недопустимо, а где за вашей реакцией может стоять слишком жесткая внутренняя норма.`;
+
+      resultBad.textContent = formatList(state.inadmissible);
+      resultUseful.textContent = formatList(state.useful);
+      resultAction.textContent = inferAction();
+
+      reflectionOutput.textContent = state.reflection
+        ? `Ваш ответ: ${state.reflection}`
+        : "Вы пока не добавили личную фиксацию.";
+    }
+
+    function resetAll(){
+      state.selectedQualities = [];
+      state.focusQuality = "";
+      state.inadmissible = [];
+      state.useful = [];
+      state.reflection = "";
+      localStorage.removeItem(storageKey);
+      reflectionInput.value = "";
+      renderAll();
+      showScreen(1);
+    }
+
+    function renderAll(){
+      renderQualitySelection();
+      renderFocusQualitySelection();
+      createCheckboxGrid(inadmissibleGrid, inadmissibleOptions, "inadmissible");
+      createCheckboxGrid(usefulGrid, usefulOptions, "useful");
+      reflectionInput.value = state.reflection || "";
+      updateButtons();
+    }
+
+    reflectionInput.addEventListener("input", () => {
+      state.reflection = reflectionInput.value;
+      saveState();
+      updateButtons();
+    });
+
+    toStep2.addEventListener("click", () => showScreen(2));
+    toStep3.addEventListener("click", () => showScreen(3));
+    backTo1.addEventListener("click", () => showScreen(1));
+    backTo2.addEventListener("click", () => showScreen(2));
+    restartBtn.addEventListener("click", resetAll);
+
+    loadState();
+    renderAll();
+    showScreen(1);
+  </script>
+</body>
+</html>
