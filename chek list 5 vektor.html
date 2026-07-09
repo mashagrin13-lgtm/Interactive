@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ценности против рутины — диагностика топ-команды</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #F7F5F0;
+            font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, sans-serif;
+            padding: 40px 24px;
+            color: #2C3A47;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .test-header {
+            background: #FFFFFF;
+            border-radius: 40px;
+            padding: 32px 36px;
+            margin-bottom: 32px;
+            box-shadow: 0 20px 35px -12px rgba(0, 0, 0, 0.05);
+        }
+
+        h1 {
+            font-size: 2rem;
+            font-weight: 600;
+            letter-spacing: -0.02em;
+            color: #2C3A47;
+            margin-bottom: 12px;
+        }
+
+        .subhead {
+            font-size: 1rem;
+            color: #5F6F7E;
+            line-height: 1.5;
+            border-left: 3px solid #BBD4CE;
+            padding-left: 18px;
+            margin-top: 8px;
+        }
+
+        .question-card {
+            background: #FFFFFF;
+            border-radius: 32px;
+            padding: 28px 32px;
+            margin-bottom: 24px;
+            box-shadow: 0 8px 20px -6px rgba(0, 0, 0, 0.04);
+            transition: all 0.2s ease;
+            border: 1px solid #EFEAE2;
+        }
+
+        .question-card:hover {
+            box-shadow: 0 12px 28px -10px rgba(0, 0, 0, 0.08);
+            transform: translateY(-1px);
+        }
+
+        .question-text {
+            font-size: 1.2rem;
+            font-weight: 550;
+            color: #2C3A47;
+            margin-bottom: 24px;
+            line-height: 1.4;
+        }
+
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .option {
+            display: flex;
+            align-items: flex-start;
+            gap: 14px;
+            padding: 12px 16px;
+            border-radius: 20px;
+            background: #FEFCF9;
+            transition: background 0.15s;
+            cursor: pointer;
+        }
+
+        .option:hover {
+            background: #F8F6F0;
+        }
+
+        .option-radio {
+            margin-top: 2px;
+            flex-shrink: 0;
+        }
+
+        .custom-radio {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            background: #FFFFFF;
+            border: 2px solid #CBD5E0;
+            border-radius: 50%;
+            position: relative;
+            transition: all 0.2s;
+        }
+
+        input[type="radio"] {
+            position: absolute;
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        input[type="radio"]:checked + .custom-radio {
+            border-color: #5FB9B0;
+            background-color: #5FB9B0;
+            box-shadow: inset 0 0 0 4px white;
+        }
+
+        .option-label {
+            font-size: 1rem;
+            color: #2C3A47;
+            line-height: 1.45;
+            flex: 1;
+        }
+
+        .result-panel {
+            background: #FFFFFF;
+            border-radius: 32px;
+            padding: 24px 32px;
+            margin-top: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+            box-shadow: 0 8px 20px -6px rgba(0, 0, 0, 0.04);
+        }
+
+        .total-score {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #5FB9B0;
+            background: #EFF7F5;
+            padding: 8px 24px;
+            border-radius: 60px;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 16px;
+        }
+
+        button {
+            background: transparent;
+            border: 1.5px solid #D9D2C5;
+            padding: 12px 28px;
+            border-radius: 60px;
+            font-size: 0.95rem;
+            font-weight: 500;
+            color: #2C4A4A;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+
+        button.primary {
+            background: #EFF7F5;
+            border-color: #7BB3AE;
+            color: #2C6B63;
+        }
+
+        button.primary:hover {
+            background: #E2F0ED;
+            transform: scale(0.97);
+        }
+
+        button:hover {
+            background: #F9F7F2;
+            border-color: #B7AA99;
+        }
+
+        .score-message {
+            font-size: 1rem;
+            color: #5F6F7E;
+            background: #F8F6F2;
+            padding: 12px 20px;
+            border-radius: 40px;
+            flex: 1;
+        }
+
+        @media (max-width: 650px) {
+            .test-header, .question-card {
+                padding: 24px 20px;
+            }
+            h1 {
+                font-size: 1.7rem;
+            }
+            .question-text {
+                font-size: 1.05rem;
+            }
+            .result-panel {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .action-buttons {
+                width: 100%;
+                justify-content: space-between;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="test-header">
+        <h1>Ценности против рутины</h1>
+        <div class="subhead">
+            Ниже — 6 рабочих ситуаций. В каждой выберите вариант, который характерен для вашей топ-команды.<br>
+            В конце подсчитаем сумму и оценим результат.
+        </div>
+    </div>
+
+    <div id="questionsContainer"></div>
+
+    <div class="result-panel" id="resultPanel" style="display: none;">
+        <div class="total-score" id="totalScore">0 баллов</div>
+        <div class="score-message" id="scoreMessage"></div>
+        <div class="action-buttons">
+            <button id="resetBtn">⟳ Сбросить ответы</button>
+        </div>
+    </div>
+
+    <div style="text-align: center; margin-top: 24px;">
+        <button id="calcBtn" class="primary">📊 Подсчитать баллы</button>
+    </div>
+</div>
+
+<script>
+    // Вопросы и варианты (баллы скрыты, но используются внутри)
+    const questions = [
+        {
+            text: "1. На вопрос «Какой главный результат команда дала компании за последний месяц?» топ-менеджеры чаще отвечают так:",
+            options: [
+                { text: "Называют общий результат для бизнеса или клиента примерно одинаково.", points: 2 },
+                { text: "Каждый говорит о результате только своей функции.", points: 1 },
+                { text: "Начинают перечислять задачи, встречи, согласования и загруженность.", points: 0 }
+            ]
+        },
+        {
+            text: "2. Когда в компании заканчивается сложный период или проект, команда обычно:",
+            options: [
+                { text: "Отдельно подводит итоги: что получилось, что изменилось для клиента и бизнеса, что стоит сохранить.", points: 2 },
+                { text: "Коротко смотрит цифры и сразу идет дальше в новые задачи.", points: 1 },
+                { text: "Вообще не возвращается к итогам, потому что уже горит следующая повестка.", points: 0 }
+            ]
+        },
+        {
+            text: "3. Когда у топ-команды слишком много задач одновременно, вы чаще видите такую реакцию:",
+            options: [
+                { text: "Команда спорит, но в итоге выбирает главное и отсекает второстепенное.", points: 2 },
+                { text: "Команда старается тащить все сразу, но хотя бы понимает, что перегружена.", points: 1 },
+                { text: "Все продолжают работать в режиме постоянного аврала, не пересматривая приоритеты.", points: 0 }
+            ]
+        },
+        {
+            text: "4. Когда сильный топ-менеджер начинает уставать и терять энергию, это чаще звучит так:",
+            options: [
+                { text: "«Я не вижу, какой общий результат мы сейчас проводим».", points: 2 },
+                { text: "«Слишком много задач, но, наверное, это нормально».", points: 1 },
+                { text: "«Я целый день занят, но не понимаю, что к чему мы идем».", points: 0 }
+            ]
+        },
+        {
+            text: "5. Ценности компании в вашей топ-команде обычно существуют так:",
+            options: [
+                { text: "На них реально опираются в спорных решениях и при выборе приоритетов.", points: 2 },
+                { text: "Их иногда вспоминают на стратегических сессиях или выступлениях.", points: 1 },
+                { text: "Они есть где-то в презентации, но в текущей работе на них никто не смотрит.", points: 0 }
+            ]
+        },
+        {
+            text: "6. Если попросить вашу топ-команду ответить, ради чего компания делает текущие изменения, чаще всего вы услышите:",
+            options: [
+                { text: "Понятный и схожий ответ про смысл для клиента, бизнеса и команды.", points: 2 },
+                { text: "Несколько близких, но все же разных версий.", points: 1 },
+                { text: "Разрозненные ответы или уход в операционные детали.", points: 0 }
+            ]
+        }
+    ];
+
+    let selectedAnswers = new Array(questions.length).fill(null);
+
+    const container = document.getElementById('questionsContainer');
+    const resultPanel = document.getElementById('resultPanel');
+    const totalScoreSpan = document.getElementById('totalScore');
+    const scoreMessageDiv = document.getElementById('scoreMessage');
+
+    function saveToStorage() {
+        localStorage.setItem('valuesVsRoutine', JSON.stringify(selectedAnswers));
+    }
+
+    function loadFromStorage() {
+        const saved = localStorage.getItem('valuesVsRoutine');
+        if (saved) {
+            try {
+                const parsed = JSON.parse(saved);
+                if (Array.isArray(parsed) && parsed.length === questions.length) {
+                    selectedAnswers = parsed;
+                }
+            } catch(e) {}
+        }
+    }
+
+    function renderQuestions() {
+        container.innerHTML = '';
+        questions.forEach((q, qIdx) => {
+            const card = document.createElement('div');
+            card.className = 'question-card';
+            card.dataset.q = qIdx;
+
+            const questionText = document.createElement('div');
+            questionText.className = 'question-text';
+            questionText.innerText = q.text;
+            card.appendChild(questionText);
+
+            const optionsDiv = document.createElement('div');
+            optionsDiv.className = 'options';
+
+            q.options.forEach((opt, optIdx) => {
+                const optionDiv = document.createElement('div');
+                optionDiv.className = 'option';
+                optionDiv.addEventListener('click', (e) => {
+                    if (e.target.tagName !== 'INPUT') {
+                        const radio = optionDiv.querySelector('input[type="radio"]');
+                        if (radio) radio.checked = true;
+                        handleRadioChange(qIdx, optIdx);
+                    }
+                });
+
+                const radioSpan = document.createElement('span');
+                radioSpan.className = 'option-radio';
+                const radio = document.createElement('input');
+                radio.type = 'radio';
+                radio.name = `q${qIdx}`;
+                radio.value = optIdx;
+                radio.id = `q${qIdx}_opt${optIdx}`;
+                radio.checked = (selectedAnswers[qIdx] === optIdx);
+                radio.addEventListener('change', () => {
+                    if (radio.checked) handleRadioChange(qIdx, optIdx);
+                });
+                const customSpan = document.createElement('span');
+                customSpan.className = 'custom-radio';
+                radioSpan.appendChild(radio);
+                radioSpan.appendChild(customSpan);
+
+                const labelSpan = document.createElement('span');
+                labelSpan.className = 'option-label';
+                labelSpan.innerText = opt.text;   // без указания баллов
+                // points badge removed as requested
+
+                optionDiv.appendChild(radioSpan);
+                optionDiv.appendChild(labelSpan);
+                optionsDiv.appendChild(optionDiv);
+            });
+
+            card.appendChild(optionsDiv);
+            container.appendChild(card);
+        });
+    }
+
+    function handleRadioChange(qIdx, optIdx) {
+        if (selectedAnswers[qIdx] === optIdx) return;
+        selectedAnswers[qIdx] = optIdx;
+        saveToStorage();
+        resultPanel.style.display = 'none';
+    }
+
+    function calculateTotal() {
+        let total = 0;
+        for (let i = 0; i < questions.length; i++) {
+            const selected = selectedAnswers[i];
+            if (selected !== null) {
+                total += questions[i].options[selected].points;
+            }
+        }
+        return total;
+    }
+
+    function getScoreMessage(score) {
+        if (score >= 10 && score <= 12) {
+            return "Пятый вектор в команде в хорошем состоянии. Люди не просто работают, а видят общий результат и понимают, зачем делают свою работу.";
+        } else if (score >= 6 && score <= 9) {
+            return "Смыслы и ценности в команде уже проседают под рутиной и нагрузкой. Есть риск, что команда уйдет в режим бесконечной операционки и начнет терять энергию.";
+        } else if (score >= 0 && score <= 5) {
+            return "Команда, скорее всего, уже работает в режиме бесконечной текучки. Задач много, но связь между усилиями, результатом и смыслом ослабла. Стоит провести отдельный разговор о больших целях и ценностях компании.";
+        }
+        return "";
+    }
+
+    function showResult() {
+        const allAnswered = selectedAnswers.every(idx => idx !== null);
+        if (!allAnswered) {
+            alert("Пожалуйста, ответьте на все 6 вопросов, чтобы увидеть результат.");
+            return;
+        }
+        const total = calculateTotal();
+        totalScoreSpan.innerText = `${total} баллов`;
+        scoreMessageDiv.innerText = getScoreMessage(total);
+        resultPanel.style.display = 'flex';
+        resultPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    function resetAll() {
+        selectedAnswers.fill(null);
+        saveToStorage();
+        renderQuestions();
+        resultPanel.style.display = 'none';
+    }
+
+    function init() {
+        loadFromStorage();
+        renderQuestions();
+        document.getElementById('calcBtn').addEventListener('click', showResult);
+        document.getElementById('resetBtn').addEventListener('click', resetAll);
+        resultPanel.style.display = 'none';
+    }
+
+    init();
+</script>
+</body>
+</html>
