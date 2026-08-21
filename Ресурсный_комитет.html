@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ресурсный комитет</title>
+<style>
+:root{
+  --bg:#f5f6f8; --card:#fff; --text:#20242d; --muted:#6d7583; --line:#dfe3ea;
+  --accent:#315d9b; --soft:#eef3fb; --ok:#2e6b4f; --okbg:#eef7f2;
+  --warn:#8a5a10; --warnbg:#fff7e8; --bad:#8b3d45; --badbg:#fff0f1;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:Arial,Helvetica,sans-serif;line-height:1.42}
+.app{width:min(560px,calc(100% - 24px));margin:18px auto}
+.shell{background:var(--card);border:1px solid var(--line);border-radius:16px;overflow:hidden}
+.head{padding:18px;border-bottom:1px solid var(--line)}
+h1{margin:0 0 8px;font-size:21px;line-height:1.2}
+.lead{margin:0;color:var(--muted);font-size:14px}
+.progress{display:flex;gap:7px;margin-top:14px}
+.progress span{flex:1;height:5px;border-radius:99px;background:#e8ebf0}
+.progress .active{background:var(--accent)}
+.body{padding:16px}
+.label{font-size:12px;color:var(--accent);font-weight:700;text-transform:uppercase;letter-spacing:.03em}
+.title{margin:4px 0 10px;font-size:17px}
+.rules,.limit,.newinfo{
+  padding:11px 12px;border:1px solid #d8e1ef;background:#f5f7fb;border-radius:12px;
+  font-size:13px;margin-bottom:12px
+}
+.rules b,.limit b,.newinfo b{display:block;margin-bottom:5px}
+.rules ol{margin:0;padding-left:19px}.rules li{margin:4px 0}
+.limit-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:7px}
+.limit-item{background:#fff;border:1px solid var(--line);border-radius:9px;padding:8px}
+.limit-item strong{display:block;font-size:16px;color:var(--accent)}
+.projects{display:grid;gap:10px}
+.project{border:1px solid var(--line);border-radius:12px;overflow:hidden;background:#fff}
+.project-head{padding:10px 11px;background:#fafbfc;border-bottom:1px solid var(--line)}
+.project-head b{font-size:14px}
+.project-body{padding:10px}
+.request{font-size:12.5px;margin-bottom:9px}
+.request p{margin:0}
+.select-row label{display:block;font-size:11px;color:var(--muted);font-weight:700;margin-bottom:4px}
+select{width:100%;padding:8px 9px;border:1px solid var(--line);border-radius:9px;background:#fff;color:var(--text);font-size:12px}
+.resource-note{margin-top:7px;color:var(--muted);font-size:10.5px}
+.budgetbar{margin:12px 0;border:1px solid var(--line);border-radius:10px;padding:9px}
+.budgetline{display:flex;justify-content:space-between;gap:8px;font-size:12px;margin-top:5px}
+.budgetline:first-child{margin-top:0}.budgetline strong{color:var(--accent)}
+.actions{display:flex;gap:8px;margin-top:13px}
+button{appearance:none;border:0;border-radius:10px;padding:10px 13px;font-size:14px;font-weight:700;cursor:pointer}
+.primary{background:var(--accent);color:#fff;flex:1}.secondary{background:#edf0f4;color:var(--text)}
+.primary:disabled{opacity:.45;cursor:not-allowed}
+.feedback{display:none;margin-top:12px}.feedback.show{display:block}
+.fb{border-radius:10px;padding:10px 11px;margin-top:7px;font-size:13px}.fb strong{display:block;margin-bottom:3px}
+.fb.ok{background:var(--okbg);border:1px solid #cfe5d8;color:#214f3b}
+.fb.warn{background:var(--warnbg);border:1px solid #f1dbb0;color:#6f480c}
+.fb.bad{background:var(--badbg);border:1px solid #efc9cd;color:#73343b}
+.hidden{display:none!important}
+.consequence{margin-top:11px;border:1px solid var(--line);border-radius:11px;overflow:hidden}
+.ch{padding:8px 10px;background:#f4f6f9;font-size:12.5px;font-weight:700}
+.cr{padding:8px 10px;border-top:1px solid #edf0f4;font-size:12px}.cr b{display:block;margin-bottom:2px}
+.summary{margin-top:14px;border-top:1px solid var(--line);padding-top:14px}
+.summary h3{margin:0 0 7px;font-size:17px}.summary p{margin:0 0 9px;font-size:13px}
+.metrics{display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px}
+.metric{border:1px solid var(--line);border-radius:10px;padding:9px;text-align:center}
+.score{font-size:19px;font-weight:700;color:var(--accent)}.ml{font-size:10.5px;color:var(--muted)}
+@media(max-width:420px){.limit-grid,.metrics{grid-template-columns:1fr}.body{padding:13px}}
+</style>
+</head>
+<body>
+<div class="app"><div class="shell">
+<div class="head">
+<h1>Ресурсный комитет</h1>
+<p class="lead">Сравните три заявки на ограниченный ресурс по эффекту, стоимости и цене отказа. Затем пересоберите решение, когда изменится бизнес-ограничение.</p>
+<div class="progress"><span id="p1" class="active"></span><span id="p2"></span></div>
+</div>
+<div class="body">
+
+<section id="stage1">
+<div class="label">Раунд 1 из 2</div>
+<h2 class="title">Распределите ограниченный ресурс</h2>
+
+<div class="rules"><b>Что нужно сделать</b><ol>
+<li>Прочитайте три заявки.</li>
+<li>Для каждой выберите одно решение: <strong>одобрить, отклонить или вернуть на доработку</strong>.</li>
+<li>Одновременно все заявки удовлетворить нельзя. На месяц доступен только указанный ниже ресурс.</li>
+<li>Сравнивайте не убедительность формулировки, а четыре вещи: что именно запрашивают, какой измеримый результат даст ресурс, сколько он стоит и что произойдет при отказе.</li>
+<li>Если данных недостаточно для решения, возвращайте заявку на доработку, а не заполняйте пробелы за автора.</li>
+<li>После выбора по всем трем проектам нажмите «Проверить решение».</li>
+</ol></div>
+
+<div class="limit">
+<b>Доступный дополнительный ресурс на месяц</b>
+<div class="limit-grid">
+<div class="limit-item"><strong>1 сотрудник × 50%</strong>рабочего времени</div>
+<div class="limit-item"><strong>200 000 ₽</strong>дополнительного бюджета</div>
+</div>
+</div>
+
+<div class="projects" id="projects1"></div>
+
+<div class="budgetbar">
+<div class="budgetline"><span>Занято времени сотрудника</span><strong id="peopleUse">0%</strong></div>
+<div class="budgetline"><span>Использовано бюджета</span><strong id="moneyUse">0 ₽</strong></div>
+</div>
+
+<div class="actions">
+<button class="secondary" id="reset1">Сбросить</button>
+<button class="primary" id="check1" disabled>Проверить решение</button>
+</div>
+
+<div class="feedback" id="fb1"></div>
+<div class="consequence hidden" id="consequence1"></div>
+<div class="actions hidden" id="go2Wrap"><button class="primary" id="go2">Перейти ко второму раунду</button></div>
+</section>
+
+<section id="stage2" class="hidden">
+<div class="label">Раунд 2 из 2</div>
+<h2 class="title">Пересмотрите распределение после новой вводной</h2>
+
+<div class="rules"><b>Что нужно сделать</b><ol>
+<li>Новая информация меняет цену отказа для проекта В.</li>
+<li>Снова выберите решение по всем трем заявкам. Можно сохранить прежнее распределение или изменить его.</li>
+<li>Ресурсное ограничение остается тем же: один сотрудник на 50% времени и 200 000 ₽ бюджета.</li>
+<li>Если два проекта теперь выглядят критичными, сравните, какой ресурс нужен каждому и можно ли удовлетворить обе заявки одновременно.</li>
+<li>После выбора нажмите «Проверить пересборку».</li>
+</ol></div>
+
+<div class="newinfo"><b>Новая информация</b>В проекте В появилась фиксированная дата: через четыре недели начинается обязательный пилот с крупным клиентом. Перенос невозможен. Внутренняя команда без подрядчика завершит разработку только через пять недель.</div>
+
+<div class="projects" id="projects2"></div>
+
+<div class="budgetbar">
+<div class="budgetline"><span>Занято времени сотрудника</span><strong id="peopleUse2">0%</strong></div>
+<div class="budgetline"><span>Использовано бюджета</span><strong id="moneyUse2">0 ₽</strong></div>
+</div>
+
+<div class="actions">
+<button class="secondary" id="back1">Назад</button>
+<button class="primary" id="check2" disabled>Проверить пересборку</button>
+</div>
+
+<div class="feedback" id="fb2"></div>
+<div class="summary hidden" id="summary"></div>
+</section>
+
+</div></div></div>
+
+<script>
+const projects = [
+  {
+    id:"A", title:"Заявка А",
+    text:"Нужен дополнительный специалист на месяц. Команда перегружена, люди устали. Если дадут специалиста, станет легче и мы, скорее всего, уложимся в сроки.",
+    people:50, money:0,
+    best1:"revise", best2:"revise"
+  },
+  {
+    id:"B", title:"Заявка Б",
+    text:"Нужен аналитик на 50% рабочего времени на три недели. Он закроет проверку базы до 18 числа и позволит сохранить запуск 25-го. Без него запуск сдвигается примерно на семь рабочих дней. Можно отказаться от части проверки, но тогда повышается риск ошибок после запуска.",
+    people:50, money:0,
+    best1:"approve", best2:"approve"
+  },
+  {
+    id:"V", title:"Заявка В",
+    text:"Нужны 180 000 ₽ на внешнего подрядчика. Это позволит закончить разработку на две недели раньше. При этом продукт сейчас не привязан к фиксированной дате запуска, а внутренняя команда может завершить работу самостоятельно через пять недель.",
+    people:0, money:180000,
+    best1:"reject", best2:"approve"
+  }
+];
+
+const options = [
+  ["","Выберите решение"],
+  ["approve","Одобрить"],
+  ["reject","Отклонить"],
+  ["revise","Вернуть на доработку"]
+];
+
+let state1={A:"",B:"",V:""};
+let state2={A:"",B:"",V:""};
+let score1=0;
+
+const $=s=>document.querySelector(s);
+
+function addFb(box,type,title,text){
+  const d=document.createElement("div");
+  d.className="fb "+type;
+  d.innerHTML="<strong>"+title+"</strong>"+text;
+  box.appendChild(d);
+}
+
+function makeSelect(value,onchange){
+  const s=document.createElement("select");
+  options.forEach(([v,l])=>{
+    const o=document.createElement("option");o.value=v;o.textContent=l;if(v===value)o.selected=true;s.appendChild(o)
+  });
+  s.addEventListener("change",()=>onchange(s.value));
+  return s;
+}
+
+function renderProjects(containerId,state,round){
+  const box=$(containerId);box.innerHTML="";
+  projects.forEach(p=>{
+    const wrap=document.createElement("div");wrap.className="project";
+    wrap.innerHTML='<div class="project-head"><b>'+p.title+'</b></div>';
+    const body=document.createElement("div");body.className="project-body";
+    body.innerHTML='<div class="request"><p>'+p.text+'</p></div>';
+    const row=document.createElement("div");row.className="select-row";
+    const lab=document.createElement("label");lab.textContent="Решение комитета";
+    row.appendChild(lab);
+    row.appendChild(makeSelect(state[p.id],v=>{
+      state[p.id]=v;
+      if(round===1)clear1(); else clear2();
+      renderProjects(containerId,state,round);
+      updateUsage(state,round);
+    }));
+    body.appendChild(row);
+
+    const note=document.createElement("div");note.className="resource-note";
+    note.textContent="Запрос: "+(p.people?("сотрудник на "+p.people+"% времени"):"без дополнительного сотрудника")+
+      "; "+(p.money?new Intl.NumberFormat("ru-RU").format(p.money)+" ₽":"без дополнительного бюджета");
+    body.appendChild(note);
+    wrap.appendChild(body);box.appendChild(wrap);
+  });
+  updateUsage(state,round);
+}
+
+function use(state){
+  let people=0,money=0;
+  projects.forEach(p=>{
+    if(state[p.id]==="approve"){people+=p.people;money+=p.money}
+  });
+  return {people,money};
+}
+
+function updateUsage(state,round){
+  const u=use(state);
+  $(round===1?"#peopleUse":"#peopleUse2").textContent=u.people+"%";
+  $(round===1?"#moneyUse":"#moneyUse2").textContent=new Intl.NumberFormat("ru-RU").format(u.money)+" ₽";
+  const ready=projects.every(p=>state[p.id]);
+  $(round===1?"#check1":"#check2").disabled=!ready;
+}
+
+function clear1(){
+  $("#fb1").className="feedback";$("#fb1").innerHTML="";
+  $("#consequence1").classList.add("hidden");$("#go2Wrap").classList.add("hidden");
+}
+function clear2(){
+  $("#fb2").className="feedback";$("#fb2").innerHTML="";$("#summary").classList.add("hidden");
+}
+
+function check1(){
+  const u=use(state1);
+  const over=u.people>50||u.money>200000;
+  score1=projects.filter(p=>state1[p.id]===p.best1).length;
+
+  const box=$("#fb1");box.innerHTML="";
+
+  if(over){
+    addFb(box,"bad","Ресурсное ограничение нарушено.","Одобрение нескольких заявок допустимо только если суммарный запрос укладывается в 50% времени одного сотрудника и 200 000 ₽.");
+  }
+
+  if(state1.A==="approve"){
+    addFb(box,"warn","Заявка А звучит убедительно, но ее эффект не определен.","Нет точного объема работ, измеримого результата, срока, плана использования специалиста и цены отказа.");
+  }else if(state1.A==="reject"){
+    addFb(box,"warn","Заявку А рано окончательно отклонять.","Проблема может быть реальной, но данных недостаточно. Ее лучше вернуть на доработку.");
+  }
+
+  if(state1.B!=="approve"){
+    addFb(box,"warn","Заявка Б содержит достаточно данных для приоритетного решения.","Ресурс связан с конкретной работой, датой запуска и измеримой ценой отказа — сдвигом примерно на семь рабочих дней.");
+  }
+
+  if(state1.V==="approve"){
+    addFb(box,"warn","Заявка В ускоряет проект, но пока не снимает критичное ограничение.","Фиксированной даты запуска нет, а внутренняя команда способна завершить работу самостоятельно.");
+  }else if(state1.V==="revise"){
+    addFb(box,"warn","По заявке В данных достаточно для текущего решения.","При отсутствии фиксированной даты ускорение на две недели пока не оправдывает использование дефицитного бюджета.");
+  }
+
+  if(score1===3&&!over){
+    addFb(box,"ok","Ресурс направлен туда, где понятен результат и цена отказа.","Заявка Б получает сотрудника на 50%, заявка А возвращается на доработку, а заявка В отклоняется в текущих условиях.");
+  }
+
+  box.classList.add("show");
+  renderConsequences();
+  $("#go2Wrap").classList.remove("hidden");
+}
+
+function renderConsequences(){
+  const rows=[];
+  if(state1.A==="approve") rows.push(["Заявка А","Через две недели выяснилось, что дополнительный специалист большую часть времени закрывал текущую операционку. Дефицитный ресурс был выделен без точного эффекта."]);
+  if(state1.B==="approve") rows.push(["Заявка Б","Проверка базы закрыта в срок, запуск 25-го сохранен. При этом остается вопрос к альтернативе без аналитика: риск сокращенной проверки был описан, но не оценен количественно."]);
+  if(state1.V==="approve") rows.push(["Заявка В","Разработка ускорилась, но более критичный запуск проекта Б остался без сотрудника. Ускорение само по себе не оказалось достаточным основанием для приоритета."]);
+  if(!rows.length) rows.push(["Последствия","Вы не одобрили ни одной заявки. Ограничение соблюдено, но ресурс не использован для предотвращения известного сдвига проекта Б."]);
+
+  $("#consequence1").innerHTML='<div class="ch">Последствия вашего решения</div>'+
+    rows.map(x=>'<div class="cr"><b>'+x[0]+'</b>'+x[1]+'</div>').join("");
+  $("#consequence1").classList.remove("hidden");
+}
+
+function go2(){
+  state2={...state1};
+  $("#stage1").classList.add("hidden");$("#stage2").classList.remove("hidden");$("#p2").classList.add("active");
+  renderProjects("#projects2",state2,2);window.scrollTo({top:0,behavior:"smooth"});
+}
+
+function check2(){
+  const u=use(state2);
+  const over=u.people>50||u.money>200000;
+  const score2=projects.filter(p=>state2[p.id]===p.best2).length;
+  const box=$("#fb2");box.innerHTML="";
+
+  if(over){
+    addFb(box,"bad","Ресурсное ограничение нарушено.","Проверьте, что две одобренные заявки используют разные типы ресурса: Б — 50% времени аналитика, В — 180 000 ₽ бюджета. В такой комбинации они совместимы.");
+  }
+
+  if(state2.B!=="approve"){
+    addFb(box,"warn","Проект Б по-прежнему имеет фиксированный запуск и понятную цену отказа.","Новая информация по проекту В не делает потребность проекта Б менее критичной.");
+  }
+
+  if(state2.V!=="approve"){
+    addFb(box,"warn","Цена отказа по проекту В изменилась.","Теперь без подрядчика разработка закончится после обязательного пилота. Ускорение стало связано с конкретным бизнес-ограничением.");
+  }
+
+  if(state2.A!=="revise"){
+    addFb(box,"warn","Новая вводная не улучшила качество заявки А.","По ней по-прежнему не хватает измеримого эффекта и цены отказа, поэтому решение о ресурсе принимать рано.");
+  }
+
+  if(score2===3&&!over){
+    addFb(box,"ok","Вы пересобрали приоритеты после изменения цены отказа.","Проекты Б и В теперь могут быть поддержаны одновременно: один использует доступное время аналитика, второй — денежный лимит. Заявка А остается на доработке.");
+  }
+
+  box.classList.add("show");
+  showSummary(score2,!over);
+}
+
+function showSummary(score2,limitOk){
+  let title,text;
+  if(score1===3&&score2===3&&limitOk){
+    title="Вы сравниваете заявки по последствиям, а не по риторике.";
+    text="В первом раунде ресурс получает проект с фиксированной датой и понятной ценой отказа. Во втором новые ограничения меняют приоритет проекта В, и вы пересобираете решение без нарушения лимита.";
+  }else if(!limitOk){
+    title="Приоритеты понятны, но решение не укладывается в доступный ресурс.";
+    text="Сильная заявка не отменяет ограничения комитета. Суммарное одобрение всегда нужно проверять по типам и объему ресурса.";
+  }else{
+    title="Стоит сильнее отделять пользу ресурса от цены отказа.";
+    text="Ускорение, снижение нагрузки и общее обещание «уложиться в сроки» сами по себе слабее заявки, где ясно, какой результат будет получен и что произойдет без ресурса.";
+  }
+
+  $("#summary").innerHTML=
+    '<h3>'+title+'</h3><p>'+text+'</p>'+
+    '<div class="metrics">'+
+      '<div class="metric"><div class="score">'+score1+'/3</div><div class="ml">первый раунд</div></div>'+
+      '<div class="metric"><div class="score">'+score2+'/3</div><div class="ml">пересборка</div></div>'+
+      '<div class="metric"><div class="score">'+(limitOk?1:0)+'/1</div><div class="ml">соблюдение лимита</div></div>'+
+    '</div>'+
+    '<div class="consequence"><div class="ch">Как сравнивать заявки</div>'+
+      '<div class="cr"><b>Запрос</b>Какой именно ресурс и на какой срок нужен.</div>'+
+      '<div class="cr"><b>Эффект</b>Какой конкретный результат изменится благодаря ресурсу.</div>'+
+      '<div class="cr"><b>Стоимость</b>Сколько времени, денег или другого дефицитного ресурса потребуется.</div>'+
+      '<div class="cr"><b>Цена отказа</b>Что произойдет, если ресурс не выделить.</div>'+
+      '<div class="cr"><b>Альтернатива</b>Как команда будет действовать без запрошенного ресурса и какой риск это создает.</div>'+
+    '</div>';
+  $("#summary").classList.remove("hidden");
+}
+
+$("#reset1").addEventListener("click",()=>{
+  state1={A:"",B:"",V:""};score1=0;clear1();renderProjects("#projects1",state1,1)
+});
+$("#check1").addEventListener("click",check1);
+$("#go2").addEventListener("click",go2);
+$("#back1").addEventListener("click",()=>{
+  $("#stage2").classList.add("hidden");$("#stage1").classList.remove("hidden");$("#p2").classList.remove("active");
+  renderProjects("#projects1",state1,1);window.scrollTo({top:0,behavior:"smooth"});
+});
+$("#check2").addEventListener("click",check2);
+
+renderProjects("#projects1",state1,1);
+</script>
+</body>
+</html>

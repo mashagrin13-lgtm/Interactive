@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Панель полномочий</title>
+<style>
+:root{--bg:#f5f6f8;--card:#fff;--text:#20242d;--muted:#6d7583;--line:#dfe3ea;--accent:#315d9b;--soft:#eef3fb;--ok:#2e6b4f;--okbg:#eef7f2;--warn:#8a5a10;--warnbg:#fff7e8;--bad:#8b3d45;--badbg:#fff0f1}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:Arial,sans-serif;line-height:1.42}
+.app{width:min(560px,calc(100% - 24px));margin:18px auto}.shell{background:var(--card);border:1px solid var(--line);border-radius:16px;overflow:hidden}
+.head{padding:18px;border-bottom:1px solid var(--line)}h1{margin:0 0 8px;font-size:21px}.lead{margin:0;color:var(--muted);font-size:14px}
+.progress{display:flex;gap:7px;margin-top:14px}.progress span{flex:1;height:5px;border-radius:99px;background:#e8ebf0}.progress .active{background:var(--accent)}
+.body{padding:16px}.label{font-size:12px;color:var(--accent);font-weight:700;text-transform:uppercase}.title{margin:4px 0 10px;font-size:17px}
+.rules,.case,.newinfo{padding:11px 12px;border:1px solid #d8e1ef;background:#f5f7fb;border-radius:12px;font-size:13px;margin-bottom:12px}
+.rules b,.case b,.newinfo b{display:block;margin-bottom:5px}.rules ol{margin:0;padding-left:19px}.rules li{margin:4px 0}
+.levels{border:1px solid var(--line);border-radius:11px;overflow:hidden;margin-bottom:12px}.lh{padding:8px 10px;background:#f4f6f9;font-size:12.5px;font-weight:700}
+.lr{display:grid;grid-template-columns:26px 1fr;gap:7px;padding:6px 10px;border-top:1px solid #edf0f4;font-size:11.5px}.lr b{color:var(--accent)}
+.panel{display:grid;gap:10px}.decision{border:1px solid var(--line);border-radius:12px;padding:10px;background:#fff}.decision.changed{border-color:var(--accent);background:var(--soft)}
+.top{display:flex;justify-content:space-between;gap:8px}.dt{font-size:13px;font-weight:700}.badge{min-width:34px;text-align:center;padding:4px 7px;border-radius:99px;background:var(--soft);color:var(--accent);font-weight:700}
+input[type=range]{width:100%;accent-color:var(--accent)}.ticks{display:grid;grid-template-columns:repeat(7,1fr);font-size:10px;color:var(--muted);text-align:center}
+.meaning{margin-top:6px;padding:7px 8px;border-radius:8px;background:#f6f7f9;color:var(--muted);font-size:11.5px}.hint{margin-top:5px;color:var(--muted);font-size:10.5px}
+.actions{display:flex;gap:8px;margin-top:13px}button{border:0;border-radius:10px;padding:10px 13px;font-size:14px;font-weight:700;cursor:pointer}.primary{background:var(--accent);color:#fff;flex:1}.secondary{background:#edf0f4}.primary:disabled{opacity:.45;cursor:not-allowed}
+.feedback{display:none;margin-top:12px}.feedback.show{display:block}.fb{border-radius:10px;padding:10px 11px;margin-top:7px;font-size:13px}.fb strong{display:block;margin-bottom:3px}.ok{background:var(--okbg);border:1px solid #cfe5d8;color:#214f3b}.warn{background:var(--warnbg);border:1px solid #f1dbb0;color:#6f480c}.bad{background:var(--badbg);border:1px solid #efc9cd;color:#73343b}
+.hidden{display:none!important}.system{margin-top:11px;border:1px solid var(--line);border-radius:11px;overflow:hidden}.sh{padding:8px 10px;background:#f4f6f9;font-size:12.5px;font-weight:700}.sr{padding:8px 10px;border-top:1px solid #edf0f4;font-size:12px}.sr b{display:block;margin-bottom:2px}
+.reason{margin-top:11px;border:1px solid var(--line);border-radius:11px;padding:10px}.reason label{display:block;font-size:12px;font-weight:700;margin-bottom:5px}.reason select{width:100%;padding:8px;border:1px solid var(--line);border-radius:9px;background:#fff}.counter{margin-top:8px;font-size:11.5px;color:var(--muted)}
+.summary{margin-top:14px;border-top:1px solid var(--line);padding-top:14px}.summary h3{margin:0 0 7px;font-size:17px}.summary p{margin:0 0 9px;font-size:13px}.metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}.metric{border:1px solid var(--line);border-radius:10px;padding:9px;text-align:center}.score{font-size:19px;font-weight:700;color:var(--accent)}.ml{font-size:10.5px;color:var(--muted)}
+@media(max-width:420px){.metrics{grid-template-columns:1fr}.body{padding:13px}}
+</style>
+</head>
+<body>
+<div class="app"><div class="shell">
+<div class="head">
+<h1>Панель полномочий</h1>
+<p class="lead">Настройте самостоятельность отдельно для разных типов решений, а затем измените только ту область, где появился новый риск.</p>
+<div class="progress"><span id="p1" class="active"></span><span id="p2"></span></div>
+</div>
+<div class="body">
+
+<section id="stage1">
+<div class="label">Раунд 1 из 2</div><h2 class="title">Настройте шесть областей решений</h2>
+<div class="rules"><b>Что нужно сделать</b><ol>
+<li>Прочитайте ситуацию и значения семи уровней.</li>
+<li>Для каждой области передвиньте ползунок на уровень от 1 до 7.</li>
+<li>Оценивайте каждую область отдельно: опыт Виктора не означает одинаковый уровень для операционных решений, бюджета и договора.</li>
+<li>Для обратимых решений внутри заданных ограничений самостоятельность можно передавать шире.</li>
+<li>Чем выше цена ошибки, ниже обратимость или сильнее решение меняет внешние обязательства, тем больше оснований сохранить участие руководителя.</li>
+<li>После настройки нажмите «Проверить систему». Оценивается допустимый диапазон и логика комбинации, а не одна единственная цифра.</li>
+</ol></div>
+<div class="case"><b>Ситуация</b>Вы руководите сервисным подразделением. Старший специалист Виктор хорошо знает клиентов и процессы, два года стабильно выполняет план. Вы передаете ему координацию работы с крупным корпоративным заказчиком.</div>
+
+<div class="levels">
+<div class="lh">Шкала самостоятельности</div>
+<div class="lr"><b>1</b><span>Руководитель решает и сообщает.</span></div>
+<div class="lr"><b>2</b><span>Руководитель решает и объясняет.</span></div>
+<div class="lr"><b>3</b><span>Руководитель запрашивает мнение сотрудника, затем решает сам.</span></div>
+<div class="lr"><b>4</b><span>Решение принимается совместно.</span></div>
+<div class="lr"><b>5</b><span>Сотрудник предлагает решение после консультации.</span></div>
+<div class="lr"><b>6</b><span>Сотрудник решает и информирует руководителя.</span></div>
+<div class="lr"><b>7</b><span>Сотрудник полностью владеет решением.</span></div>
+</div>
+
+<div class="panel" id="panel1"></div>
+<div class="actions"><button class="secondary" id="reset1">Сбросить</button><button class="primary" id="check1">Проверить систему</button></div>
+<div class="feedback" id="fb1"></div>
+<div class="system hidden" id="system1"></div>
+<div class="actions hidden" id="go2Wrap"><button class="primary" id="go2">Применить рабочую конфигурацию и перейти к новому риску</button></div>
+</section>
+
+<section id="stage2" class="hidden">
+<div class="label">Раунд 2 из 2</div><h2 class="title">Измените только одну область</h2>
+<div class="rules"><b>Что нужно сделать</b><ol>
+<li>На старте показана рабочая конфигурация полномочий.</li>
+<li>Прочитайте новую информацию.</li>
+<li>Измените уровень только в одной из шести областей. Остальные оставьте без изменений.</li>
+<li>После изменения выберите причину в поле под панелью.</li>
+<li>Не снижайте самостоятельность по всем решениям «на всякий случай».</li>
+<li>После одного изменения и выбора причины нажмите «Проверить изменение».</li>
+</ol></div>
+
+<div class="newinfo"><b>Новая информация</b>Виктор впервые будет самостоятельно работать с внешними подрядчиками. В прошлом проекте подразделение потеряло деньги из-за неверно составленных условий работы с подрядчиком. Остальные типы решений Виктор продолжает выполнять стабильно.</div>
+
+<div class="panel" id="panel2"></div>
+<div class="counter" id="counter">Изменено областей: 0 из 1</div>
+
+<div class="reason">
+<label for="reason">Почему вы меняете именно эту настройку?</label>
+<select id="reason">
+<option value="">Выберите причину</option>
+<option value="risk">Новая для Виктора зона сочетается с повышенной ценой ошибки: до накопления опыта решение по подрядчику стоит принимать с участием руководителя.</option>
+<option value="trust">После двух лет стабильной работы Виктору нужно передать максимальную самостоятельность по всем решениям.</option>
+<option value="all">Раз подразделение уже теряло деньги, руководитель должен временно забрать все решения по проекту.</option>
+<option value="budget">Новый подрядчик автоматически означает, что нужно снизить полномочия только по общему бюджету.</option>
+</select>
+</div>
+
+<div class="actions"><button class="secondary" id="back1">Назад</button><button class="primary" id="check2" disabled>Проверить изменение</button></div>
+<div class="feedback" id="fb2"></div>
+<div class="summary hidden" id="summary"></div>
+</section>
+
+</div></div></div>
+
+<script>
+const meanings={
+1:"Руководитель решает и сообщает.",
+2:"Руководитель решает и объясняет.",
+3:"Руководитель запрашивает мнение сотрудника и решает.",
+4:"Решение принимается совместно.",
+5:"Сотрудник предлагает решение после консультации.",
+6:"Сотрудник решает и информирует руководителя.",
+7:"Сотрудник полностью владеет решением."
+};
+
+const decisions=[
+{id:"tasks",title:"1. Распределить задачи между специалистами своей группы",min:6,max:7,why:"Внутреннее, обратимое решение в собственной группе."},
+{id:"internal",title:"2. Перенести внутренний срок на два дня без влияния на итоговую дату",min:5,max:7,why:"Решение обратимо и не меняет внешние обязательства."},
+{id:"service",title:"3. Предоставить клиенту дополнительную услугу в пределах установленного лимита",min:5,max:6,why:"Лимит заранее задан, поэтому решение можно передать широко, сохранив информирование."},
+{id:"contractor",title:"4. Выбрать внешнего подрядчика для части работ",min:4,max:5,why:"Внешний контур и более высокая цена ошибки требуют участия руководителя на старте."},
+{id:"budget",title:"5. Увеличить общий бюджет проекта на 12%",min:2,max:3,why:"Изменение общего бюджета остается в зоне решения руководителя."},
+{id:"contract",title:"6. Изменить обязательство, которое уже закреплено в договоре",min:1,max:3,why:"Договорное обязательство требует руководительского решения."}
+];
+
+const baseline={tasks:7,internal:6,service:6,contractor:5,budget:2,contract:2};
+let state1={tasks:4,internal:4,service:4,contractor:4,budget:4,contract:4};
+let state2={...baseline};
+let round1Score=0;
+
+const $=s=>document.querySelector(s);
+
+function fb(box,type,title,text){
+  const d=document.createElement("div");
+  d.className="fb "+type;
+  d.innerHTML="<strong>"+title+"</strong>"+text;
+  box.appendChild(d);
+}
+
+function renderPanel(id,state,round){
+  const box=$(id); box.innerHTML="";
+  decisions.forEach(d=>{
+    const wrap=document.createElement("div");
+    const changed=round===2 && state[d.id]!==baseline[d.id];
+    wrap.className="decision"+(changed?" changed":"");
+
+    const top=document.createElement("div"); top.className="top";
+    const title=document.createElement("div"); title.className="dt"; title.textContent=d.title;
+    const badge=document.createElement("div"); badge.className="badge"; badge.textContent=state[d.id];
+    top.append(title,badge); wrap.appendChild(top);
+
+    const range=document.createElement("input");
+    range.type="range"; range.min=1; range.max=7; range.step=1; range.value=state[d.id];
+    range.setAttribute("aria-label",d.title);
+
+    range.addEventListener("input",()=>{
+      const val=Number(range.value);
+      if(round===2){
+        const existing=changedIds().filter(x=>x!==d.id);
+        if(existing.length && val!==baseline[d.id]){
+          range.value=state[d.id];
+          showOneOnly();
+          return;
+        }
+      }
+      state[d.id]=val;
+      if(round===1){clear1();renderPanel(id,state,round)}
+      else{clear2();renderPanel(id,state,round);ready2()}
+    });
+
+    wrap.appendChild(range);
+    const ticks=document.createElement("div"); ticks.className="ticks";
+    for(let i=1;i<=7;i++){const s=document.createElement("span");s.textContent=i;ticks.appendChild(s)}
+    wrap.appendChild(ticks);
+
+    const m=document.createElement("div");m.className="meaning";m.textContent=meanings[state[d.id]];wrap.appendChild(m);
+    const h=document.createElement("div");h.className="hint";
+    h.textContent=round===2?(changed?"Было: уровень "+baseline[d.id]:"Исходный уровень: "+baseline[d.id]):"Допустимый диапазон появится после проверки.";
+    wrap.appendChild(h);
+    box.appendChild(wrap);
+  });
+}
+
+function clear1(){
+  $("#fb1").className="feedback";$("#fb1").innerHTML="";
+  $("#system1").classList.add("hidden");$("#go2Wrap").classList.add("hidden");
+}
+function clear2(){
+  $("#fb2").className="feedback";$("#fb2").innerHTML="";$("#summary").classList.add("hidden");
+}
+
+function evaluate1(){
+  round1Score=decisions.filter(d=>state1[d.id]>=d.min&&state1[d.id]<=d.max).length;
+  const lowOps=["tasks","internal","service","contractor"].filter(id=>state1[id]<=3).length;
+  const highRisk=["budget","contract"].filter(id=>state1[id]>=6).length;
+  const headHeavy=decisions.filter(d=>state1[d.id]<=3).length>=4;
+  const tooWide=decisions.filter(d=>state1[d.id]>=6).length>=4;
+  const flat=new Set(Object.values(state1)).size<=2;
+
+  const box=$("#fb1");box.innerHTML="";
+  if(round1Score===6){
+    fb(box,"ok","Полномочия распределены по типу решения.","Операционные решения переданы широко, а бюджет и договор остаются в более осторожном режиме.");
+  } else {
+    if(headHeavy||lowOps>=3) fb(box,"warn","Большая часть решений по-прежнему замкнута на руководителе.","Для обратимых операционных вопросов Виктору можно дать больше самостоятельности.");
+    if(tooWide||highRisk) fb(box,"bad","Самостоятельность высокая, но границы риска размыты.","Бюджет и договор требуют другого режима, чем внутренние операционные решения.");
+    if(flat) fb(box,"warn","Почти одинаковый уровень по всем областям скрывает различия в риске.","Настраивайте уровень по решению, а не общий уровень доверия к Виктору.");
+    if(!headHeavy&&!tooWide&&!flat) fb(box,"warn","Несколько областей вне рабочего диапазона.","Проверьте обратимость, цену ошибки и наличие внешнего обязательства.");
+  }
+  box.classList.add("show");
+
+  $("#system1").innerHTML='<div class="sh">Разбор комбинации</div>'+decisions.map(d=>{
+    const v=state1[d.id], ok=v>=d.min&&v<=d.max;
+    const status=ok?"в рабочем диапазоне":(v<d.min?"самостоятельность занижена":"самостоятельность завышена");
+    return '<div class="sr"><b>'+d.title+' — уровень '+v+': '+status+'</b>'+d.why+' Допустимый диапазон: '+d.min+'–'+d.max+'.</div>';
+  }).join("");
+  $("#system1").classList.remove("hidden");
+  $("#go2Wrap").classList.remove("hidden");
+}
+
+function reset1(){
+  state1={tasks:4,internal:4,service:4,contractor:4,budget:4,contract:4};round1Score=0;clear1();renderPanel("#panel1",state1,1)
+}
+
+function go2(){
+  state2={...baseline};
+  $("#stage1").classList.add("hidden");$("#stage2").classList.remove("hidden");$("#p2").classList.add("active");
+  $("#reason").value="";renderPanel("#panel2",state2,2);ready2();window.scrollTo({top:0,behavior:"smooth"})
+}
+
+function changedIds(){return decisions.filter(d=>state2[d.id]!==baseline[d.id]).map(d=>d.id)}
+
+function ready2(){
+  const n=changedIds().length;
+  $("#counter").textContent="Изменено областей: "+n+" из 1";
+  $("#check2").disabled=!(n===1&&$("#reason").value)
+}
+
+function showOneOnly(){
+  const box=$("#fb2");box.innerHTML="";
+  fb(box,"warn","Можно изменить только одну область.","Верните уже измененную настройку к исходному уровню, если хотите выбрать другую.");
+  box.classList.add("show")
+}
+
+function check2(){
+  const changed=changedIds()[0], reason=$("#reason").value;
+  const level=state2[changed];
+  const areaOk=changed==="contractor";
+  const directionOk=areaOk&&level<baseline.contractor;
+  const levelOk=areaOk&&level>=3&&level<=4;
+  const reasonOk=reason==="risk";
+  const ok=areaOk&&directionOk&&levelOk&&reasonOk;
+
+  const box=$("#fb2");box.innerHTML="";
+  if(ok){
+    fb(box,"ok","Вы изменили только ту область, где вырос риск.","Новизна для Виктора и повышенная цена ошибки обосновывают временно более тесное участие руководителя в выборе подрядчика.");
+  } else {
+    if(!areaOk) fb(box,"warn","Изменена не та область.","Новые данные относятся к работе с внешними подрядчиками. Остальные типы решений не изменились.");
+    else if(!directionOk) fb(box,"warn","Новый риск требует более осторожного режима.","До накопления опыта участие руководителя в выборе подрядчика стоит увеличить.");
+    else if(!levelOk) fb(box,"warn","Изменение получилось слишком сильным.","Достаточно перейти от уровня 5 к уровню 4 или 3, а не полностью забирать решение.");
+    if(!reasonOk) fb(box,"warn","Причина не связана с новой фактурой.","Меняйте область из-за сочетания новизны и повышенной цены ошибки, а не из-за общего недоверия.");
+  }
+  box.classList.add("show");
+  summary(ok)
+}
+
+function summary(round2Ok){
+  let title,text;
+  if(round1Score>=5&&round2Ok){
+    title="Вы настраиваете полномочия по решениям и меняете их вместе с риском.";
+    text="Высокая самостоятельность остается там, где решения обратимы и укладываются в ограничения. Новый риск меняет только затронутую область.";
+  } else if(round1Score<4){
+    title="Стоит отказаться от одного уровня самостоятельности «для человека вообще».";
+    text="Один сотрудник может полностью владеть внутренним распределением задач и одновременно не иметь права самостоятельно менять бюджет или договор.";
+  } else if(!round2Ok){
+    title="Первая настройка в целом рабочая, но новое событие изменило не тот участок системы.";
+    text="Сначала определите, к какому типу решения относится новая информация, и меняйте только его уровень.";
+  } else {
+    title="Основная логика распределения полномочий работает.";
+    text="Точнее различайте обратимые операционные решения и решения, которые меняют финансовые или договорные обязательства.";
+  }
+  const diff=new Set(Object.values(state1)).size>=3?1:0;
+  $("#summary").innerHTML='<h3>'+title+'</h3><p>'+text+'</p>'+
+  '<div class="metrics"><div class="metric"><div class="score">'+round1Score+'/6</div><div class="ml">рабочие диапазоны</div></div>'+
+  '<div class="metric"><div class="score">'+diff+'/1</div><div class="ml">разные режимы для разных решений</div></div>'+
+  '<div class="metric"><div class="score">'+(round2Ok?1:0)+'/1</div><div class="ml">адаптация к новому риску</div></div></div>'+
+  '<div class="system"><div class="sh">Рабочая логика</div>'+
+  '<div class="sr"><b>Операционные решения внутри ограничений</b>Можно передавать на уровни 5–7 при стабильной работе и умеренной цене ошибки.</div>'+
+  '<div class="sr"><b>Новый или менее обратимый контур</b>На старте уместны уровни 3–5 с участием руководителя.</div>'+
+  '<div class="sr"><b>Бюджет и договор</b>Формальное право решения не исчезает из-за высокого общего доверия к сотруднику.</div>'+
+  '<div class="sr"><b>Изменение риска</b>Меняется уровень конкретной области, а не самостоятельность сотрудника целиком.</div></div>';
+  $("#summary").classList.remove("hidden")
+}
+
+$("#reset1").addEventListener("click",reset1);
+$("#check1").addEventListener("click",evaluate1);
+$("#go2").addEventListener("click",go2);
+$("#back1").addEventListener("click",()=>{$("#stage2").classList.add("hidden");$("#stage1").classList.remove("hidden");$("#p2").classList.remove("active");renderPanel("#panel1",state1,1);window.scrollTo({top:0,behavior:"smooth"})});
+$("#reason").addEventListener("change",()=>{clear2();ready2()});
+$("#check2").addEventListener("click",check2);
+
+renderPanel("#panel1",state1,1);
+</script>
+</body>
+</html>

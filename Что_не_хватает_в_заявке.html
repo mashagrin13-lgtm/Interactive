@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Что не хватает в заявке</title>
+<style>
+:root{
+  --bg:#f5f6f8; --card:#fff; --text:#20242d; --muted:#6d7583; --line:#dfe3ea;
+  --accent:#315d9b; --soft:#eef3fb; --ok:#2e6b4f; --okbg:#eef7f2;
+  --warn:#8a5a10; --warnbg:#fff7e8;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:Arial,Helvetica,sans-serif;line-height:1.42}
+.app{width:min(560px,calc(100% - 24px));margin:18px auto}
+.shell{background:var(--card);border:1px solid var(--line);border-radius:16px;overflow:hidden}
+.head{padding:18px;border-bottom:1px solid var(--line)}
+h1{margin:0 0 8px;font-size:21px}.lead{margin:0;color:var(--muted);font-size:14px}
+.body{padding:16px}.rules,.request{padding:11px 12px;border:1px solid #d8e1ef;background:#f5f7fb;border-radius:12px;font-size:13px;margin-bottom:12px}
+.rules b,.request b{display:block;margin-bottom:5px}.rules ol{margin:0;padding-left:19px}.rules li{margin:4px 0}
+.quote{padding:9px 10px;background:#fff;border-left:3px solid var(--accent);border-radius:8px;font-size:12.5px}
+.options{display:grid;gap:8px}.opt{border:1px solid var(--line);border-radius:10px;padding:10px;background:#fff}
+.opt label{display:grid;grid-template-columns:22px 1fr;gap:7px;align-items:start;font-size:12.5px;cursor:pointer}
+.opt input{margin-top:2px}
+.actions{display:flex;gap:8px;margin-top:13px}
+button{appearance:none;border:0;border-radius:10px;padding:10px 13px;font-size:14px;font-weight:700;cursor:pointer}
+.primary{background:var(--accent);color:#fff;flex:1}.secondary{background:#edf0f4}
+.feedback{display:none;margin-top:12px}.feedback.show{display:block}
+.fb{border-radius:10px;padding:10px 11px;margin-top:7px;font-size:13px}.fb strong{display:block;margin-bottom:3px}
+.ok{background:var(--okbg);border:1px solid #cfe5d8;color:#214f3b}
+.warn{background:var(--warnbg);border:1px solid #f1dbb0;color:#6f480c}
+.improved{margin-top:12px;border:1px solid var(--line);border-radius:11px;overflow:hidden}
+.ih{padding:8px 10px;background:#f4f6f9;font-size:12.5px;font-weight:700}
+.ir{padding:9px 10px;border-top:1px solid #edf0f4;font-size:12.5px}
+.ir b{display:block;margin-bottom:2px}
+.hidden{display:none!important}
+</style>
+</head>
+<body>
+<div class="app"><div class="shell">
+<div class="head">
+<h1>Что не хватает в заявке</h1>
+<p class="lead">Определите, каких данных не хватает руководителю, чтобы принять решение о дополнительном ресурсе без догадок.</p>
+</div>
+<div class="body">
+
+<div class="rules"><b>Что нужно сделать</b><ol>
+<li>Прочитайте заявку.</li>
+<li>Отметьте все данные, которых действительно не хватает для управленческого решения.</li>
+<li>Не выбирайте информацию только потому, что она «может быть интересна». Нужны данные, которые позволяют оценить запрос, эффект, использование ресурса и цену отказа.</li>
+<li>После выбора нажмите «Проверить».</li>
+</ol></div>
+
+<div class="request"><b>Заявка</b><div class="quote">«Нам нужен еще один специалист на два месяца. Сейчас команда не справляется с нагрузкой. Если сотрудника не дадут, сроки могут пострадать».</div></div>
+
+<div class="options" id="options"></div>
+
+<div class="actions">
+<button class="secondary" id="reset">Сбросить</button>
+<button class="primary" id="check">Проверить</button>
+</div>
+
+<div class="feedback" id="fb"></div>
+<div class="improved hidden" id="improved"></div>
+
+</div></div></div>
+
+<script>
+const items=[
+  {id:"volume",text:"Конкретный объем ресурса: какая роль, какая загрузка и на какой срок.",correct:true},
+  {id:"effect",text:"Ожидаемый эффект: какой результат изменится благодаря ресурсу и к какой дате.",correct:true},
+  {id:"refusal",text:"Последствия отказа: что именно произойдет без ресурса и насколько это критично.",correct:true},
+  {id:"plan",text:"План использования: какие задачи получит специалист и как его работа разгрузит критичный участок.",correct:true},
+  {id:"name",text:"Имя сотрудника, который написал заявку.",correct:false},
+  {id:"tool",text:"Любимый инструмент команды.",correct:false}
+];
+
+const selected=new Set();
+const $=s=>document.querySelector(s);
+
+function addFb(type,title,text){
+  const d=document.createElement("div");d.className="fb "+type;d.innerHTML="<strong>"+title+"</strong>"+text;$("#fb").appendChild(d)
+}
+
+function render(){
+  const box=$("#options");box.innerHTML="";
+  items.forEach(i=>{
+    const d=document.createElement("div");d.className="opt";
+    const lab=document.createElement("label");
+    const inp=document.createElement("input");inp.type="checkbox";inp.checked=selected.has(i.id);
+    inp.addEventListener("change",()=>{if(inp.checked)selected.add(i.id);else selected.delete(i.id);clear()});
+    const span=document.createElement("span");span.textContent=i.text;
+    lab.append(inp,span);d.appendChild(lab);box.appendChild(d)
+  })
+}
+
+function clear(){
+  $("#fb").className="feedback";$("#fb").innerHTML="";$("#improved").classList.add("hidden")
+}
+
+function check(){
+  const missingCorrect=items.filter(i=>i.correct&&!selected.has(i.id));
+  const extras=items.filter(i=>!i.correct&&selected.has(i.id));
+
+  $("#fb").innerHTML="";
+  if(!missingCorrect.length&&!extras.length){
+    addFb("ok","Вы выбрали данные, которые действительно влияют на решение.","Руководителю нужно понять объем ресурса, ожидаемый эффект, план использования и цену отказа. Имя автора и любимый инструмент команды не помогают сравнить заявку с другими.");
+  }else{
+    if(missingCorrect.length) addFb("warn","В заявке по-прежнему остаются важные пробелы.","Не выбраны: "+missingCorrect.map(i=>i.text).join(" "));
+    if(extras.length) addFb("warn","Часть выбранной информации не влияет на решение о ресурсе.","Уберите: "+extras.map(i=>i.text).join(" "));
+  }
+  $("#fb").classList.add("show");
+
+  $("#improved").innerHTML=
+    '<div class="ih">Улучшенная версия заявки</div>'+
+    '<div class="ir"><b>Запрос</b>Нужен специалист по сопровождению на 50% рабочего времени на два месяца.</div>'+
+    '<div class="ir"><b>Эффект</b>Он возьмет обработку типовых обращений и освободит ведущих специалистов для завершения миграции до 30 сентября.</div>'+
+    '<div class="ir"><b>План использования</b>Около 20 часов в неделю — типовые обращения и контроль очереди. Ведущие специалисты высвобождают по 10 часов в неделю на миграцию.</div>'+
+    '<div class="ir"><b>Цена отказа</b>Без ресурса команда прогнозирует сдвиг миграции на 8–10 рабочих дней; это задержит подключение двух подразделений.</div>'+
+    '<div class="ir"><b>Альтернатива</b>Можно временно сократить часы поддержки, но тогда время ответа пользователям вырастет примерно вдвое.</div>';
+  $("#improved").classList.remove("hidden")
+}
+
+$("#reset").addEventListener("click",()=>{selected.clear();clear();render()});
+$("#check").addEventListener("click",check);
+render();
+</script>
+</body>
+</html>
