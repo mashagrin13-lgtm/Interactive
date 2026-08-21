@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Что лишнее в сценарии</title>
+<style>
+
+:root{
+  --bg:#f5f6f8;
+  --card:#ffffff;
+  --text:#20242d;
+  --muted:#6d7583;
+  --line:#dfe3ea;
+  --accent:#315d9b;
+  --accent-soft:#eef3fb;
+  --ok:#2e6b4f;
+  --ok-bg:#eef7f2;
+  --warn:#8a5a10;
+  --warn-bg:#fff7e8;
+  --bad:#8b3d45;
+  --bad-bg:#fff0f1;
+  --shadow:0 6px 18px rgba(31,36,48,.07);
+}
+*{box-sizing:border-box}
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--text);
+  font-family:Arial,Helvetica,sans-serif;
+  line-height:1.42;
+}
+.app{
+  width:min(560px,calc(100% - 24px));
+  margin:18px auto;
+}
+.shell{
+  background:var(--card);
+  border:1px solid var(--line);
+  border-radius:16px;
+  box-shadow:var(--shadow);
+  overflow:hidden;
+}
+.head{
+  padding:18px 18px 14px;
+  border-bottom:1px solid var(--line);
+}
+h1{margin:0 0 8px;font-size:21px;line-height:1.2}
+.lead{margin:0;font-size:14px;color:var(--muted)}
+.progress{display:flex;gap:7px;margin-top:14px}
+.progress span{height:5px;flex:1;background:#e8ebf0;border-radius:999px}
+.progress span.active{background:var(--accent)}
+.body{padding:16px}
+.stage-label{
+  font-size:12px;
+  color:var(--accent);
+  font-weight:700;
+  text-transform:uppercase;
+  letter-spacing:.03em;
+  margin-bottom:5px;
+}
+.stage-title{margin:0 0 5px;font-size:17px}
+.stage-note{margin:0 0 12px;color:var(--muted);font-size:13px}
+.rules{
+  padding:11px 12px;
+  border:1px solid #d8e1ef;
+  background:#f5f7fb;
+  border-radius:12px;
+  font-size:13px;
+  margin-bottom:13px;
+}
+.rules b{display:block;margin-bottom:5px}
+.rules ol{margin:0;padding-left:19px}
+.rules li{margin:4px 0}
+.case{
+  padding:11px 12px;
+  border:1px solid #d8e1ef;
+  background:#f5f7fb;
+  border-radius:11px;
+  font-size:13px;
+  margin-bottom:12px;
+}
+.case b{display:block;margin-bottom:3px}
+.actions{display:flex;gap:8px;margin-top:13px}
+button{
+  appearance:none;
+  border:0;
+  border-radius:10px;
+  padding:10px 13px;
+  font-size:14px;
+  font-weight:700;
+  cursor:pointer;
+}
+.primary{background:var(--accent);color:#fff;flex:1}
+.primary:disabled{opacity:.45;cursor:not-allowed}
+.secondary{background:#edf0f4;color:var(--text)}
+.hidden{display:none!important}
+.option-list{display:grid;gap:8px}
+.option{
+  width:100%;
+  border:1px solid var(--line);
+  border-radius:10px;
+  background:#fff;
+  color:var(--text);
+  padding:10px 11px;
+  text-align:left;
+  font-size:13px;
+  cursor:pointer;
+}
+.option:hover{border-color:#b5bfcd}
+.option.selected{
+  border-color:var(--accent);
+  background:var(--accent-soft);
+  box-shadow:0 0 0 1px var(--accent) inset;
+}
+.option.correct{
+  border-color:#a9d2bb;
+  background:var(--ok-bg);
+}
+.option.wrong{
+  border-color:#e1b0b5;
+  background:var(--bad-bg);
+}
+.feedback{display:none;margin-top:12px}
+.feedback.show{display:block}
+.fb{border-radius:10px;padding:10px 11px;margin-top:7px;font-size:13px}
+.fb strong{display:block;margin-bottom:3px}
+.fb.ok{background:var(--ok-bg);border:1px solid #cfe5d8;color:#214f3b}
+.fb.warn{background:var(--warn-bg);border:1px solid #f1dbb0;color:#6f480c}
+.fb.bad{background:var(--bad-bg);border:1px solid #efc9cd;color:#73343b}
+.summary{
+  margin-top:14px;
+  padding-top:14px;
+  border-top:1px solid var(--line);
+}
+.summary h3{margin:0 0 7px;font-size:17px}
+.summary p{margin:0 0 9px;font-size:13px}
+.summary-grid{display:grid;gap:7px}
+.summary-item{
+  border:1px solid var(--line);
+  border-radius:10px;
+  padding:9px 10px;
+  font-size:12.5px;
+}
+.summary-item b{display:block;margin-bottom:2px}
+.small{font-size:12px;color:var(--muted)}
+
+.scenario-card{border:1px solid var(--line);border-radius:12px;padding:11px;margin-bottom:12px}
+.scenario-card h3{margin:0 0 5px;font-size:16px}
+.scenario-trigger{font-size:12.5px;color:var(--muted);margin-bottom:9px}
+.line-option{
+  display:grid;grid-template-columns:26px 1fr;gap:8px;align-items:start;
+  border:1px solid var(--line);border-radius:10px;padding:9px 10px;margin-top:7px;background:#fff;cursor:pointer
+}
+.line-option.selected{border-color:var(--accent);background:var(--accent-soft)}
+.line-num{font-weight:700;color:var(--accent)}
+.replacement{margin-top:13px}
+.replacement h3{margin:0 0 5px;font-size:16px}
+.editor{border:1px solid var(--line);border-radius:12px;overflow:hidden;margin-top:10px}
+.editor-head{padding:9px 10px;background:#f4f6f9;font-size:12.5px;font-weight:700}
+.editor-row{padding:9px 10px;border-top:1px solid #edf0f4;font-size:12.5px}
+.editor-row.bad{background:var(--bad-bg)}
+.editor-row.good{background:var(--ok-bg)}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="shell">
+    <div class="head">
+      <h1>Что лишнее в сценарии</h1>
+      <p class="lead">Найдите элемент, который делает сценарий неработающим: возвращает каждое решение руководителю, задает размытый триггер или выводит сотрудника за границы полномочий.</p>
+      <div class="progress">
+        <span id="s1" class="active"></span>
+        <span id="s2"></span>
+        <span id="s3"></span>
+        <span id="s4"></span>
+        <span id="s5"></span>
+      </div>
+    </div>
+    <div class="body">
+      <section id="quiz">
+        <div class="stage-label" id="caseLabel"></div>
+        <h2 class="stage-title">Найдите проблемный элемент</h2>
+        <div class="rules">
+          <b>Что нужно сделать</b>
+          <ol>
+            <li>Прочитайте триггер сценария и все действия.</li>
+            <li>Выберите <strong>одно</strong> действие, которое нарушает логику сценария.</li>
+            <li>Проверьте себя по трем вопросам: можно ли распознать триггер по факту; может ли сотрудник начать действия без отдельного разрешения; не получает ли он новых полномочий сверх согласованных.</li>
+            <li>После ответа прочитайте комментарий и переходите к следующему кейсу.</li>
+          </ol>
+        </div>
+
+        <div class="scenario-card">
+          <h3 id="scenarioTitle"></h3>
+          <div class="scenario-trigger" id="scenarioTrigger"></div>
+          <div id="scenarioLines"></div>
+        </div>
+
+        <div class="actions">
+          <button class="primary" id="checkCase" disabled>Проверить ответ</button>
+        </div>
+        <div class="feedback" id="caseFeedback"></div>
+        <div class="actions hidden" id="nextCaseWrap">
+          <button class="primary" id="nextCase">Следующий кейс</button>
+        </div>
+      </section>
+
+      <section id="edit" class="hidden">
+        <div class="stage-label">Финальный этап</div>
+        <h2 class="stage-title">Исправьте сценарий</h2>
+        <div class="rules">
+          <b>Что нужно сделать</b>
+          <ol>
+            <li>Перед вами сценарий с одним слабым элементом.</li>
+            <li>Выберите формулировку, которая лучше заменяет проблемную строку.</li>
+            <li>Замена должна дать сотруднику конкретное действие внутри полномочий и оставить понятную точку эскалации.</li>
+          </ol>
+        </div>
+
+        <div class="editor">
+          <div class="editor-head">Сценарий: подрядчик задерживается больше чем на три дня</div>
+          <div class="editor-row">Оценить влияние на критический путь.</div>
+          <div class="editor-row">Перенести некритичные внутренние этапы.</div>
+          <div class="editor-row bad">Каждый шаг согласовывать с руководителем.</div>
+          <div class="editor-row">Подготовить вариант сохранения финальной даты.</div>
+          <div class="editor-row">Если задержка превышает семь дней или затрагивает финальную дату — эскалировать.</div>
+        </div>
+
+        <div class="stage-note" style="margin-top:12px">Чем заменить выделенную строку?</div>
+        <div class="option-list" id="replacementOptions"></div>
+
+        <div class="actions">
+          <button class="primary" id="checkReplacement" disabled>Проверить замену</button>
+        </div>
+
+        <div class="feedback" id="replacementFeedback"></div>
+        <div class="summary hidden" id="summary"></div>
+      </section>
+    </div>
+  </div>
+</div>
+
+<script>
+const cases = [
+  {
+    title:"Подрядчик задерживается",
+    trigger:"Триггер: задержка подрядчика больше чем на три рабочих дня.",
+    lines:[
+      "Оценить влияние задержки на критический путь.",
+      "Перенести некритичные внутренние этапы в пределах плана.",
+      "Каждый шаг согласовывать с руководителем.",
+      "Подготовить вариант сохранения финальной даты.",
+      "Если задержка превышает семь дней или затрагивает финальную дату — эскалировать."
+    ],
+    bad:2,
+    reason:"Обязательное согласование каждого шага возвращает типовое решение руководителю. Сценарий должен заранее задавать, что сотрудник вправе изменить сам."
+  },
+  {
+    title:"Нагрузка в сервисной очереди",
+    trigger:"Триггер: «если ситуация становится серьезной».",
+    lines:[
+      "Отложить внутренние некритичные задачи.",
+      "Перераспределить доступных специалистов.",
+      "Использовать согласованный резерв.",
+      "Уведомить смежную команду при влиянии на ее работу."
+    ],
+    badTrigger:true,
+    bad:null,
+    reason:"Триггер «становится серьезной» нельзя распознать одинаково. Укажите наблюдаемый порог: число заявок, время ожидания или риск обязательного срока."
+  },
+  {
+    title:"Сбой внутренней системы",
+    trigger:"Триггер: система недоступна больше 15 минут.",
+    lines:[
+      "Перейти на резервный канал приема обращений.",
+      "Зафиксировать время начала сбоя.",
+      "Ждать руководителя и до его ответа не менять порядок работы.",
+      "Если простой превышает 45 минут — эскалировать владельцу системы."
+    ],
+    bad:2,
+    reason:"Если резервный режим заранее согласован, ожидание руководителя создает ненужную паузу. Первые защитные действия должны начинаться сразу."
+  },
+  {
+    title:"Рост расходов по проекту",
+    trigger:"Триггер: прогноз дополнительных расходов выше 50 000 ₽.",
+    lines:[
+      "Проверить источник отклонения.",
+      "Подготовить два варианта сокращения затрат.",
+      "Самостоятельно утвердить любые дополнительные расходы, если они помогают сохранить срок.",
+      "Если требуется выход за утвержденный бюджет — эскалировать с рекомендацией."
+    ],
+    bad:2,
+    reason:"Сценарий помогает действовать быстрее, но не создает новых финансовых полномочий. Выход за бюджет остается точкой эскалации."
+  }
+];
+
+const replacements = [
+  {
+    id:"r1",
+    text:"В пределах согласованных полномочий самостоятельно перенести некритичные этапы и обновить план; руководителя подключать только при срабатывании условия эскалации.",
+    correct:true
+  },
+  {
+    id:"r2",
+    text:"Перед каждым изменением коротко писать руководителю и ждать подтверждения.",
+    correct:false
+  },
+  {
+    id:"r3",
+    text:"Сотрудник может менять любые сроки и бюджет, если считает это полезным для проекта.",
+    correct:false
+  },
+  {
+    id:"r4",
+    text:"Ничего не менять до тех пор, пока задержка не превысит семь дней.",
+    correct:false
+  }
+];
+
+let index=0;
+let selected=null;
+let score=0;
+let replacement=null;
+
+const $=s=>document.querySelector(s);
+
+function addFb(container,type,title,text){
+  const d=document.createElement("div");
+  d.className=`fb ${type}`;
+  d.innerHTML=`<strong>${title}</strong>${text}`;
+  container.appendChild(d);
+}
+
+function renderCase(){
+  const c=cases[index];
+  for(let i=1;i<=5;i++)$("#s"+i).classList.toggle("active",i<=index+1);
+
+  $("#caseLabel").textContent=`Кейс ${index+1} из 4`;
+  $("#scenarioTitle").textContent=c.title;
+  $("#scenarioTrigger").textContent=c.trigger;
+  const box=$("#scenarioLines");box.innerHTML="";
+
+  if(c.badTrigger){
+    const triggerLine=document.createElement("div");
+    triggerLine.className="line-option"+(selected==="trigger"?" selected":"");
+    triggerLine.innerHTML='<div class="line-num">Т</div><div><b>Проблема может быть в самом триггере.</b><br>Отметить триггер как лишний или некорректный элемент.</div>';
+    triggerLine.addEventListener("click",()=>{selected="trigger";renderCase()});
+    box.appendChild(triggerLine);
+  }
+
+  c.lines.forEach((line,i)=>{
+    const row=document.createElement("div");
+    row.className="line-option"+(selected===i?" selected":"");
+    row.innerHTML=`<div class="line-num">${i+1}</div><div>${line}</div>`;
+    row.addEventListener("click",()=>{selected=i;renderCase()});
+    box.appendChild(row);
+  });
+
+  $("#checkCase").disabled=selected===null;
+  $("#caseFeedback").className="feedback";$("#caseFeedback").innerHTML="";
+  $("#nextCaseWrap").classList.add("hidden");
+}
+
+function checkCase(){
+  const c=cases[index];
+  const correct=c.badTrigger?selected==="trigger":selected===c.bad;
+  const fb=$("#caseFeedback");fb.innerHTML="";
+  if(correct){
+    score++;
+    addFb(fb,"ok","Проблемный элемент найден.",c.reason);
+  }else{
+    addFb(fb,"warn","Вы выбрали рабочий элемент сценария.",c.reason);
+  }
+  fb.classList.add("show");
+  $("#nextCaseWrap").classList.remove("hidden");
+  $("#nextCase").textContent=index===3?"Перейти к исправлению сценария":"Следующий кейс";
+}
+
+function nextCase(){
+  if(index<3){
+    index++;selected=null;renderCase();window.scrollTo({top:0,behavior:"smooth"});
+  }else{
+    $("#quiz").classList.add("hidden");
+    $("#edit").classList.remove("hidden");
+    $("#s5").classList.add("active");
+    renderReplacements();
+    window.scrollTo({top:0,behavior:"smooth"});
+  }
+}
+
+function renderReplacements(){
+  const box=$("#replacementOptions");box.innerHTML="";
+  replacements.forEach(r=>{
+    const b=document.createElement("button");
+    b.type="button";
+    b.className="option"+(replacement===r.id?" selected":"");
+    b.textContent=r.text;
+    b.addEventListener("click",()=>{replacement=r.id;renderReplacements()});
+    box.appendChild(b);
+  });
+  $("#checkReplacement").disabled=!replacement;
+  $("#replacementFeedback").className="feedback";$("#replacementFeedback").innerHTML="";
+  $("#summary").classList.add("hidden");
+}
+
+function checkReplacement(){
+  const fb=$("#replacementFeedback");fb.innerHTML="";
+  const chosen=replacements.find(r=>r.id===replacement);
+  if(chosen.correct){
+    addFb(fb,"ok","Замена восстанавливает самостоятельность сценария.",
+      "Сотрудник получает право выполнить заранее согласованные действия сам, а руководитель подключается только при понятном условии эскалации.");
+  }else if(replacement==="r2"){
+    addFb(fb,"bad","Согласование каждого шага сохраняет зависимость.",
+      "Такой сценарий описывает последовательность проверки, но не дает сотруднику права действовать самостоятельно.");
+  }else if(replacement==="r3"){
+    addFb(fb,"bad","Формулировка выходит за границы полномочий.",
+      "Сценарий не может автоматически разрешить изменение бюджета и любых сроков.");
+  }else{
+    addFb(fb,"warn","Формулировка заставляет ждать, хотя безопасные действия уже известны.",
+      "Сценарий нужен именно для того, чтобы начать первые шаги до достижения критической точки.");
+  }
+  fb.classList.add("show");
+
+  const s=$("#summary");
+  let title,text;
+  if(score===4&&chosen.correct){
+    title="Вы хорошо видите, что делает сценарий самостоятельным.";
+    text="Вы отличаете рабочие действия от трех типичных дефектов: размытый триггер, обязательное ожидание руководителя и выход за границы полномочий.";
+  }else if(score>=3){
+    title="Основная логика освоена.";
+    text="Проверьте те кейсы, где сценарий выглядел правдоподобно, но содержал скрытое согласование или размытый триггер.";
+  }else{
+    title="Стоит еще раз проверить конструкцию сценария.";
+    text="Хороший сценарий содержит наблюдаемый триггер, разрешенные первые действия, понятную границу и конкретную точку эскалации.";
+  }
+  s.innerHTML=`
+    <h3>${title}</h3>
+    <p>${text}</p>
+    <div class="summary-grid">
+      <div class="summary-item"><b>Найдено дефектов</b>${score} из 4.</div>
+      <div class="summary-item"><b>Критерий 1</b>Триггер можно распознать по факту.</div>
+      <div class="summary-item"><b>Критерий 2</b>Первые действия разрешены заранее и не требуют согласования каждого шага.</div>
+      <div class="summary-item"><b>Критерий 3</b>Сценарий не создает полномочий сверх бюджета, сроков и других ограничений.</div>
+    </div>
+  `;
+  s.classList.remove("hidden");
+}
+
+$("#checkCase").addEventListener("click",checkCase);
+$("#nextCase").addEventListener("click",nextCase);
+$("#checkReplacement").addEventListener("click",checkReplacement);
+
+renderCase();
+</script>
+</body>
+</html>

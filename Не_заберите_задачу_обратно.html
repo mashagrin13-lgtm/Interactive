@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Не забирайте задачи обратно</title>
+<style>
+:root{
+  --bg:#f5f6f8;
+  --card:#ffffff;
+  --text:#20242d;
+  --muted:#6d7583;
+  --line:#dfe3ea;
+  --accent:#315d9b;
+  --accent-soft:#eef3fb;
+  --ok:#2e6b4f;
+  --ok-bg:#eef7f2;
+  --warn:#8a5a10;
+  --warn-bg:#fff7e8;
+  --bad:#8b3d45;
+  --bad-bg:#fff0f1;
+  --shadow:0 6px 18px rgba(31,36,48,.07);
+}
+*{box-sizing:border-box}
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--text);
+  font-family:Arial,Helvetica,sans-serif;
+  line-height:1.42;
+}
+.app{
+  width:min(560px,calc(100% - 24px));
+  margin:18px auto;
+}
+.shell{
+  background:var(--card);
+  border:1px solid var(--line);
+  border-radius:16px;
+  box-shadow:var(--shadow);
+  overflow:hidden;
+}
+.head{
+  padding:18px 18px 14px;
+  border-bottom:1px solid var(--line);
+}
+h1{
+  margin:0 0 8px;
+  font-size:21px;
+  line-height:1.2;
+}
+.lead{
+  margin:0;
+  color:var(--muted);
+  font-size:14px;
+}
+.rules{
+  margin-top:13px;
+  padding:11px 12px;
+  border:1px solid #d8e1ef;
+  background:#f5f7fb;
+  border-radius:12px;
+  font-size:13px;
+}
+.rules b{display:block;margin-bottom:5px}
+.rules ol{margin:0;padding-left:19px}
+.rules li{margin:4px 0}
+.progress{
+  display:flex;
+  gap:6px;
+  margin-top:14px;
+}
+.progress span{
+  flex:1;
+  height:5px;
+  border-radius:999px;
+  background:#e8ebf0;
+}
+.progress span.active{background:var(--accent)}
+.body{padding:16px}
+.topline{
+  display:flex;
+  justify-content:space-between;
+  gap:10px;
+  align-items:center;
+  margin-bottom:10px;
+  font-size:12px;
+  color:var(--muted);
+}
+.badge{
+  padding:3px 7px;
+  border-radius:999px;
+  background:var(--accent-soft);
+  color:var(--accent);
+  font-weight:700;
+  white-space:nowrap;
+}
+.agenda{
+  display:grid;
+  grid-template-columns:repeat(5,1fr);
+  gap:5px;
+  margin-bottom:13px;
+}
+.agenda-item{
+  border:1px solid var(--line);
+  border-radius:8px;
+  padding:6px 4px;
+  text-align:center;
+  font-size:10.5px;
+  color:var(--muted);
+  background:#fff;
+}
+.agenda-item.current{
+  border-color:var(--accent);
+  background:var(--accent-soft);
+  color:var(--accent);
+  font-weight:700;
+}
+.agenda-item.done{
+  background:#f4f7f5;
+  color:var(--ok);
+}
+.chat{
+  display:flex;
+  flex-direction:column;
+  gap:9px;
+}
+.bubble{
+  max-width:90%;
+  border-radius:13px;
+  padding:10px 11px;
+  font-size:13.5px;
+}
+.employee{
+  align-self:flex-start;
+  background:#f1f3f6;
+  border-bottom-left-radius:5px;
+}
+.manager{
+  align-self:flex-end;
+  background:var(--accent);
+  color:#fff;
+  border-bottom-right-radius:5px;
+}
+.meta{
+  display:block;
+  font-size:11px;
+  opacity:.72;
+  margin-bottom:3px;
+}
+.note{
+  margin:1px 0;
+  padding:9px 10px;
+  border-left:3px solid var(--accent);
+  background:var(--accent-soft);
+  font-size:12.5px;
+}
+.question{
+  margin-top:14px;
+  font-size:13px;
+  font-weight:700;
+}
+.options{
+  display:grid;
+  gap:7px;
+  margin-top:8px;
+}
+.option{
+  width:100%;
+  text-align:left;
+  border:1px solid var(--line);
+  border-radius:10px;
+  background:#fff;
+  color:var(--text);
+  padding:10px 11px;
+  font-size:13px;
+  cursor:pointer;
+}
+.option:hover{border-color:#b5bfcd}
+.option:disabled{cursor:default;opacity:.72}
+.option.selected{
+  border-color:var(--accent);
+  background:var(--accent-soft);
+  opacity:1;
+  box-shadow:0 0 0 1px var(--accent) inset;
+}
+.actions{
+  display:flex;
+  gap:8px;
+  margin-top:13px;
+}
+button{
+  appearance:none;
+  border:0;
+  border-radius:10px;
+  padding:10px 13px;
+  font-size:14px;
+  font-weight:700;
+  cursor:pointer;
+}
+.primary{
+  background:var(--accent);
+  color:#fff;
+  flex:1;
+}
+.primary:disabled{opacity:.45;cursor:not-allowed}
+.secondary{
+  background:#edf0f4;
+  color:var(--text);
+}
+.feedback{
+  display:none;
+  margin-top:12px;
+}
+.feedback.show{display:block}
+.fb{
+  border-radius:10px;
+  padding:10px 11px;
+  margin-top:7px;
+  font-size:13px;
+}
+.fb strong{display:block;margin-bottom:3px}
+.fb.ok{background:var(--ok-bg);border:1px solid #cfe5d8;color:#214f3b}
+.fb.warn{background:var(--warn-bg);border:1px solid #f1dbb0;color:#6f480c}
+.fb.bad{background:var(--bad-bg);border:1px solid #efc9cd;color:#73343b}
+.hidden{display:none!important}
+.final{
+  display:none;
+}
+.final.show{display:block}
+.final h2{
+  margin:0 0 7px;
+  font-size:18px;
+}
+.final p{
+  margin:0 0 10px;
+  font-size:13.5px;
+}
+.metrics{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:7px;
+  margin-top:12px;
+}
+.metric{
+  border:1px solid var(--line);
+  border-radius:10px;
+  padding:9px;
+}
+.metric b{
+  display:block;
+  font-size:12px;
+  margin-bottom:4px;
+}
+.metric .score{
+  font-size:18px;
+  font-weight:700;
+  color:var(--accent);
+}
+.trajectory{
+  margin-top:12px;
+  border:1px solid var(--line);
+  border-radius:11px;
+  overflow:hidden;
+}
+.trajectory-head{
+  padding:8px 10px;
+  background:#f4f6f9;
+  font-size:12.5px;
+  font-weight:700;
+}
+.trajectory-row{
+  padding:8px 10px;
+  border-top:1px solid #edf0f4;
+  font-size:12px;
+}
+.trajectory-row b{display:block;margin-bottom:2px}
+@media(max-width:420px){
+  .agenda-item{font-size:9.5px;padding:5px 2px}
+  .bubble{max-width:95%}
+  .body{padding:13px}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="shell">
+    <div class="head">
+      <h1>Не заберите задачу обратно</h1>
+      <p class="lead">Проведите короткую 1:1 по делегированной задаче так, чтобы увидеть риск, помочь сотруднику сформировать решение и не стать новым владельцем его работы.</p>
+
+      <div class="rules">
+        <b>Как выполнять задание</b>
+        <ol>
+          <li>Читайте сообщение сотрудника и выбирайте <strong>один</strong> ответ руководителя.</li>
+          <li>После выбора появится реакция сотрудника. Она зависит от вашей реплики: готовый ответ усиливает зависимость, а корректный вопрос оставляет управление у сотрудника.</li>
+          <li>Пройдите все пять этапов 1:1: результат → изменения → препятствие → решение → следующий результат.</li>
+          <li>Не пытайтесь любой ценой «не вмешиваться». Если решение действительно требует полномочий руководителя, подключитесь только в этой точке.</li>
+          <li>В финале система оценит всю траекторию разговора, а не отдельную фразу.</li>
+        </ol>
+      </div>
+
+      <div class="progress">
+        <span id="p1" class="active"></span>
+        <span id="p2"></span>
+        <span id="p3"></span>
+        <span id="p4"></span>
+        <span id="p5"></span>
+      </div>
+    </div>
+
+    <div class="body">
+      <section id="game">
+        <div class="topline">
+          <span id="roundLabel">Этап 1 из 5</span>
+          <span class="badge" id="autonomyBadge">ответственность пока нейтральна</span>
+        </div>
+
+        <div class="agenda">
+          <div class="agenda-item current" data-step="0">Результат</div>
+          <div class="agenda-item" data-step="1">Изменения</div>
+          <div class="agenda-item" data-step="2">Препятствие</div>
+          <div class="agenda-item" data-step="3">Решение</div>
+          <div class="agenda-item" data-step="4">Следующий результат</div>
+        </div>
+
+        <div class="chat" id="chat" aria-live="polite"></div>
+
+        <div class="question">Как ответите?</div>
+        <div class="options" id="options"></div>
+
+        <div class="feedback" id="feedback"></div>
+
+        <div class="actions">
+          <button class="secondary" id="restartBtn">Начать заново</button>
+          <button class="primary" id="nextBtn" disabled>Продолжить</button>
+        </div>
+      </section>
+
+      <section id="final" class="final">
+        <h2 id="finalTitle"></h2>
+        <p id="finalText"></p>
+
+        <div class="metrics">
+          <div class="metric">
+            <b>Фокус на результате</b>
+            <div class="score" id="mResult"></div>
+          </div>
+          <div class="metric">
+            <b>Ответственность сотрудника</b>
+            <div class="score" id="mOwnership"></div>
+          </div>
+          <div class="metric">
+            <b>Граница полномочий</b>
+            <div class="score" id="mBoundary"></div>
+          </div>
+          <div class="metric">
+            <b>Следующий результат</b>
+            <div class="score" id="mNext"></div>
+          </div>
+        </div>
+
+        <div class="trajectory">
+          <div class="trajectory-head">Как менялся разговор</div>
+          <div id="trajectoryRows"></div>
+        </div>
+
+        <div class="actions">
+          <button class="secondary" id="restartFinal">Пройти еще раз</button>
+        </div>
+      </section>
+    </div>
+  </div>
+</div>
+
+<script>
+const steps = [
+  {
+    name:"Результат",
+    employee:{
+      low:"Мы немного отстаем. Подрядчик еще не прислал финальный макет. Что мне делать?",
+      mid:"Мы немного отстаем. Подрядчик еще не прислал финальный макет.",
+      high:"Мы немного отстаем. Финальный макет подрядчика задерживается, но пока вижу риск только для одного этапа."
+    },
+    options:[
+      {
+        text:"Когда именно пришлет? Я сейчас сам ему напишу.",
+        effect:-2,
+        score:{result:0,ownership:0,boundary:0,next:0},
+        tag:"перехват",
+        employee:"Тогда перешлю вам контакт. Скажите, что решите с подрядчиком.",
+        feedback:"Вы быстро включились в проблему, но пока не выяснили состояние задачи и сразу забрали внешнюю коммуникацию."
+      },
+      {
+        text:"Что уже получено по результату и на что сейчас влияет отсутствие макета?",
+        effect:2,
+        score:{result:2,ownership:1,boundary:0,next:0},
+        tag:"фокус на результате",
+        employee:"Три из четырех этапов идут по плану. Из-за макета рискует только обучение команды. Финальная дата запуска пока сохраняется.",
+        feedback:"Вы сначала выяснили состояние результата и влияние отклонения. Теперь можно обсуждать риск, а не весь проект целиком."
+      },
+      {
+        text:"Я же говорил, что с этим подрядчиком будут проблемы.",
+        effect:-1,
+        score:{result:0,ownership:0,boundary:0,next:0},
+        tag:"оценка вместо разбора",
+        employee:"Да, понимаю. Тогда, наверное, надо было сразу выбрать другого.",
+        feedback:"Разговор ушел в оценку прошлого решения. Информации о текущем результате и реальном риске по-прежнему нет."
+      },
+      {
+        text:"Тогда переносим запуск на неделю.",
+        effect:-2,
+        score:{result:0,ownership:0,boundary:0,next:0},
+        tag:"решение до диагноза",
+        employee:"Хорошо. Я сообщу команде, что запуск переносится.",
+        feedback:"Вы приняли крупное решение до того, как проверили масштаб отклонения. Позже выяснится, что под угрозой был только один этап."
+      }
+    ]
+  },
+  {
+    name:"Изменения",
+    employee:{
+      low:"Подрядчик говорит, что макет будет через четыре дня. Переносим обучение?",
+      mid:"Подрядчик обещает прислать макет через четыре дня. Сейчас это сдвигает подготовку обучения, но не сам запуск.",
+      high:"Подрядчик подтвердил четыре дня задержки. Я проверил график: финальная дата сохраняется, но на подготовку обучения останется только два дня."
+    },
+    options:[
+      {
+        text:"Да, перенеси обучение на следующую неделю.",
+        effect:-1.5,
+        score:{result:0,ownership:0,boundary:0,next:0},
+        tag:"готовое решение",
+        employee:"Понял. Тогда сообщу всем о переносе.",
+        feedback:"Сотрудник уже мог сравнить варианты, но получил готовый выбор от руководителя."
+      },
+      {
+        text:"Какие варианты вы видите и что произойдет при каждом?",
+        effect:2,
+        score:{result:1,ownership:2,boundary:0,next:0},
+        tag:"варианты сотрудника",
+        employee:"Вижу два. Первый — перенести обучение на неделю. Второй — взять у подрядчика промежуточную версию макета и начать подготовку по ней. Второй сохраняет дату, но потребует быстрой финальной правки.",
+        feedback:"Вы вернули сотруднику анализ и получили варианты с последствиями вместо сырой проблемы."
+      },
+      {
+        text:"Пришлите мне к вечеру подробный отчет по всем этапам проекта.",
+        effect:-0.5,
+        score:{result:1,ownership:0,boundary:0,next:0},
+        tag:"отчет вместо решения",
+        employee:"Хорошо, соберу статус по каждому этапу. По макету тогда пока ничего не меняю.",
+        feedback:"Дополнительный отчет увеличил объем информации, но не продвинул решение по конкретному риску."
+      },
+      {
+        text:"Давайте я сам возьму коммуникацию с подрядчиком и обучение, а вы займитесь остальными этапами.",
+        effect:-2,
+        score:{result:0,ownership:0,boundary:0,next:0},
+        tag:"изъятие части задачи",
+        employee:"Хорошо. Тогда по макету и обучению буду ждать ваших решений.",
+        feedback:"Вы сняли с сотрудника проблемный участок. Следующий похожий риск с высокой вероятностью снова придет к вам."
+      }
+    ]
+  },
+  {
+    name:"Препятствие",
+    employee:{
+      low:"Я не уверен, какой вариант выбрать. Может, вы решите?",
+      mid:"Есть два варианта. Склоняюсь к промежуточному макету, но не уверен, стоит ли рисковать.",
+      high:"Рекомендую взять промежуточный макет: финальную дату сохраним, а риск ограничен одной быстрой правкой перед обучением."
+    },
+    options:[
+      {
+        text:"Берем промежуточный макет. Попросите подрядчика прислать его сегодня.",
+        effect:-1,
+        score:{result:0,ownership:0,boundary:0,next:0},
+        tag:"финальный выбор за руководителем",
+        employee:"Хорошо, так и сделаю.",
+        feedback:"Рекомендация сотрудника могла стать его решением, но финальный выбор снова сделал руководитель."
+      },
+      {
+        text:"Что должно оказаться правдой, чтобы этот вариант сработал, и какой риск вы принимаете?",
+        effect:2,
+        score:{result:1,ownership:2,boundary:0,next:0},
+        tag:"проверка логики",
+        employee:"Нужно получить промежуточный макет сегодня и оставить хотя бы полдня на финальную правку. Риск — одна часть обучения потребует обновления в последний момент. Считаю его приемлемым.",
+        feedback:"Вы проверили логику решения, не подменяя ее своей. Сотрудник сформулировал условия успеха и принятый риск."
+      },
+      {
+        text:"Почему вы раньше не предусмотрели такой риск?",
+        effect:-1,
+        score:{result:0,ownership:0,boundary:0,next:0},
+        tag:"поиск виноватого",
+        employee:"Наверное, недооценил подрядчика. Тогда сначала разберу, где ошибся.",
+        feedback:"Разбор прошлого сейчас отодвинул рабочее решение. Причины можно обсудить после стабилизации задачи."
+      },
+      {
+        text:"Составьте три варианта, согласуйте их со всеми участниками и потом вернитесь ко мне.",
+        effect:-0.5,
+        score:{result:0,ownership:1,boundary:0,next:0},
+        tag:"избыточное согласование",
+        employee:"Хорошо. Тогда сначала соберу всех и вернусь после согласований.",
+        feedback:"Вы оставили анализ у сотрудника, но добавили лишний круг согласований и задержали решение."
+      }
+    ]
+  },
+  {
+    name:"Решение",
+    employee:{
+      low:"Есть еще проблема: чтобы успеть с обучением, нужен специалист соседней команды на два дня. Я не могу сам менять их приоритет. Что делаем?",
+      mid:"Чтобы сохранить дату, понадобится специалист соседней команды на два дня. Внутри своей команды я уже перераспределил ресурс, но межфункциональный приоритет решить не могу.",
+      high:"План собран. Единственная точка за пределами моих полномочий — специалист соседней команды на два дня. Без него обучение сдвинется. От вас нужен только выбор по межфункциональному приоритету."
+    },
+    options:[
+      {
+        text:"Я сам возьму весь вопрос и договорюсь с соседним отделом. Дальше тоже буду координировать обучение.",
+        effect:-1.5,
+        score:{result:0,ownership:0,boundary:0,next:0},
+        tag:"подключение шире полномочия",
+        employee:"Понял. Тогда по обучению передаю управление вам.",
+        feedback:"Подключение руководителя действительно требуется, но только для межфункционального приоритета. Вы забрали больше, чем нужно."
+      },
+      {
+        text:"Подтверждаю приоритет проекта на эти два дня. Договоренность с соседней командой беру на себя, остальной план остается за вами.",
+        effect:2,
+        score:{result:1,ownership:2,boundary:2,next:0},
+        tag:"точечное полномочие",
+        employee:"Принято. Как только ресурс подтвержден, запускаю промежуточный макет и подготовку обучения по своему плану.",
+        feedback:"Вы использовали свое полномочие там, где сотрудник действительно не мог решить вопрос сам, и не забрали остальную задачу."
+      },
+      {
+        text:"Проект ваш — сами договоритесь с соседним отделом.",
+        effect:-1,
+        score:{result:0,ownership:0,boundary:0,next:0},
+        tag:"ложная автономия",
+        employee:"Попробую, хотя менять их приоритет я формально не могу.",
+        feedback:"Самостоятельность не означает передавать сотруднику решение, для которого у него нет полномочий."
+      },
+      {
+        text:"Сначала пришлите мне полную переписку с подрядчиком и график всех сотрудников. Потом решу.",
+        effect:-0.5,
+        score:{result:0,ownership:0,boundary:1,next:0},
+        tag:"лишняя информация",
+        employee:"Хорошо, соберу материалы. До этого ресурс у соседней команды запрашивать не буду.",
+        feedback:"Вы распознали точку своего решения, но добавили данные, которые не нужны для выбора межфункционального приоритета."
+      }
+    ]
+  },
+  {
+    name:"Следующий результат",
+    employee:{
+      low:"Что теперь делать дальше и когда вам отчитаться?",
+      mid:"План понятен. Какую следующую точку фиксируем?",
+      high:"Могу к четвергу получить промежуточный макет, обновить материалы и подтвердить готовность обучения. Если подрядчик сдвинется еще хотя бы на день, сразу эскалирую."
+    },
+    options:[
+      {
+        text:"Держите меня в курсе.",
+        effect:0,
+        score:{result:0,ownership:0,boundary:0,next:0},
+        tag:"размытый финал",
+        employee:"Хорошо. Тогда буду писать по мере изменений.",
+        feedback:"Встреча закончилась без конкретного следующего результата и понятной контрольной точки."
+      },
+      {
+        text:"Присылайте мне статус каждый день в 10:00, 14:00 и 18:00.",
+        effect:-1,
+        score:{result:0,ownership:0,boundary:0,next:0},
+        tag:"контроль действий",
+        employee:"Понял. Буду трижды в день присылать статус.",
+        feedback:"Частота отчетов выросла, но она не привязана к значимому результату или рисковой развилке."
+      },
+      {
+        text:"К четвергу нужен промежуточный макет и подтвержденная готовность обучения. До этого работайте самостоятельно; подключайте меня раньше только при риске финальной даты или новом межфункциональном конфликте.",
+        effect:2,
+        score:{result:2,ownership:1,boundary:1,next:2},
+        tag:"следующий результат и эскалация",
+        employee:"Принято. К четвергу фиксирую результат. Раньше подключу вас только при этих двух триггерах.",
+        feedback:"Вы завершили 1:1 конкретным результатом, контрольной точкой и условиями досрочной эскалации."
+      },
+      {
+        text:"Сначала решите текущую проблему, а следующую точку определим потом.",
+        effect:-0.5,
+        score:{result:0,ownership:0,boundary:0,next:0},
+        tag:"нет обязательства",
+        employee:"Хорошо. Тогда вернусь, когда появятся новости.",
+        feedback:"Без следующего результата сотрудник не понимает, к какой точке управляет задачей самостоятельно."
+      }
+    ]
+  }
+];
+
+const state = {
+  step:0,
+  autonomy:0,
+  selected:null,
+  metrics:{result:0,ownership:0,boundary:0,next:0},
+  history:[]
+};
+
+const $ = s => document.querySelector(s);
+
+function autonomyBand(){
+  if(state.autonomy <= -2) return "low";
+  if(state.autonomy >= 3) return "high";
+  return "mid";
+}
+function autonomyLabel(){
+  if(state.autonomy <= -4) return "задача возвращается руководителю";
+  if(state.autonomy <= -1) return "зависимость растет";
+  if(state.autonomy < 3) return "ответственность удерживается";
+  return "самостоятельность усиливается";
+}
+function addBubble(role,text,meta){
+  const b=document.createElement("div");
+  b.className=`bubble ${role}`;
+  b.innerHTML=`<span class="meta">${meta}</span>${text}`;
+  $("#chat").appendChild(b);
+}
+function addNote(text){
+  const n=document.createElement("div");
+  n.className="note";
+  n.textContent=text;
+  $("#chat").appendChild(n);
+}
+function renderAgenda(){
+  document.querySelectorAll(".agenda-item").forEach((el,i)=>{
+    el.classList.toggle("current",i===state.step);
+    el.classList.toggle("done",i<state.step);
+  });
+}
+function renderStep(){
+  const s=steps[state.step];
+  for(let i=1;i<=5;i++)$("#p"+i).classList.toggle("active",i<=state.step+1);
+  $("#roundLabel").textContent=`Этап ${state.step+1} из 5 · ${s.name}`;
+  $("#autonomyBadge").textContent=autonomyLabel();
+  renderAgenda();
+
+  $("#chat").innerHTML="";
+  addBubble("employee",s.employee[autonomyBand()],"Сотрудник");
+
+  const box=$("#options");
+  box.innerHTML="";
+  s.options.forEach((o,i)=>{
+    const b=document.createElement("button");
+    b.type="button";
+    b.className="option"+(state.selected===i?" selected":"");
+    b.textContent=`${String.fromCharCode(1040+i)}. ${o.text}`;
+    b.disabled=state.selected!==null;
+    b.addEventListener("click",()=>choose(i));
+    box.appendChild(b);
+  });
+
+  $("#feedback").className="feedback";
+  $("#feedback").innerHTML="";
+  $("#nextBtn").disabled=state.selected===null;
+  $("#nextBtn").textContent=state.step===4?"Показать итог":"Продолжить";
+}
+function choose(index){
+  if(state.selected!==null) return;
+  state.selected=index;
+  const s=steps[state.step];
+  const o=s.options[index];
+
+  [...$("#options").children].forEach((b,i)=>{
+    b.disabled=true;
+    if(i===index)b.classList.add("selected");
+  });
+
+  addBubble("manager",o.text,"Вы");
+  addBubble("employee",o.employee,"Сотрудник");
+  addNote(o.feedback);
+
+  state.autonomy+=o.effect;
+  Object.keys(state.metrics).forEach(k=>state.metrics[k]+=o.score[k]||0);
+  state.history.push({
+    step:s.name,
+    tag:o.tag,
+    effect:o.effect,
+    feedback:o.feedback
+  });
+
+  const fb=$("#feedback");
+  fb.innerHTML="";
+  let type="warn";
+  if(o.effect>=2) type="ok";
+  if(o.effect<=-1.5) type="bad";
+
+  const d=document.createElement("div");
+  d.className=`fb ${type}`;
+  d.innerHTML=`<strong>Что произошло с ответственностью</strong>${trajectoryText(o.effect)}`;
+  fb.appendChild(d);
+  fb.classList.add("show");
+
+  $("#autonomyBadge").textContent=autonomyLabel();
+  $("#nextBtn").disabled=false;
+}
+function trajectoryText(effect){
+  if(effect>=2) return "Ответ сотрудника стал более самостоятельным: он удерживает анализ и следующий выбор в своей зоне.";
+  if(effect>0) return "Вы помогли анализу, но право решения еще стоит обозначить яснее.";
+  if(effect===0) return "Траектория почти не изменилась: следующий шаг сотрудника остается неопределенным.";
+  if(effect>-1.5) return "Сотрудник стал сильнее ориентироваться на подтверждение руководителя.";
+  return "Вы заметно приблизили задачу обратно к руководителю: следующий похожий вопрос сотрудник, скорее всего, снова принесет наверх.";
+}
+function next(){
+  if(state.selected===null)return;
+  if(state.step<4){
+    state.step++;
+    state.selected=null;
+    renderStep();
+    window.scrollTo({top:0,behavior:"smooth"});
+  }else{
+    showFinal();
+    window.scrollTo({top:0,behavior:"smooth"});
+  }
+}
+function cap(value,max){return Math.min(value,max)}
+function showFinal(){
+  $("#game").classList.add("hidden");
+  $("#final").classList.add("show");
+
+  const r=cap(state.metrics.result,7);
+  const o=cap(state.metrics.ownership,8);
+  const b=cap(state.metrics.boundary,3);
+  const n=cap(state.metrics.next,2);
+
+  $("#mResult").textContent=`${r}/7`;
+  $("#mOwnership").textContent=`${o}/8`;
+  $("#mBoundary").textContent=`${b}/3`;
+  $("#mNext").textContent=`${n}/2`;
+
+  let title,text;
+  const takeover=state.history.filter(h=>["перехват","готовое решение","изъятие части задачи","финальный выбор за руководителем","подключение шире полномочия","контроль действий"].includes(h.tag)).length;
+  const lateResult=state.history[0]?.tag!=="фокус на результате";
+  const boundaryGood=state.history.some(h=>h.tag==="точечное полномочие");
+  const nextGood=state.history.some(h=>h.tag==="следующий результат и эскалация");
+
+  if(takeover>=3){
+    title="Вы быстро находили решения, но постепенно забрали управление задачей.";
+    text="В нескольких развилках сотрудник мог сам провести анализ или выбрать допустимый вариант, однако получил готовое решение либо передал вам часть задачи. Такая 1:1 снижает текущую неопределенность, но формирует новые согласования.";
+  }else if(lateResult && o>=5){
+    title="Вы сохранили ответственность у сотрудника, но поздно проверили влияние проблемы на результат.";
+    text="Разговор лучше начинать с состояния задачи: что уже получено, что изменилось и какой результат оказался под риском. После этого вопросы про варианты становятся точнее.";
+  }else if(!boundaryGood){
+    title="Вы хорошо развивали решение сотрудника, но не до конца отделили его полномочия от своих.";
+    text="На 1:1 руководитель подключается там, где сотрудник действительно не может решить вопрос сам: межфункциональный приоритет, изменение бюджета, внешнее обязательство. При этом остальная задача остается у сотрудника.";
+  }else if(!nextGood){
+    title="Разговор помог решить текущую проблему, но завершился без ясной следующей точки.";
+    text="В конце 1:1 зафиксируйте конкретный следующий результат, срок и условия досрочной эскалации. Это позволяет сотруднику снова работать самостоятельно между встречами.";
+  }else if(state.autonomy>=5 && r>=5 && o>=6 && b>=2 && n===2){
+    title="Вы сопровождали задачу, не перехватывая управление.";
+    text="Вы начали с результата, запросили варианты и логику сотрудника, использовали свое полномочие только в межфункциональной точке и завершили встречу конкретным следующим результатом.";
+  }else{
+    title="Вы в целом удержали задачу у сотрудника, но часть ответов усилила зависимость.";
+    text="Проверьте, где вы давали готовый план раньше, чем сотрудник сформулировал варианты, и где контроль можно было привязать к результату вместо действий.";
+  }
+
+  $("#finalTitle").textContent=title;
+  $("#finalText").textContent=text;
+
+  const rows=$("#trajectoryRows");
+  rows.innerHTML="";
+  state.history.forEach((h,i)=>{
+    const row=document.createElement("div");
+    row.className="trajectory-row";
+    const direction=h.effect>=2?"самостоятельность усилилась":h.effect>0?"анализ усилился":h.effect===0?"без заметного изменения":h.effect>-1.5?"зависимость выросла":"управление сместилось к руководителю";
+    row.innerHTML=`<b>${i+1}. ${h.step}: ${h.tag}</b>${direction}.`;
+    rows.appendChild(row);
+  });
+}
+function restart(){
+  state.step=0;
+  state.autonomy=0;
+  state.selected=null;
+  state.metrics={result:0,ownership:0,boundary:0,next:0};
+  state.history=[];
+  $("#final").classList.remove("show");
+  $("#game").classList.remove("hidden");
+  renderStep();
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+
+$("#nextBtn").addEventListener("click",next);
+$("#restartBtn").addEventListener("click",restart);
+$("#restartFinal").addEventListener("click",restart);
+
+renderStep();
+</script>
+</body>
+</html>

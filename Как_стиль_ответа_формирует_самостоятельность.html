@@ -1,0 +1,603 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Как стиль ответа формирует самостоятельность</title>
+<style>
+body{margin:0;background:#f5f6f8;padding:18px;font-family:Arial,Helvetica,sans-serif}
+main{max-width:560px;margin:0 auto;background:#fff;border:1px solid #dfe3ea;border-radius:16px;padding:16px}
+</style>
+</head>
+<body><main>
+<div id="delegation-chat" class="da-root">
+  <style>
+    #delegation-chat{
+      --bg:var(--viz-panel,#f6f7f9);
+      --card:var(--viz-card,#ffffff);
+      --text:var(--viz-text,#1f2430);
+      --muted:var(--viz-muted,#6d7583);
+      --border:var(--viz-border,#dfe3ea);
+      --accent:var(--viz-accent,#315d9b);
+      --accentText:var(--viz-accent-text,#ffffff);
+      --accentBg:var(--viz-accent-bg,#eef3fb);
+      --accentSubtle:var(--viz-accent-bg-subtle,#f4f7fc);
+      color:var(--text);
+      font-family:Arial,Helvetica,sans-serif;
+      width:100%;
+    }
+    #delegation-chat *{box-sizing:border-box}
+    #delegation-chat .da-intro{
+      padding:0 0 14px;
+      color:var(--muted);
+      font-size:14px;
+    }
+    #delegation-chat .da-status{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      padding:10px 0 14px;
+      border-bottom:1px solid var(--border);
+      margin-bottom:14px;
+    }
+    #delegation-chat .da-status-label{
+      font-size:12px;
+      color:var(--muted);
+      white-space:nowrap;
+    }
+    #delegation-chat .da-track{
+      flex:1;
+      height:8px;
+      border-radius:999px;
+      background:color-mix(in srgb,var(--border) 75%,transparent);
+      overflow:hidden;
+    }
+    #delegation-chat .da-fill{
+      width:50%;
+      height:100%;
+      background:var(--accent);
+      border-radius:999px;
+      transition:width .25s ease;
+    }
+    #delegation-chat .da-status-text{
+      min-width:112px;
+      text-align:right;
+      font-size:12px;
+      font-weight:600;
+    }
+    #delegation-chat .da-chat{
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+    }
+    #delegation-chat .da-bubble{
+      max-width:88%;
+      padding:10px 12px;
+      border-radius:14px;
+      font-size:14px;
+      line-height:1.42;
+    }
+    #delegation-chat .da-employee{
+      align-self:flex-start;
+      background:var(--accentSubtle);
+      border:1px solid var(--border);
+      border-bottom-left-radius:5px;
+    }
+    #delegation-chat .da-manager{
+      align-self:flex-end;
+      background:var(--accent);
+      color:var(--accentText);
+      border-bottom-right-radius:5px;
+    }
+    #delegation-chat .da-meta{
+      display:block;
+      font-size:11px;
+      opacity:.72;
+      margin-bottom:3px;
+    }
+    #delegation-chat .da-observation{
+      margin:2px 0 2px 0;
+      padding:9px 10px;
+      border-left:3px solid var(--accent);
+      background:var(--accentBg);
+      font-size:12.5px;
+      color:var(--text);
+    }
+    #delegation-chat .da-question{
+      margin-top:14px;
+      font-size:13px;
+      font-weight:700;
+    }
+    #delegation-chat .da-options{
+      display:grid;
+      gap:7px;
+      margin-top:8px;
+    }
+    #delegation-chat .da-option{
+      width:100%;
+      text-align:left;
+      border:1px solid var(--border);
+      border-radius:11px;
+      background:var(--card);
+      color:var(--text);
+      padding:10px 11px;
+      font-size:13px;
+      cursor:pointer;
+    }
+    #delegation-chat .da-option:hover{
+      border-color:var(--accent);
+    }
+    #delegation-chat .da-option:disabled{
+      cursor:default;
+      opacity:.72;
+    }
+    #delegation-chat .da-option.da-picked{
+      border-color:var(--accent);
+      background:var(--accentBg);
+      opacity:1;
+    }
+    #delegation-chat .da-actions{
+      display:flex;
+      gap:8px;
+      margin-top:14px;
+    }
+    #delegation-chat .da-btn{
+      border:0;
+      border-radius:10px;
+      padding:10px 13px;
+      font-size:14px;
+      font-weight:700;
+      cursor:pointer;
+    }
+    #delegation-chat .da-primary{
+      background:var(--accent);
+      color:var(--accentText);
+      flex:1;
+    }
+    #delegation-chat .da-secondary{
+      background:color-mix(in srgb,var(--border) 70%,transparent);
+      color:var(--text);
+    }
+    #delegation-chat .da-btn:disabled{
+      opacity:.45;
+      cursor:not-allowed;
+    }
+    #delegation-chat .da-round{
+      font-size:12px;
+      color:var(--muted);
+      margin-bottom:8px;
+    }
+    #delegation-chat .da-final{
+      display:none;
+      margin-top:16px;
+      border-top:1px solid var(--border);
+      padding-top:16px;
+    }
+    #delegation-chat .da-final.da-show{display:block}
+    #delegation-chat .da-final h3{
+      margin:0 0 7px;
+      font-size:17px;
+    }
+    #delegation-chat .da-final p{
+      margin:0 0 10px;
+      font-size:13.5px;
+    }
+    #delegation-chat .da-summary{
+      display:grid;
+      gap:8px;
+      margin-top:10px;
+    }
+    #delegation-chat .da-summary-row{
+      border:1px solid var(--border);
+      border-radius:10px;
+      padding:9px 10px;
+      font-size:12.5px;
+    }
+    #delegation-chat .da-summary-row b{
+      display:block;
+      margin-bottom:2px;
+    }
+    @media (max-width:420px){
+      #delegation-chat .da-bubble{max-width:94%}
+      #delegation-chat .da-status{align-items:flex-start;flex-wrap:wrap}
+      #delegation-chat .da-track{order:3;flex-basis:100%}
+      #delegation-chat .da-status-text{margin-left:auto}
+    }
+  </style>
+
+  <div class="da-intro">
+    Вы отвечаете сотруднику в рабочем чате. В каждом раунде его следующая реплика зависит от того, оставили вы решение у себя или вернули ответственность в согласованные границы.
+  </div>
+
+  <div class="da-status">
+    <span class="da-status-label">Самостоятельность</span>
+    <div class="da-track" aria-hidden="true"><div class="da-fill" id="da-fill"></div></div>
+    <span class="da-status-text" id="da-status-text">нейтральная</span>
+  </div>
+
+  <div class="da-round" id="da-round"></div>
+  <div class="da-chat" id="da-chat" aria-live="polite"></div>
+
+  <div id="da-choice-area">
+    <div class="da-question">Как ответите?</div>
+    <div class="da-options" id="da-options"></div>
+  </div>
+
+  <div class="da-actions">
+    <button type="button" class="da-btn da-secondary" id="da-restart">Начать заново</button>
+    <button type="button" class="da-btn da-primary" id="da-next" disabled>Продолжить</button>
+  </div>
+
+  <div class="da-final" id="da-final" aria-live="polite"></div>
+
+  <script>
+  (() => {
+    const root = document.getElementById('delegation-chat');
+    if (!root || root.dataset.ready === '1') return;
+    root.dataset.ready = '1';
+
+    const rounds = [
+      {
+        employee: {
+          low: 'Клиент просит перенести срок на два дня. По загрузке можем. Как поступить?',
+          mid: 'Клиент просит перенести срок на два дня. По загрузке можем. Я бы согласовал перенос. Что думаете?',
+          high:'Клиент просит перенести срок на два дня. По загрузке можем, финальная дата не меняется. Я бы согласовал перенос и обновил план.'
+        },
+        options: [
+          {
+            text:'Да, переносим на два дня.',
+            effect:-1,
+            tag:'решение за сотрудника',
+            employee:'Понял. Тогда в похожих случаях тоже лучше сначала уточнять у вас?',
+            observation:'Вы быстро закрыли вопрос, но финальное решение снова принял руководитель.'
+          },
+          {
+            text:'Какие риски у этого решения и есть ли альтернативы?',
+            effect:0.5,
+            tag:'развитие анализа',
+            employee:'Риск только один: если смежная задача сдвинется, потеряем резерв. Альтернатива — оставить срок. Я все равно рекомендую перенос. Могу согласовать?',
+            observation:'Вы вернули анализ сотруднику, но право на финальное решение пока осталось неясным.'
+          },
+          {
+            text:'Лучше не рисковать, оставляем старый срок.',
+            effect:-1.5,
+            tag:'перехват управления',
+            employee:'Хорошо. Тогда изменения сроков буду сразу приносить вам.',
+            observation:'Руководитель отменил допустимое решение сотрудника и усилил зависимость.'
+          },
+          {
+            text:'Ты отвечаешь за этот блок. Если решение укладывается в наши условия, принимай его и сообщи клиенту.',
+            effect:2,
+            tag:'ответственность в границах',
+            employee:'Принял. Согласую перенос, обновлю план и сообщу, если появится риск для финальной даты.',
+            observation:'Граница ясна: типовое решение остается у сотрудника, руководитель подключается только при изменении риска.'
+          }
+        ]
+      },
+      {
+        employee: {
+          low:'Клиент просит компенсацию 8 тысяч. Лимит у нас 10 тысяч. Можно согласовать?',
+          mid:'Клиент просит компенсацию 8 тысяч при лимите 10. Я бы согласовал. Подтвердите?',
+          high:'Клиент просит компенсацию 8 тысяч. Случай подтвержден, лимит 10. Оформляю компенсацию и фиксирую решение.'
+        },
+        options: [
+          {
+            text:'Да, 8 тысяч можно.',
+            effect:-1,
+            tag:'подтверждение вместо полномочия',
+            employee:'Спасибо. Тогда буду приносить такие суммы на подтверждение.',
+            observation:'Даже внутри известного лимита сотрудник получил еще один сигнал: решение лучше не принимать без начальника.'
+          },
+          {
+            text:'Почему выбрал именно 8 тысяч?',
+            effect:0.5,
+            tag:'проверка логики',
+            employee:'Это покрывает неудобство клиента и остается внутри лимита. Альтернатива — 5 тысяч, но считаю сумму недостаточной для этого случая. Тогда согласую 8?',
+            observation:'Анализ стал сильнее, но сотрудник все еще ищет финальное разрешение.'
+          },
+          {
+            text:'В лимите решай сам. Сообщай только о спорных случаях или превышении суммы.',
+            effect:2,
+            tag:'граница эскалации',
+            employee:'Принято. Оформляю 8 тысяч. Если случай будет спорным или выше лимита, принесу варианты.',
+            observation:'Сотрудник получил правило, по которому сможет решать следующие похожие случаи.'
+          },
+          {
+            text:'Давай пока все компенсации согласовывать со мной.',
+            effect:-2,
+            tag:'сужение полномочий без причины',
+            employee:'Хорошо, тогда буду присылать каждую компенсацию заранее.',
+            observation:'Типовая задача полностью вернулась руководителю, хотя исходные границы уже были заданы.'
+          }
+        ]
+      },
+      {
+        employee: {
+          low:'Подрядчик сдвигает внутренний этап на три дня. Что ему ответить?',
+          mid:'Подрядчик сдвигает внутренний этап на три дня. Вижу два варианта: принять изменение или поменять порядок работ. Я бы поменял порядок. Согласуете?',
+          high:'Подрядчик сдвигает внутренний этап на три дня. Я переставлю два внутренних шага и сохраню финальную дату. Если задержка вырастет больше пяти дней, эскалирую.'
+        },
+        options: [
+          {
+            text:'Переставь этапы вот так: сначала аналитика, потом макет. Я уже сталкивался с таким.',
+            effect:-1.5,
+            tag:'готовый план руководителя',
+            employee:'Понял. В следующий раз при изменениях тоже сначала уточнять порядок у вас.',
+            observation:'Даже если совет хороший, план снова сформировал руководитель.'
+          },
+          {
+            text:'Что должно произойти, чтобы твой план перестал работать?',
+            effect:1,
+            tag:'проверка границы',
+            employee:'Если задержка станет больше пяти дней или затронет финальный запуск. Тогда уже понадобится пересборка плана и, возможно, дополнительный ресурс.',
+            observation:'Вопрос помогает сотруднику самому определить предел применимости решения.'
+          },
+          {
+            text:'Если финальная дата сохраняется, меняй порядок сам. При риске запуска — сразу подключай меня.',
+            effect:2,
+            tag:'самостоятельность + эскалация',
+            employee:'Принято. Перестраиваю внутренние этапы. Эскалирую только если появится риск общей даты.',
+            observation:'Руководитель не диктует способ и одновременно сохраняет контроль над критической границей.'
+          },
+          {
+            text:'Ничего не меняй до нашей следующей встречи.',
+            effect:-2,
+            tag:'ожидание руководителя',
+            employee:'Хорошо, остановлю изменения до встречи.',
+            observation:'Работа начинает зависеть не от ситуации, а от доступности руководителя.'
+          }
+        ]
+      },
+      {
+        employee: {
+          low:'У смежного отдела конфликт приоритетов с нашим проектом. Что им сказать?',
+          mid:'У смежного отдела конфликт приоритетов с нашим проектом. Могу предложить обмен сроками, но без вашего одобрения они вряд ли согласятся. Как лучше?',
+          high:'У смежного отдела конфликт приоритетов. Я подготовил два варианта, но решение о приоритете между подразделениями уже за пределами моих полномочий. Нужен ваш выбор между А и Б.'
+        },
+        options: [
+          {
+            text:'Я сам им позвоню и решу.',
+            effect:-1,
+            tag:'полный перехват',
+            employee:'Хорошо, тогда передам вопрос вам.',
+            observation:'Руководитель забрал и решение, и коммуникацию, хотя часть подготовки сотрудник мог сохранить за собой.'
+          },
+          {
+            text:'Пришли мне все детали, я подумаю, что делать.',
+            effect:-0.5,
+            tag:'сырая проблема наверх',
+            employee:'Отправлю переписку и вводные.',
+            observation:'Сотрудник передал руководителю проблему целиком, а не подготовленное решение.'
+          },
+          {
+            text:'Подготовь варианты и свою рекомендацию. Я приму только решение о межфункциональном приоритете.',
+            effect:1.5,
+            tag:'точечное подключение руководителя',
+            employee:'Сделаю. Принесу два варианта с последствиями и рекомендацией; от вас только выбор приоритета.',
+            observation:'Руководитель подключается в своей зоне полномочий, но не забирает анализ и подготовку решения.'
+          },
+          {
+            text:'Разбирайся сам: проект теперь полностью твой.',
+            effect:-1,
+            tag:'ложная автономия',
+            employee:'Понял, попробую, хотя приоритеты другого подразделения я формально менять не могу.',
+            observation:'Самостоятельность не означает передавать сотруднику решение, для которого у него нет полномочий.'
+          }
+        ]
+      }
+    ];
+
+    const state = {
+      round:0,
+      autonomy:0,
+      picked:null,
+      history:[]
+    };
+
+    const chat = root.querySelector('#da-chat');
+    const options = root.querySelector('#da-options');
+    const nextBtn = root.querySelector('#da-next');
+    const restartBtn = root.querySelector('#da-restart');
+    const roundEl = root.querySelector('#da-round');
+    const fill = root.querySelector('#da-fill');
+    const statusText = root.querySelector('#da-status-text');
+    const final = root.querySelector('#da-final');
+    const choiceArea = root.querySelector('#da-choice-area');
+
+    function autonomyBand(){
+      if(state.autonomy <= -2) return 'low';
+      if(state.autonomy >= 2) return 'high';
+      return 'mid';
+    }
+
+    function statusLabel(){
+      if(state.autonomy <= -3) return 'зависимость растет';
+      if(state.autonomy < 0) return 'скорее зависимая';
+      if(state.autonomy < 2) return 'переходная';
+      if(state.autonomy < 4) return 'самостоятельная';
+      return 'устойчивая';
+    }
+
+    function updateStatus(){
+      const bounded = Math.max(-4, Math.min(6, state.autonomy));
+      const width = ((bounded + 4) / 10) * 100;
+      fill.style.width = `${width}%`;
+      statusText.textContent = statusLabel();
+    }
+
+    function bubble(role, text, meta){
+      const div = document.createElement('div');
+      div.className = `da-bubble ${role === 'employee' ? 'da-employee' : 'da-manager'}`;
+      if(meta){
+        const m = document.createElement('span');
+        m.className = 'da-meta';
+        m.textContent = meta;
+        div.appendChild(m);
+      }
+      const t = document.createElement('span');
+      t.textContent = text;
+      div.appendChild(t);
+      chat.appendChild(div);
+    }
+
+    function observation(text){
+      const div = document.createElement('div');
+      div.className = 'da-observation';
+      div.textContent = text;
+      chat.appendChild(div);
+    }
+
+    function renderRound(){
+      final.classList.remove('da-show');
+      final.innerHTML = '';
+      choiceArea.style.display = '';
+      nextBtn.style.display = '';
+      nextBtn.disabled = true;
+      nextBtn.textContent = state.round === rounds.length - 1 ? 'Показать результат' : 'Продолжить';
+      state.picked = null;
+
+      const r = rounds[state.round];
+      const band = autonomyBand();
+
+      chat.innerHTML = '';
+      roundEl.textContent = `Ситуация ${state.round + 1} из ${rounds.length}`;
+      bubble('employee', r.employee[band], 'Сотрудник');
+
+      options.innerHTML = '';
+      r.options.forEach((opt, idx) => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'da-option';
+        btn.textContent = `${String.fromCharCode(1040 + idx)}. ${opt.text}`;
+        btn.addEventListener('click', () => choose(idx));
+        options.appendChild(btn);
+      });
+
+      updateStatus();
+    }
+
+    function choose(index){
+      if(state.picked !== null) return;
+      state.picked = index;
+
+      const r = rounds[state.round];
+      const opt = r.options[index];
+
+      [...options.children].forEach((b, i) => {
+        b.disabled = true;
+        if(i === index) b.classList.add('da-picked');
+      });
+
+      bubble('manager', opt.text, 'Вы');
+      bubble('employee', opt.employee, 'Сотрудник');
+      observation(opt.observation);
+
+      state.autonomy += opt.effect;
+      state.history.push({
+        round:state.round + 1,
+        tag:opt.tag,
+        effect:opt.effect,
+        text:opt.text
+      });
+
+      updateStatus();
+      nextBtn.disabled = false;
+    }
+
+    function profile(){
+      const takeover = state.history.filter(h => [
+        'решение за сотрудника',
+        'перехват управления',
+        'подтверждение вместо полномочия',
+        'сужение полномочий без причины',
+        'готовый план руководителя',
+        'ожидание руководителя',
+        'полный перехват',
+        'сырая проблема наверх'
+      ].includes(h.tag)).length;
+
+      const development = state.history.filter(h => [
+        'развитие анализа',
+        'ответственность в границах',
+        'проверка логики',
+        'граница эскалации',
+        'проверка границы',
+        'самостоятельность + эскалация',
+        'точечное подключение руководителя'
+      ].includes(h.tag)).length;
+
+      const falseAutonomy = state.history.filter(h => h.tag === 'ложная автономия').length;
+
+      if(falseAutonomy){
+        return {
+          title:'Вы даете свободу шире реальных полномочий',
+          text:'В одной из ситуаций сотруднику предложено решить вопрос, который требует управленческого полномочия другого уровня. Самостоятельность работает только внутри реальных границ роли.'
+        };
+      }
+      if(takeover >= 3){
+        return {
+          title:'Вы формируете зависимость от руководителя',
+          text:'В большинстве развилок вы быстро закрывали вопрос сами. Это ускоряет процессы, но учит сотрудника каждый раз приносить следующий похожий выбор вам.'
+        };
+      }
+      if(development >= 3 && state.autonomy >= 3){
+        return {
+          title:'Вы формируете самостоятельность в границах',
+          text:'Вы оставляете сотруднику анализ и типовые решения, а сами подключаетесь там, где меняется риск или действительно нужны полномочия руководителя.'
+        };
+      }
+      return {
+        title:'Вы развиваете анализ, но право решения иногда остается неясным',
+        text:'Вы часто задаете хорошие вопросы, однако сотрудник не всегда понимает, может ли после анализа принять решение сам. Добавляйте явную границу: что он решает самостоятельно и какой сигнал требует эскалации.'
+      };
+    }
+
+    function renderFinal(){
+      chat.innerHTML = '';
+      choiceArea.style.display = 'none';
+      nextBtn.style.display = 'none';
+      roundEl.textContent = 'Итог';
+      const p = profile();
+
+      final.innerHTML = `
+        <h3>${p.title}</h3>
+        <p>${p.text}</p>
+        <div class="da-summary">
+          ${state.history.map((h, i) => `
+            <div class="da-summary-row">
+              <b>Ситуация ${i + 1}: ${h.tag}</b>
+              ${h.effect > 0 ? 'Ответ сотрудника стал более самостоятельным.' :
+                h.effect < 0 ? 'Следующая реплика сотрудника стала более зависимой.' :
+                'Вы усилили анализ, но не полностью определили право решения.'}
+            </div>
+          `).join('')}
+        </div>
+      `;
+      final.classList.add('da-show');
+      updateStatus();
+    }
+
+    nextBtn.addEventListener('click', () => {
+      if(state.picked === null) return;
+      if(state.round < rounds.length - 1){
+        state.round += 1;
+        renderRound();
+      }else{
+        renderFinal();
+      }
+    });
+
+    restartBtn.addEventListener('click', () => {
+      state.round = 0;
+      state.autonomy = 0;
+      state.picked = null;
+      state.history = [];
+      renderRound();
+    });
+
+    renderRound();
+  })();
+  </script>
+</div>
+</main></body>
+</html>

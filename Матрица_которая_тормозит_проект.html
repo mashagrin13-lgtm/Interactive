@@ -1,0 +1,814 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Матрица, которая тормозит проект</title>
+<style>
+:root{
+  --bg:#f5f6f8;
+  --card:#ffffff;
+  --text:#20242d;
+  --muted:#6d7583;
+  --line:#dfe3ea;
+  --accent:#315d9b;
+  --accent-soft:#eef3fb;
+  --ok:#2e6b4f;
+  --ok-bg:#eef7f2;
+  --warn:#8a5a10;
+  --warn-bg:#fff7e8;
+  --bad:#8b3d45;
+  --bad-bg:#fff0f1;
+  --shadow:0 6px 18px rgba(31,36,48,.07);
+}
+*{box-sizing:border-box}
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--text);
+  font-family:Arial,Helvetica,sans-serif;
+  line-height:1.42;
+}
+.app{
+  width:min(560px,calc(100% - 24px));
+  margin:18px auto;
+}
+.shell{
+  background:var(--card);
+  border:1px solid var(--line);
+  border-radius:16px;
+  box-shadow:var(--shadow);
+  overflow:hidden;
+}
+.head{
+  padding:18px 18px 14px;
+  border-bottom:1px solid var(--line);
+}
+h1{
+  margin:0 0 8px;
+  font-size:21px;
+  line-height:1.2;
+}
+.lead{
+  margin:0;
+  color:var(--muted);
+  font-size:14px;
+}
+.progress{
+  display:flex;
+  gap:7px;
+  margin-top:14px;
+}
+.progress span{
+  flex:1;
+  height:5px;
+  border-radius:999px;
+  background:#e8ebf0;
+}
+.progress span.active{background:var(--accent)}
+.body{padding:16px}
+.stage-label{
+  font-size:12px;
+  color:var(--accent);
+  font-weight:700;
+  text-transform:uppercase;
+  letter-spacing:.03em;
+  margin-bottom:5px;
+}
+.stage-title{
+  margin:0 0 5px;
+  font-size:17px;
+}
+.stage-note{
+  margin:0 0 12px;
+  color:var(--muted);
+  font-size:13px;
+}
+.rules{
+  padding:11px 12px;
+  border:1px solid #d8e1ef;
+  background:#f5f7fb;
+  border-radius:12px;
+  font-size:13px;
+  margin-bottom:13px;
+}
+.rules b{display:block;margin-bottom:5px}
+.rules ol{margin:0;padding-left:19px}
+.rules li{margin:4px 0}
+.role-key{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:6px 9px;
+  border:1px solid var(--line);
+  border-radius:11px;
+  padding:9px 10px;
+  margin-bottom:11px;
+  font-size:11.5px;
+}
+.role-key b{color:var(--accent)}
+.powers{
+  margin-bottom:12px;
+  border:1px solid var(--line);
+  border-radius:11px;
+  overflow:hidden;
+}
+.powers-head{
+  padding:8px 10px;
+  background:#f4f6f9;
+  font-size:12.5px;
+  font-weight:700;
+}
+.powers-row{
+  padding:7px 10px;
+  border-top:1px solid #edf0f4;
+  font-size:11.5px;
+}
+.powers-row b{display:block;margin-bottom:2px}
+.matrix-wrap{
+  width:100%;
+  overflow-x:auto;
+  border:1px solid var(--line);
+  border-radius:11px;
+}
+.matrix{
+  min-width:500px;
+}
+.m-head,.m-row{
+  display:grid;
+  grid-template-columns:160px repeat(5, 1fr);
+}
+.m-head{
+  background:#f4f6f9;
+  border-bottom:1px solid var(--line);
+}
+.m-head > div{
+  padding:8px 4px;
+  font-size:10.5px;
+  font-weight:700;
+  text-align:center;
+  border-left:1px solid var(--line);
+}
+.m-head > div:first-child{
+  text-align:left;
+  border-left:0;
+  padding-left:9px;
+}
+.m-row{
+  border-bottom:1px solid #edf0f4;
+}
+.m-row:last-child{border-bottom:0}
+.work{
+  padding:8px 8px;
+  font-size:11.5px;
+}
+.work b{
+  display:block;
+  margin-bottom:2px;
+}
+.work-state{
+  color:var(--muted);
+  font-size:10.5px;
+  margin-top:3px;
+}
+.cell{
+  padding:6px 4px;
+  border-left:1px solid #edf0f4;
+  display:flex;
+  align-items:center;
+}
+.cell select{
+  width:100%;
+  min-width:0;
+  border:1px solid var(--line);
+  border-radius:7px;
+  background:#fff;
+  color:var(--text);
+  padding:6px 2px;
+  text-align:center;
+  font-size:11px;
+}
+.cell select.changed{
+  border-color:var(--accent);
+  background:var(--accent-soft);
+}
+.person-legend{
+  margin-top:8px;
+  font-size:11px;
+  color:var(--muted);
+}
+.person-legend div{margin-top:2px}
+.actions{
+  display:flex;
+  gap:8px;
+  margin-top:13px;
+}
+button{
+  appearance:none;
+  border:0;
+  border-radius:10px;
+  padding:10px 13px;
+  font-size:14px;
+  font-weight:700;
+  cursor:pointer;
+}
+.primary{
+  background:var(--accent);
+  color:#fff;
+  flex:1;
+}
+.secondary{
+  background:#edf0f4;
+  color:var(--text);
+}
+.feedback{display:none;margin-top:12px}
+.feedback.show{display:block}
+.fb{
+  border-radius:10px;
+  padding:10px 11px;
+  margin-top:7px;
+  font-size:13px;
+}
+.fb strong{display:block;margin-bottom:3px}
+.fb.ok{background:var(--ok-bg);border:1px solid #cfe5d8;color:#214f3b}
+.fb.warn{background:var(--warn-bg);border:1px solid #f1dbb0;color:#6f480c}
+.fb.bad{background:var(--bad-bg);border:1px solid #efc9cd;color:#73343b}
+.hidden{display:none!important}
+.consequence{
+  border:1px solid var(--line);
+  border-radius:11px;
+  overflow:hidden;
+  margin-top:10px;
+}
+.consequence-head{
+  padding:8px 10px;
+  background:#f4f6f9;
+  font-size:12.5px;
+  font-weight:700;
+}
+.consequence-row{
+  padding:8px 10px;
+  border-top:1px solid #edf0f4;
+  font-size:12px;
+}
+.consequence-row b{display:block;margin-bottom:2px}
+.change-box{
+  border:1px solid #d8e1ef;
+  background:#f5f7fb;
+  border-radius:11px;
+  padding:10px 11px;
+  margin-bottom:11px;
+  font-size:13px;
+}
+.change-box b{display:block;margin-bottom:3px}
+.unavailable{
+  background:var(--bad-bg)!important;
+  color:var(--bad)!important;
+}
+.summary{
+  margin-top:14px;
+  padding-top:14px;
+  border-top:1px solid var(--line);
+}
+.summary h3{
+  margin:0 0 7px;
+  font-size:17px;
+}
+.summary p{
+  margin:0 0 9px;
+  font-size:13px;
+}
+.metrics{
+  display:grid;
+  grid-template-columns:1fr 1fr 1fr;
+  gap:7px;
+}
+.metric{
+  border:1px solid var(--line);
+  border-radius:10px;
+  padding:9px 6px;
+  text-align:center;
+}
+.metric .score{
+  font-size:19px;
+  font-weight:700;
+  color:var(--accent);
+}
+.metric .label{
+  margin-top:2px;
+  font-size:10.5px;
+  color:var(--muted);
+}
+@media(max-width:420px){
+  .body{padding:13px}
+  .role-key{grid-template-columns:1fr}
+  .metrics{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="shell">
+    <div class="head">
+      <h1>Матрица, которая тормозит проект</h1>
+      <p class="lead">Исправьте RACI так, чтобы у каждой работы был понятный владелец результата, исполнители имели полномочия для своей роли, а согласования не создавали лишнюю очередь.</p>
+      <div class="progress">
+        <span id="p1" class="active"></span>
+        <span id="p2"></span>
+      </div>
+    </div>
+
+    <div class="body">
+
+      <section id="stage1">
+        <div class="stage-label">Раунд 1 из 2</div>
+        <h2 class="stage-title">Исправьте проблемную RACI-матрицу</h2>
+
+        <div class="rules">
+          <b>Что нужно сделать</b>
+          <ol>
+            <li>В каждой строке проверьте распределение ролей между пятью участниками.</li>
+            <li>Нажимайте на выпадающие списки в ячейках и меняйте роль: <strong>R, A, C, I или —</strong>.</li>
+            <li>В каждой работе должен быть <strong>один A</strong>. Если один человек одновременно выполняет работу и отвечает за результат, можно выбрать <strong>A/R</strong>.</li>
+            <li>Проверьте, что в строке есть хотя бы один R и что A действительно обладает нужными полномочиями.</li>
+            <li>Не заполняйте матрицу «для полноты»: C нужен только тому, чье мнение требуется <strong>до</strong> решения, I — тому, кого достаточно уведомить после.</li>
+            <li>Руководителя подразделения нельзя назначить A во всех строках. Используйте его полномочия только там, где они действительно нужны.</li>
+            <li>Когда закончите, нажмите «Проверить матрицу».</li>
+          </ol>
+        </div>
+
+        <div class="role-key">
+          <div><b>R — Responsible</b> выполняет работу.</div>
+          <div><b>A — Accountable</b> один владелец итогового результата.</div>
+          <div><b>C — Consulted</b> дает обязательный вход до решения.</div>
+          <div><b>I — Informed</b> получает информацию, но не согласует.</div>
+        </div>
+
+        <div class="powers">
+          <div class="powers-head">Какие полномочия есть у участников</div>
+          <div class="powers-row"><b>Руководитель подразделения</b>утверждает изменение бюджета, договорные обязательства и финальный запуск.</div>
+          <div class="powers-row"><b>Руководитель проекта</b>отвечает за проектный результат, рабочие решения и координацию внутри согласованных ограничений.</div>
+          <div class="powers-row"><b>Аналитик</b>собирает требования и готовит анализ, но не утверждает бюджет, договор или запуск.</div>
+          <div class="powers-row"><b>Юрист</b>готовит и проверяет юридические условия, но не принимает бизнес-решение о запуске.</div>
+          <div class="powers-row"><b>Операционный специалист</b>настраивает процесс и оценивает операционную готовность.</div>
+        </div>
+
+        <div id="matrix1"></div>
+
+        <div class="actions">
+          <button class="secondary" id="reset1">Вернуть исходную матрицу</button>
+          <button class="primary" id="check1">Проверить матрицу</button>
+        </div>
+
+        <div class="feedback" id="fb1"></div>
+        <div id="consequences1" class="consequence hidden"></div>
+
+        <div class="actions hidden" id="go2Wrap">
+          <button class="primary" id="go2">Применить рабочую матрицу и перейти ко второму раунду</button>
+        </div>
+      </section>
+
+      <section id="stage2" class="hidden">
+        <div class="stage-label">Раунд 2 из 2</div>
+        <h2 class="stage-title">Перестройте только затронутые строки</h2>
+
+        <div class="rules">
+          <b>Что нужно сделать</b>
+          <ol>
+            <li>Перед вами рабочая матрица из первого раунда.</li>
+            <li>Прочитайте новую вводную и определите, в каких <strong>незавершенных</strong> работах отсутствие участника действительно мешает выполнить его роль.</li>
+            <li>Измените только эти строки. Завершенные работы переписывать не нужно.</li>
+            <li>После замены снова проверьте правило «один A», наличие R и реальные полномочия нового владельца.</li>
+            <li>Не назначайте руководителя подразделения на все освободившиеся роли автоматически.</li>
+            <li>После изменений нажмите «Проверить перестройку».</li>
+          </ol>
+        </div>
+
+        <div class="change-box">
+          <b>Новая вводная</b>
+          Руководитель проекта недоступен ближайшие три рабочих дня. Работы 1–5 уже завершены. В эти три дня команда должна закончить настройку операционного процесса и принять решение о запуске пилота.
+        </div>
+
+        <div id="matrix2"></div>
+
+        <div class="actions">
+          <button class="secondary" id="back1">Назад</button>
+          <button class="primary" id="check2">Проверить перестройку</button>
+        </div>
+
+        <div class="feedback" id="fb2"></div>
+        <div class="summary hidden" id="summary"></div>
+      </section>
+
+    </div>
+  </div>
+</div>
+
+<script>
+const people = [
+  {id:"head", short:"Рук", name:"Руководитель подразделения"},
+  {id:"pm", short:"РП", name:"Руководитель проекта"},
+  {id:"analyst", short:"Ан", name:"Аналитик"},
+  {id:"lawyer", short:"Юр", name:"Юрист"},
+  {id:"ops", short:"Оп", name:"Операционный специалист"}
+];
+
+const rows = [
+  {id:"w1", n:1, work:"Собрать требования клиента", state2:"Завершено"},
+  {id:"w2", n:2, work:"Подготовить предложение крупному клиенту", state2:"Завершено"},
+  {id:"w3", n:3, work:"Выбрать формат пилота", state2:"Завершено"},
+  {id:"w4", n:4, work:"Утвердить изменение бюджета пилота", state2:"Завершено"},
+  {id:"w5", n:5, work:"Согласовать условия договора", state2:"Завершено"},
+  {id:"w6", n:6, work:"Настроить операционный процесс", state2:"В работе"},
+  {id:"w7", n:7, work:"Принять решение о запуске пилота", state2:"В работе"}
+];
+
+const initial = {
+  w1:{head:"A",pm:"C",analyst:"R",lawyer:"I",ops:"C"},
+  w2:{head:"A",pm:"R",analyst:"C",lawyer:"C",ops:"C"},
+  w3:{head:"A",pm:"A",analyst:"C",lawyer:"C",ops:"C"},
+  w4:{head:"C",pm:"R",analyst:"A",lawyer:"I",ops:"I"},
+  w5:{head:"A",pm:"C",analyst:"I",lawyer:"R",ops:"I"},
+  w6:{head:"A",pm:"C",analyst:"C",lawyer:"I",ops:"R"},
+  w7:{head:"C",pm:"R",analyst:"I",lawyer:"C",ops:"C"}
+};
+
+const target = {
+  w1:{head:"I",pm:"A",analyst:"R",lawyer:"I",ops:"C"},
+  w2:{head:"I",pm:"A",analyst:"R",lawyer:"C",ops:"I"},
+  w3:{head:"I",pm:"A",analyst:"R",lawyer:"I",ops:"C"},
+  w4:{head:"A",pm:"R",analyst:"C",lawyer:"I",ops:"I"},
+  w5:{head:"A",pm:"C",analyst:"I",lawyer:"R",ops:"I"},
+  w6:{head:"I",pm:"A",analyst:"C",lawyer:"I",ops:"R"},
+  w7:{head:"A",pm:"R",analyst:"I",lawyer:"C",ops:"C"}
+};
+
+const round2Target = JSON.parse(JSON.stringify(target));
+round2Target.w6 = {head:"A",pm:"—",analyst:"C",lawyer:"I",ops:"R"};
+round2Target.w7 = {head:"A",pm:"—",analyst:"I",lawyer:"C",ops:"R"};
+
+let state1 = JSON.parse(JSON.stringify(initial));
+let state2 = JSON.parse(JSON.stringify(target));
+let score1 = {ownership:0,authority:0,flow:0};
+
+const $ = s => document.querySelector(s);
+
+function normalizeRole(v){ return v || "—"; }
+function hasA(role){ return role==="A" || role==="A/R"; }
+function hasR(role){ return role==="R" || role==="A/R"; }
+
+function copy(obj){ return JSON.parse(JSON.stringify(obj)); }
+
+function addFb(container,type,title,text){
+  const d=document.createElement("div");
+  d.className=`fb ${type}`;
+  d.innerHTML=`<strong>${title}</strong>${text}`;
+  container.appendChild(d);
+}
+
+function renderMatrix(containerId,state,round){
+  const host=$(containerId);
+  host.innerHTML="";
+
+  const wrap=document.createElement("div");
+  wrap.className="matrix-wrap";
+  const matrix=document.createElement("div");
+  matrix.className="matrix";
+
+  const head=document.createElement("div");
+  head.className="m-head";
+  const hWork=document.createElement("div");
+  hWork.textContent="Работа";
+  head.appendChild(hWork);
+
+  people.forEach(p=>{
+    const h=document.createElement("div");
+    h.textContent=p.short;
+    h.title=p.name;
+    if(round===2 && p.id==="pm") h.classList.add("unavailable");
+    head.appendChild(h);
+  });
+  matrix.appendChild(head);
+
+  rows.forEach(row=>{
+    const line=document.createElement("div");
+    line.className="m-row";
+
+    const work=document.createElement("div");
+    work.className="work";
+    work.innerHTML=`<b>${row.n}. ${row.work}</b>${round===2?`<div class="work-state">${row.state2}</div>`:""}`;
+    line.appendChild(work);
+
+    people.forEach(p=>{
+      const cell=document.createElement("div");
+      cell.className="cell";
+      const select=document.createElement("select");
+      select.setAttribute("aria-label",`${row.work}: ${p.name}`);
+
+      ["—","R","A","A/R","C","I"].forEach(role=>{
+        const opt=document.createElement("option");
+        opt.value=role;
+        opt.textContent=role;
+        if(normalizeRole(state[row.id][p.id])===role) opt.selected=true;
+        select.appendChild(opt);
+      });
+
+      if(round===2){
+        const baseline=normalizeRole(target[row.id][p.id]);
+        const current=normalizeRole(state[row.id][p.id]);
+        if(current!==baseline) select.classList.add("changed");
+      }
+
+      select.addEventListener("change",()=>{
+        state[row.id][p.id]=select.value;
+        if(round===1){
+          $("#fb1").className="feedback";
+          $("#fb1").innerHTML="";
+          $("#consequences1").classList.add("hidden");
+          $("#go2Wrap").classList.add("hidden");
+        }else{
+          $("#fb2").className="feedback";
+          $("#fb2").innerHTML="";
+          $("#summary").classList.add("hidden");
+        }
+        renderMatrix(containerId,state,round);
+      });
+
+      cell.appendChild(select);
+      line.appendChild(cell);
+    });
+
+    matrix.appendChild(line);
+  });
+
+  wrap.appendChild(matrix);
+  host.appendChild(wrap);
+
+  const legend=document.createElement("div");
+  legend.className="person-legend";
+  legend.innerHTML=people.map(p=>`<div><b>${p.short}</b> — ${p.name}</div>`).join("");
+  host.appendChild(legend);
+}
+
+function rowDiagnostics(state){
+  const issues=[];
+  rows.forEach(row=>{
+    const roles=state[row.id];
+    const aPeople=people.filter(p=>hasA(roles[p.id]));
+    const rPeople=people.filter(p=>hasR(roles[p.id]));
+    const cPeople=people.filter(p=>roles[p.id]==="C");
+
+    if(aPeople.length===0) issues.push({type:"noA",row:row.id});
+    if(aPeople.length>1) issues.push({type:"multiA",row:row.id,count:aPeople.length});
+    if(rPeople.length===0) issues.push({type:"noR",row:row.id});
+
+    if(row.id==="w4" && aPeople.some(p=>p.id!=="head")) issues.push({type:"authority",row:row.id});
+    if(row.id==="w5" && aPeople.some(p=>p.id!=="head")) issues.push({type:"authority",row:row.id});
+    if(row.id==="w7" && aPeople.some(p=>p.id!=="head")) issues.push({type:"authority",row:row.id});
+
+    if(["w1","w2","w3"].includes(row.id) && aPeople.some(p=>p.id!=="pm")) issues.push({type:"wrongOwner",row:row.id});
+    if(row.id==="w6" && aPeople.some(p=>p.id!=="pm")) issues.push({type:"wrongOwner",row:row.id});
+
+    if(row.id==="w3" && cPeople.length>1) issues.push({type:"tooManyC",row:row.id,count:cPeople.length});
+    if(row.id==="w2" && cPeople.length>2) issues.push({type:"tooManyC",row:row.id,count:cPeople.length});
+  });
+
+  const headACount=rows.filter(r=>hasA(state[r.id].head)).length;
+  if(headACount>3) issues.push({type:"headBottleneck",count:headACount});
+
+  return issues;
+}
+
+function compareCore(state,goal){
+  let ownerOk=0, authorityOk=0, flowOk=0;
+
+  rows.forEach(row=>{
+    const roles=state[row.id];
+    const a=people.filter(p=>hasA(roles[p.id]));
+    const r=people.filter(p=>hasR(roles[p.id]));
+
+    if(a.length===1 && r.length>=1) ownerOk++;
+
+    const goalA=people.find(p=>hasA(goal[row.id][p.id]))?.id;
+    if(a.length===1 && a[0].id===goalA) authorityOk++;
+
+    const cCount=people.filter(p=>roles[p.id]==="C").length;
+    if((row.id==="w3" && cCount<=1) || (row.id!=="w3" && cCount<=2)) flowOk++;
+  });
+
+  return {
+    ownership:ownerOk===7?1:0,
+    authority:authorityOk===7?1:0,
+    flow:flowOk===7?1:0
+  };
+}
+
+function checkStage1(){
+  const issues=rowDiagnostics(state1);
+  score1=compareCore(state1,target);
+
+  const fb=$("#fb1");
+  fb.innerHTML="";
+
+  const noA=issues.filter(x=>x.type==="noA");
+  const multiA=issues.filter(x=>x.type==="multiA");
+  const authority=issues.filter(x=>x.type==="authority");
+  const bottleneck=issues.find(x=>x.type==="headBottleneck");
+  const tooManyC=issues.filter(x=>x.type==="tooManyC");
+  const noR=issues.filter(x=>x.type==="noR");
+  const wrongOwner=issues.filter(x=>x.type==="wrongOwner");
+
+  if(!issues.length && score1.ownership && score1.authority && score1.flow){
+    addFb(fb,"ok","Матрица стала рабочей.",
+      "У каждой работы есть один владелец результата, A соответствует полномочиям, а консультации не превращают небольшой выбор в коллективное согласование.");
+  }else{
+    if(noA.length){
+      addFb(fb,"bad","В одной или нескольких строках нет A.",
+        "Без единственного владельца итогового результата решение зависает: участники могут выполнять работу, но никто не обязан поставить финальную точку.");
+    }
+    if(multiA.length){
+      addFb(fb,"bad","В одной или нескольких строках осталось несколько A.",
+        "Два владельца результата создают конкурирующие центры согласования. Оставьте одного A.");
+    }
+    if(authority.length){
+      addFb(fb,"bad","A назначен человеку без нужных полномочий.",
+        "Экспертиза не заменяет право принять решение. Такой A все равно вынужден вернуть вопрос наверх.");
+    }
+    if(wrongOwner.length){
+      addFb(fb,"warn","Часть проектных решений осталась у руководителя подразделения.",
+        "Там, где решение укладывается в согласованные ограничения проекта, A должен быть у руководителя проекта, а не автоматически у руководителя подразделения.");
+    }
+    if(bottleneck){
+      addFb(fb,"warn","Руководитель подразделения остается A слишком часто.",
+        `Сейчас он A в ${bottleneck.count} строках. Это превращает его в очередь согласований и замедляет решения, которые команда могла бы закрывать сама.`);
+    }
+    if(tooManyC.length){
+      addFb(fb,"warn","В небольшой работе осталось слишком много C.",
+        "Каждый C означает обязательный вход до решения. Если мнение человека не способно изменить выбор, лучше оставить I или «—».");
+    }
+    if(noR.length){
+      addFb(fb,"warn","В одной или нескольких строках нет исполнителя R.",
+        "Даже при понятном A работу должен кто-то фактически выполнить.");
+    }
+  }
+
+  fb.classList.add("show");
+  renderConsequences1(issues);
+  $("#go2Wrap").classList.remove("hidden");
+}
+
+function renderConsequences1(issues){
+  const box=$("#consequences1");
+  const items=[];
+
+  if(issues.some(x=>x.type==="tooManyC")){
+    items.push(["Лишние C","Выбор проходит через лишний круг консультаций. Время решения растет, хотя ответственность не становится яснее."]);
+  }
+  if(issues.some(x=>x.type==="noA")){
+    items.push(["Нет A","Критическое решение может зависнуть: R выполняет работу, но финальный владелец результата не определен."]);
+  }
+  if(issues.some(x=>x.type==="multiA")){
+    items.push(["Несколько A","Участники получают два центра финального решения и начинают сверять позиции между ними."]);
+  }
+  if(issues.some(x=>x.type==="authority")){
+    items.push(["A без полномочий","Формально ответственность передана, но фактически вопрос все равно возвращается руководителю."]);
+  }
+  if(issues.some(x=>x.type==="headBottleneck") || issues.some(x=>x.type==="wrongOwner")){
+    items.push(["Руководитель A почти везде","Даже типовые проектные решения ждут одного человека. Матрица фиксирует микроменеджмент вместо распределения ответственности."]);
+  }
+  if(!items.length){
+    items.push(["Последствия устранены","В матрице нет явных структурных дефектов: решения не должны зависать из-за ролей."]);
+  }
+
+  box.innerHTML=`<div class="consequence-head">Что произойдет с такой матрицей</div>`+
+    items.map(([t,x])=>`<div class="consequence-row"><b>${t}</b>${x}</div>`).join("");
+  box.classList.remove("hidden");
+}
+
+function goRound2(){
+  state2=copy(target);
+  $("#stage1").classList.add("hidden");
+  $("#stage2").classList.remove("hidden");
+  $("#p2").classList.add("active");
+  renderMatrix("#matrix2",state2,2);
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+
+function changedRows(state,baseline){
+  return rows.filter(row=>
+    people.some(p=>normalizeRole(state[row.id][p.id])!==normalizeRole(baseline[row.id][p.id]))
+  ).map(r=>r.id);
+}
+
+function exactRowMatch(state,goal,rowId){
+  return people.every(p=>normalizeRole(state[rowId][p.id])===normalizeRole(goal[rowId][p.id]));
+}
+
+function checkStage2(){
+  const changed=changedRows(state2,target);
+  const unrelated=changed.filter(id=>!["w6","w7"].includes(id));
+  const row6ok=exactRowMatch(state2,round2Target,"w6");
+  const row7ok=exactRowMatch(state2,round2Target,"w7");
+
+  const row6Roles=state2.w6;
+  const row7Roles=state2.w7;
+  const pmStillActive=hasA(row6Roles.pm)||hasR(row6Roles.pm)||hasA(row7Roles.pm)||hasR(row7Roles.pm);
+  const row6A=people.filter(p=>hasA(row6Roles[p.id]));
+  const row7A=people.filter(p=>hasA(row7Roles[p.id]));
+  const row6R=people.filter(p=>hasR(row6Roles[p.id]));
+  const row7R=people.filter(p=>hasR(row7Roles[p.id]));
+
+  const fb=$("#fb2");
+  fb.innerHTML="";
+
+  if(row6ok && row7ok && unrelated.length===0){
+    addFb(fb,"ok","Перестройка затронула только две активные строки.",
+      "В настройке процесса временный A перешел к руководителю подразделения, а операционный специалист остался R. В решении о запуске операционный специалист взял R, а A остался у руководителя подразделения.");
+  }else{
+    if(unrelated.length){
+      addFb(fb,"warn","Вы изменили уже завершенные работы.",
+        `Новая вводная не требует переписывать строки ${unrelated.map(id=>rows.find(r=>r.id===id).n).join(", ")}. RACI меняют только там, где отсутствие участника влияет на предстоящую работу.`);
+    }
+    if(pmStillActive){
+      addFb(fb,"bad","В активных строках осталась роль недоступного руководителя проекта.",
+        "Если человек не сможет выполнить роль в нужный период, ответственность нужно временно перераспределить до начала работы.");
+    }
+    if(row6A.length!==1 || row6R.length<1 || row7A.length!==1 || row7R.length<1){
+      addFb(fb,"bad","После перестройки в активной строке нарушена базовая конструкция RACI.",
+        "Проверьте: один A и хотя бы один R должны сохраниться после любого временного замещения.");
+    }
+    if(!row6ok){
+      addFb(fb,"warn","Строка 6 требует точечной замены A.",
+        "Операционный специалист уже умеет выполнить настройку и остается R. В отсутствие руководителя проекта временное A можно передать руководителю подразделения — без перехвата самой работы.");
+    }
+    if(!row7ok){
+      addFb(fb,"warn","Строка 7 требует нового R, но не нового A.",
+        "Решение о запуске и раньше принадлежало руководителю подразделения. В отсутствие руководителя проекта операционный специалист может собрать подтверждение готовности и выступить R.");
+    }
+  }
+
+  fb.classList.add("show");
+  showSummary(row6ok,row7ok,unrelated.length===0);
+}
+
+function showSummary(row6ok,row7ok,onlyRelevant){
+  const targeted = onlyRelevant ? 1 : 0;
+  const continuity = (row6ok && row7ok) ? 1 : 0;
+  const noHeadEverywhere = rows.filter(r=>hasA(state2[r.id].head)).length <= 5 ? 1 : 0;
+
+  let title,text;
+  if(targeted && continuity && noHeadEverywhere){
+    title="Вы используете RACI как рабочую карту ответственности, а не как формальную таблицу.";
+    text="Вы исправили структурные дефекты первого раунда и при изменении состава команды перестроили только те строки, где роль действительно нужно выполнить в новый период.";
+  }else if(!targeted){
+    title="Вы перестраиваете матрицу шире, чем требует изменение.";
+    text="RACI не нужно переписывать целиком при каждом отсутствии. Сначала определите, какие незавершенные результаты реально зависят от роли этого участника.";
+  }else if(!continuity){
+    title="Вы нашли затронутые строки, но временное замещение пока не закрывает работу.";
+    text="После любой замены в строке должны сохраниться один A, минимум один R и реальная способность этих людей выполнить свою роль.";
+  }else{
+    title="Ответственность распределена, но руководитель снова становится слишком частым владельцем.";
+    text="Временное замещение допустимо, однако оно не должно автоматически возвращать все A руководителю подразделения.";
+  }
+
+  const s=$("#summary");
+  s.innerHTML=`
+    <h3>${title}</h3>
+    <p>${text}</p>
+    <div class="metrics">
+      <div class="metric"><div class="score">${score1.ownership + continuity}/2</div><div class="label">ясность A и R</div></div>
+      <div class="metric"><div class="score">${score1.authority + noHeadEverywhere}/2</div><div class="label">реальные полномочия</div></div>
+      <div class="metric"><div class="score">${score1.flow + targeted}/2</div><div class="label">без лишних согласований</div></div>
+    </div>
+    <div class="consequence" style="margin-top:11px">
+      <div class="consequence-head">Рабочая логика второго раунда</div>
+      <div class="consequence-row"><b>Работы 1–5</b>Они уже завершены, поэтому отсутствие руководителя проекта не требует менять их строки.</div>
+      <div class="consequence-row"><b>Работа 6</b>Операционный специалист сохраняет R. Временное A переходит руководителю подразделения на период отсутствия руководителя проекта.</div>
+      <div class="consequence-row"><b>Работа 7</b>A остается у руководителя подразделения. R временно переходит операционному специалисту, который собирает подтверждение операционной готовности.</div>
+    </div>
+  `;
+  s.classList.remove("hidden");
+}
+
+$("#reset1").addEventListener("click",()=>{
+  state1=copy(initial);
+  renderMatrix("#matrix1",state1,1);
+  $("#fb1").className="feedback";
+  $("#fb1").innerHTML="";
+  $("#consequences1").classList.add("hidden");
+  $("#go2Wrap").classList.add("hidden");
+});
+$("#check1").addEventListener("click",checkStage1);
+$("#go2").addEventListener("click",goRound2);
+$("#back1").addEventListener("click",()=>{
+  $("#stage2").classList.add("hidden");
+  $("#stage1").classList.remove("hidden");
+  $("#p2").classList.remove("active");
+  renderMatrix("#matrix1",state1,1);
+  window.scrollTo({top:0,behavior:"smooth"});
+});
+$("#check2").addEventListener("click",checkStage2);
+
+renderMatrix("#matrix1",state1,1);
+</script>
+</body>
+</html>

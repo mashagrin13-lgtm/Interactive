@@ -1,0 +1,1011 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Пять точек контроля</title>
+<style>
+:root{
+  --bg:#f5f6f8;
+  --card:#ffffff;
+  --text:#20242d;
+  --muted:#6d7583;
+  --line:#dfe3ea;
+  --accent:#315d9b;
+  --accent-soft:#eef3fb;
+  --ok:#2e6b4f;
+  --ok-bg:#eef7f2;
+  --warn:#8a5a10;
+  --warn-bg:#fff7e8;
+  --bad:#8b3d45;
+  --bad-bg:#fff0f1;
+  --shadow:0 6px 18px rgba(31,36,48,.07);
+}
+*{box-sizing:border-box}
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--text);
+  font-family:Arial,Helvetica,sans-serif;
+  line-height:1.42;
+}
+.app{
+  width:min(560px,calc(100% - 24px));
+  margin:18px auto;
+}
+.shell{
+  background:var(--card);
+  border:1px solid var(--line);
+  border-radius:16px;
+  box-shadow:var(--shadow);
+  overflow:hidden;
+}
+.head{
+  padding:18px 18px 14px;
+  border-bottom:1px solid var(--line);
+}
+h1{
+  margin:0 0 8px;
+  font-size:21px;
+  line-height:1.2;
+}
+.lead{
+  margin:0;
+  color:var(--muted);
+  font-size:14px;
+}
+.progress{
+  display:flex;
+  gap:7px;
+  margin-top:14px;
+}
+.progress span{
+  height:5px;
+  flex:1;
+  border-radius:999px;
+  background:#e8ebf0;
+}
+.progress span.active{background:var(--accent)}
+.body{padding:16px}
+.stage-label{
+  font-size:12px;
+  color:var(--accent);
+  font-weight:700;
+  text-transform:uppercase;
+  letter-spacing:.03em;
+  margin-bottom:5px;
+}
+.stage-title{
+  margin:0 0 5px;
+  font-size:17px;
+}
+.stage-note{
+  margin:0 0 12px;
+  color:var(--muted);
+  font-size:13px;
+}
+.rules{
+  padding:11px 12px;
+  border:1px solid #d8e1ef;
+  background:#f5f7fb;
+  border-radius:12px;
+  font-size:13px;
+  margin-bottom:13px;
+}
+.rules b{display:block;margin-bottom:5px}
+.rules ol{margin:0;padding-left:19px}
+.rules li{margin:4px 0}
+.budget{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:10px;
+  margin-bottom:11px;
+  padding:9px 10px;
+  border:1px solid var(--line);
+  border-radius:10px;
+  background:#fff;
+  font-size:12.5px;
+}
+.budget strong{color:var(--accent)}
+.track{
+  width:110px;
+  height:8px;
+  background:#e8ebf0;
+  border-radius:999px;
+  overflow:hidden;
+}
+.fill{
+  height:100%;
+  width:0;
+  background:var(--accent);
+  border-radius:999px;
+  transition:width .18s ease;
+}
+.task-list{
+  display:grid;
+  gap:10px;
+}
+.task{
+  border:1px solid var(--line);
+  border-radius:12px;
+  overflow:hidden;
+  background:#fff;
+}
+.task-head{
+  padding:10px 11px;
+  background:#fafbfc;
+  border-bottom:1px solid var(--line);
+}
+.task-name{
+  font-size:13.5px;
+  font-weight:700;
+}
+.task-meta{
+  margin-top:3px;
+  font-size:11.5px;
+  color:var(--muted);
+}
+.task-tag{
+  display:inline-block;
+  margin-top:5px;
+  padding:3px 6px;
+  border-radius:999px;
+  background:var(--accent-soft);
+  color:var(--accent);
+  font-size:10.5px;
+  font-weight:700;
+}
+.points{
+  padding:8px 10px 10px;
+}
+.point{
+  border:1px solid var(--line);
+  border-radius:10px;
+  padding:9px;
+  margin-top:7px;
+}
+.point:first-child{margin-top:0}
+.point.selected{
+  border-color:var(--accent);
+  background:var(--accent-soft);
+}
+.point-top{
+  display:grid;
+  grid-template-columns:22px 1fr;
+  gap:7px;
+  align-items:start;
+}
+.point-top input{margin-top:2px}
+.point-title{
+  font-size:12.5px;
+  font-weight:700;
+}
+.point-note{
+  margin-top:2px;
+  font-size:11.5px;
+  color:var(--muted);
+}
+.criterion{
+  margin-top:8px;
+  display:none;
+}
+.point.selected .criterion{display:block}
+.criterion label{
+  display:block;
+  font-size:11px;
+  font-weight:700;
+  color:var(--muted);
+  margin-bottom:4px;
+}
+.criterion select{
+  width:100%;
+  border:1px solid var(--line);
+  border-radius:9px;
+  background:#fff;
+  color:var(--text);
+  padding:8px 9px;
+  font-size:12px;
+}
+.actions{
+  display:flex;
+  gap:8px;
+  margin-top:13px;
+}
+button{
+  appearance:none;
+  border:0;
+  border-radius:10px;
+  padding:10px 13px;
+  font-size:14px;
+  font-weight:700;
+  cursor:pointer;
+}
+.primary{
+  background:var(--accent);
+  color:#fff;
+  flex:1;
+}
+.primary:disabled{
+  opacity:.45;
+  cursor:not-allowed;
+}
+.secondary{
+  background:#edf0f4;
+  color:var(--text);
+}
+.feedback{display:none;margin-top:12px}
+.feedback.show{display:block}
+.fb{
+  border-radius:10px;
+  padding:10px 11px;
+  margin-top:7px;
+  font-size:13px;
+}
+.fb strong{display:block;margin-bottom:3px}
+.fb.ok{background:var(--ok-bg);border:1px solid #cfe5d8;color:#214f3b}
+.fb.warn{background:var(--warn-bg);border:1px solid #f1dbb0;color:#6f480c}
+.fb.bad{background:var(--bad-bg);border:1px solid #efc9cd;color:#73343b}
+.hidden{display:none!important}
+.change-box{
+  border:1px solid #d8e1ef;
+  background:#f5f7fb;
+  border-radius:12px;
+  padding:11px 12px;
+  margin-bottom:10px;
+  font-size:13px;
+}
+.change-box b{display:block;margin-bottom:3px}
+.summary{
+  margin-top:14px;
+  padding-top:14px;
+  border-top:1px solid var(--line);
+}
+.summary h3{
+  margin:0 0 7px;
+  font-size:17px;
+}
+.summary p{
+  margin:0 0 9px;
+  font-size:13px;
+}
+.metrics{
+  display:grid;
+  grid-template-columns:1fr 1fr 1fr;
+  gap:7px;
+}
+.metric{
+  border:1px solid var(--line);
+  border-radius:10px;
+  padding:9px 7px;
+  text-align:center;
+}
+.metric .score{
+  font-size:19px;
+  font-weight:700;
+  color:var(--accent);
+}
+.metric .label{
+  font-size:10.5px;
+  color:var(--muted);
+  margin-top:2px;
+}
+.reference{
+  margin-top:11px;
+  border:1px solid var(--line);
+  border-radius:11px;
+  overflow:hidden;
+}
+.reference-head{
+  padding:8px 10px;
+  background:#f4f6f9;
+  font-size:12.5px;
+  font-weight:700;
+}
+.reference-row{
+  padding:8px 10px;
+  border-top:1px solid #edf0f4;
+  font-size:12px;
+}
+.reference-row b{display:block;margin-bottom:2px}
+@media(max-width:420px){
+  .metrics{grid-template-columns:1fr}
+  .budget{align-items:flex-start;flex-wrap:wrap}
+  .track{width:100%}
+  .body{padding:13px}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="shell">
+    <div class="head">
+      <h1>Пять точек контроля</h1>
+      <p class="lead">Распределите ограниченное управленческое время между четырьмя делегированными задачами. Контроль должен усиливаться там, где выше риск или ниже стабильность, и сокращаться после устойчивых результатов.</p>
+      <div class="progress">
+        <span id="p1" class="active"></span>
+        <span id="p2"></span>
+      </div>
+    </div>
+
+    <div class="body">
+
+      <section id="stage1">
+        <div class="stage-label">Этап 1 из 2</div>
+        <h2 class="stage-title">Распределите пять точек контроля</h2>
+
+        <div class="rules">
+          <b>Что нужно сделать</b>
+          <ol>
+            <li>Перед вами четыре делегированные задачи и несколько возможных точек контроля для каждой.</li>
+            <li>Выберите ровно <strong>5 контрольных точек</strong>. Каждая выбранная точка расходует одну единицу вашего времени.</li>
+            <li>Для каждой выбранной точки укажите в списке <strong>что именно вы будете проверять</strong>.</li>
+            <li>Ставьте контроль перед моментом, после которого ошибка станет дорогой или трудно обратимой.</li>
+            <li>Не тратьте точки на постоянные статус-отчеты, если задача знакомая и сотрудник стабильно справляется.</li>
+            <li>Когда используете все пять точек и заполните критерии проверки, нажмите «Проверить систему».</li>
+          </ol>
+        </div>
+
+        <div class="budget">
+          <span>Использовано точек: <strong id="budgetText">0 из 5</strong></span>
+          <div class="track"><div class="fill" id="budgetFill"></div></div>
+        </div>
+
+        <div class="task-list" id="taskList1"></div>
+
+        <div class="actions">
+          <button class="secondary" id="reset1">Сбросить</button>
+          <button class="primary" id="check1" disabled>Проверить систему</button>
+        </div>
+
+        <div class="feedback" id="fb1"></div>
+
+        <div class="actions hidden" id="go2Wrap">
+          <button class="primary" id="go2">Применить рабочую схему и перейти к изменениям</button>
+        </div>
+      </section>
+
+      <section id="stage2" class="hidden">
+        <div class="stage-label">Этап 2 из 2</div>
+        <h2 class="stage-title">Пересоберите контроль после изменений</h2>
+
+        <div class="rules">
+          <b>Что нужно сделать</b>
+          <ol>
+            <li>На старте уже стоит рабочая система из пяти точек.</li>
+            <li>Прочитайте две новые вводные ниже.</li>
+            <li>Измените только те точки, на которые новые условия действительно влияют.</li>
+            <li>Уберите контроль там, где сотрудник подтвердил стабильность, и добавьте его там, где появился новый риск.</li>
+            <li>Для новой точки снова укажите, что именно вы будете проверять.</li>
+            <li>Всего по-прежнему доступно не более пяти точек. Для завершения задания используйте пять.</li>
+          </ol>
+        </div>
+
+        <div class="change-box">
+          <b>Изменение 1</b>
+          Новый подрядчик сообщил, что может задержать первый критический результат на три рабочих дня. Если задержка подтвердится, она затронет следующий этап проекта.
+        </div>
+
+        <div class="change-box">
+          <b>Изменение 2</b>
+          Опытный специалист в привычном ежемесячном процессе завершил еще два цикла без ошибок и без просрочек.
+        </div>
+
+        <div class="budget">
+          <span>Использовано точек: <strong id="budgetText2">5 из 5</strong></span>
+          <div class="track"><div class="fill" id="budgetFill2" style="width:100%"></div></div>
+        </div>
+
+        <div class="task-list" id="taskList2"></div>
+
+        <div class="actions">
+          <button class="secondary" id="back1">Назад</button>
+          <button class="primary" id="check2" disabled>Проверить пересборку</button>
+        </div>
+
+        <div class="feedback" id="fb2"></div>
+        <div class="summary hidden" id="summary"></div>
+      </section>
+
+    </div>
+  </div>
+</div>
+
+<script>
+const tasksStage1 = [
+  {
+    id:"t1",
+    name:"Новый сотрудник впервые готовит предложение крупному клиенту",
+    meta:"Высокая новизна для сотрудника · высокая цена ошибки",
+    tag:"контроль плотнее на старте",
+    points:[
+      {
+        id:"t1p1",
+        title:"После первого содержательного черновика, до финализации условий",
+        note:"Можно скорректировать направление до того, как сотрудник потратит время на полную сборку предложения.",
+        good:true,
+        criteria:[
+          ["","Выберите, что проверять"],
+          ["good","Соответствие запросу клиента, обязательным требованиям и коммерческим ограничениям"],
+          ["bad1","Сколько часов сотрудник уже потратил на документ"],
+          ["bad2","Какие формулировки он использовал в каждом абзаце"]
+        ]
+      },
+      {
+        id:"t1p2",
+        title:"Перед отправкой предложения клиенту",
+        note:"Последняя точка перед внешним обязательством и дорогой переделкой.",
+        good:true,
+        critical:true,
+        criteria:[
+          ["","Выберите, что проверять"],
+          ["good","Финальные условия, риски, обязательства и соответствие согласованным границам"],
+          ["bad1","Все ли комментарии руководителя дословно внесены"],
+          ["bad2","Сколько промежуточных версий сделал сотрудник"]
+        ]
+      },
+      {
+        id:"t1p3",
+        title:"Ежедневно запрашивать статус подготовки",
+        note:"Контроль действий, а не значимого промежуточного результата.",
+        good:false,
+        criteria:[
+          ["","Выберите, что проверять"],
+          ["bad1","Что сотрудник сделал за день"],
+          ["bad2","Сколько пунктов осталось"],
+          ["good","Изменился ли риск по обязательствам клиенту"]
+        ]
+      }
+    ]
+  },
+  {
+    id:"t2",
+    name:"Опытный специалист ведет привычный ежемесячный процесс",
+    meta:"Низкая новизна · стабильные результаты · умеренный риск",
+    tag:"минимальный контроль",
+    points:[
+      {
+        id:"t2p1",
+        title:"Проверить итог процесса перед передачей результата дальше",
+        note:"Одна легкая контрольная точка без вмешательства в способ работы.",
+        good:true,
+        criteria:[
+          ["","Выберите, что проверять"],
+          ["good","Срок, качество результата и отсутствие критичных отклонений"],
+          ["bad1","Какие действия сотрудник выполнял в течение месяца"],
+          ["bad2","Сколько раз он сверялся с коллегами"]
+        ]
+      },
+      {
+        id:"t2p2",
+        title:"Проводить обязательную сверку в середине каждого цикла",
+        note:"Для стабильной знакомой работы эта точка не дает достаточной ценности.",
+        good:false,
+        criteria:[
+          ["","Выберите, что проверять"],
+          ["bad1","Ход выполнения каждого шага"],
+          ["good","Появились ли новые риски, которых раньше не было"],
+          ["bad2","Совпадает ли способ работы с привычным способом руководителя"]
+        ]
+      },
+      {
+        id:"t2p3",
+        title:"Запрашивать короткий статус дважды в неделю",
+        note:"Регулярный контроль без нового риска или нестабильности.",
+        good:false,
+        criteria:[
+          ["","Выберите, что проверять"],
+          ["bad1","Что сделано с прошлого отчета"],
+          ["bad2","Сколько задач осталось"],
+          ["good","Есть ли отклонение от итогового срока"]
+        ]
+      }
+    ]
+  },
+  {
+    id:"t3",
+    name:"Сильный сотрудник впервые работает с новым подрядчиком",
+    meta:"Компетентность высокая · новый внешний контур · ошибка частично обратима",
+    tag:"контроль в рисковой развилке",
+    points:[
+      {
+        id:"t3p1",
+        title:"Перед подтверждением подрядчику сроков и обязательств",
+        note:"Точка стоит до внешнего обещания и позволяет проверить допущения о новом подрядчике.",
+        good:true,
+        critical:true,
+        criteria:[
+          ["","Выберите, что проверять"],
+          ["good","Реалистичность сроков, зависимости, ответственность сторон и запас по риску"],
+          ["bad1","Как именно сотрудник вел переговоры"],
+          ["bad2","Сколько сообщений отправил подрядчику"]
+        ]
+      },
+      {
+        id:"t3p2",
+        title:"После каждого письма подрядчика",
+        note:"Частота контроля не соответствует уровню сильного сотрудника.",
+        good:false,
+        criteria:[
+          ["","Выберите, что проверять"],
+          ["bad1","Текст каждого ответа"],
+          ["bad2","Тон переписки"],
+          ["good","Появился ли риск по ключевым обязательствам"]
+        ]
+      },
+      {
+        id:"t3p3",
+        title:"Только после завершения всей работы подрядчика",
+        note:"Слишком поздно для первого цикла с новым внешним партнером.",
+        good:false,
+        criteria:[
+          ["","Выберите, что проверять"],
+          ["good","Итоговое качество результата"],
+          ["bad1","Полный архив переписки"],
+          ["bad2","Количество итераций"]
+        ]
+      }
+    ]
+  },
+  {
+    id:"t4",
+    name:"Сотрудник после двух недавних срывов снова ведет знакомый проект",
+    meta:"Задача знакомая · результат нестабилен · причина прошлых срывов известна",
+    tag:"контроль узкого слабого места",
+    points:[
+      {
+        id:"t4p1",
+        title:"Перед этапом, на котором возникали два предыдущих срыва",
+        note:"Контроль усиливается только в проблемной зоне, а не по всему проекту.",
+        good:true,
+        criteria:[
+          ["","Выберите, что проверять"],
+          ["good","Устранена ли причина прошлых срывов и появились ли новые сигналы риска"],
+          ["bad1","Все ли действия выполнены в порядке, который предпочитает руководитель"],
+          ["bad2","Сколько часов сотрудник потратил на подготовку"]
+        ]
+      },
+      {
+        id:"t4p2",
+        title:"Проверять каждый этап проекта",
+        note:"Прошлые ошибки не требуют превращать знакомую работу в постоянный микроконтроль.",
+        good:false,
+        criteria:[
+          ["","Выберите, что проверять"],
+          ["bad1","Каждый промежуточный шаг"],
+          ["bad2","Каждое решение до его выполнения"],
+          ["good","Только признаки повторения известной причины срыва"]
+        ]
+      },
+      {
+        id:"t4p3",
+        title:"Проверить только итог после завершения проекта",
+        note:"После двух недавних срывов это слишком поздняя точка.",
+        good:false,
+        criteria:[
+          ["","Выберите, что проверять"],
+          ["good","Итоговый результат"],
+          ["bad1","Полную историю действий"],
+          ["bad2","Все решения сотрудника"]
+        ]
+      }
+    ]
+  }
+];
+
+const stage1Baseline = {
+  t1p1:"good",
+  t1p2:"good",
+  t2p1:"good",
+  t3p1:"good",
+  t4p1:"good"
+};
+
+const tasksStage2 = [
+  {
+    ...tasksStage1[0]
+  },
+  {
+    id:"t2",
+    name:"Опытный специалист: еще два цикла без ошибок",
+    meta:"Низкая новизна · устойчивый результат подтвержден дополнительными циклами",
+    tag:"контроль можно снять",
+    points:[
+      {
+        id:"t2p1",
+        title:"Оставить обязательную проверку каждого итогового результата",
+        note:"После серии стабильных циклов постоянная контрольная точка уже не обязательна.",
+        good:false,
+        criteria:[
+          ["","Выберите, что проверять"],
+          ["good","Срок и качество результата"],
+          ["bad1","Все действия сотрудника"],
+          ["bad2","Промежуточный статус"]
+        ]
+      },
+      {
+        id:"t2p4",
+        title:"Вернуть промежуточную сверку, чтобы не потерять стабильность",
+        note:"Стабильный результат — основание уменьшить контроль, а не увеличивать его.",
+        good:false,
+        criteria:[
+          ["","Выберите, что проверять"],
+          ["bad1","Промежуточные действия"],
+          ["good","Новые риски"],
+          ["bad2","Совпадение с привычным способом"]
+        ]
+      }
+    ]
+  },
+  {
+    id:"t3",
+    name:"Новый подрядчик сообщил о риске задержки",
+    meta:"Новый внешний контур · появился конкретный риск по сроку",
+    tag:"контроль нужно усилить",
+    points:[
+      {
+        id:"t3p1",
+        title:"Сохранить точку перед подтверждением подрядчику сроков и обязательств",
+        note:"Базовая рисковая развилка по-прежнему актуальна.",
+        good:true,
+        critical:true,
+        criteria:[
+          ["","Выберите, что проверять"],
+          ["good","Реалистичность сроков, зависимости, ответственность сторон и запас по риску"],
+          ["bad1","Как сотрудник вел переписку"],
+          ["bad2","Количество контактов с подрядчиком"]
+        ]
+      },
+      {
+        id:"t3p4",
+        title:"Сейчас, до принятия нового срока подрядчика",
+        note:"Новая точка появляется из-за конкретного сигнала риска.",
+        good:true,
+        critical:true,
+        criteria:[
+          ["","Выберите, что проверять"],
+          ["good","Влияние задержки на критический путь, доступные варианты и границу эскалации"],
+          ["bad1","Почему сотрудник сразу не выбрал другого подрядчика"],
+          ["bad2","Все сообщения подрядчика за проект"]
+        ]
+      },
+      {
+        id:"t3p2",
+        title:"После каждого следующего письма подрядчика",
+        note:"Даже при повышенном риске контроль должен быть привязан к значимым развилкам.",
+        good:false,
+        criteria:[
+          ["","Выберите, что проверять"],
+          ["bad1","Каждый ответ сотрудника"],
+          ["good","Изменился ли риск для критического пути"],
+          ["bad2","Тон переписки"]
+        ]
+      }
+    ]
+  },
+  {
+    ...tasksStage1[3]
+  }
+];
+
+const stage2Target = {
+  t1p1:"good",
+  t1p2:"good",
+  t3p1:"good",
+  t3p4:"good",
+  t4p1:"good"
+};
+
+let state1 = {};
+let state2 = {};
+let stage1Scores = {economy:0,timing:0,criteria:0};
+
+const $ = s => document.querySelector(s);
+
+function allPoints(tasks){
+  return tasks.flatMap(t=>t.points.map(p=>({...p,taskId:t.id})));
+}
+
+function selectedCount(state){
+  return Object.values(state).filter(x=>x && x.selected).length;
+}
+
+function allSelectedHaveCriteria(state){
+  return Object.values(state).filter(x=>x && x.selected).every(x=>x.criterion);
+}
+
+function addFb(container,type,title,text){
+  const d=document.createElement("div");
+  d.className=`fb ${type}`;
+  d.innerHTML=`<strong>${title}</strong>${text}`;
+  container.appendChild(d);
+}
+
+function renderTasks(tasks,state,containerId,stage){
+  const container=$(containerId);
+  container.innerHTML="";
+  const count=selectedCount(state);
+
+  tasks.forEach(task=>{
+    const wrap=document.createElement("div");
+    wrap.className="task";
+
+    const head=document.createElement("div");
+    head.className="task-head";
+    head.innerHTML=`
+      <div class="task-name">${task.name}</div>
+      <div class="task-meta">${task.meta}</div>
+      <div class="task-tag">${task.tag}</div>
+    `;
+    wrap.appendChild(head);
+
+    const points=document.createElement("div");
+    points.className="points";
+
+    task.points.forEach(point=>{
+      const current=state[point.id]||{selected:false,criterion:""};
+      const div=document.createElement("div");
+      div.className="point"+(current.selected?" selected":"");
+
+      const top=document.createElement("label");
+      top.className="point-top";
+
+      const input=document.createElement("input");
+      input.type="checkbox";
+      input.checked=current.selected;
+      input.disabled=!current.selected && count>=5;
+
+      const text=document.createElement("div");
+      text.innerHTML=`<div class="point-title">${point.title}</div><div class="point-note">${point.note}</div>`;
+
+      top.append(input,text);
+      div.appendChild(top);
+
+      const criterion=document.createElement("div");
+      criterion.className="criterion";
+      criterion.innerHTML=`<label>Что будете проверять</label>`;
+
+      const select=document.createElement("select");
+      point.criteria.forEach(([value,label])=>{
+        const opt=document.createElement("option");
+        opt.value=value;
+        opt.textContent=label;
+        if(current.criterion===value)opt.selected=true;
+        select.appendChild(opt);
+      });
+      criterion.appendChild(select);
+      div.appendChild(criterion);
+
+      input.addEventListener("change",()=>{
+        if(input.checked && selectedCount(state)>=5){
+          input.checked=false;
+          return;
+        }
+        state[point.id]=state[point.id]||{};
+        state[point.id].selected=input.checked;
+        if(!input.checked)state[point.id].criterion="";
+        renderStage(stage);
+      });
+
+      select.addEventListener("change",()=>{
+        state[point.id]=state[point.id]||{};
+        state[point.id].selected=true;
+        state[point.id].criterion=select.value;
+        renderStage(stage);
+      });
+
+      points.appendChild(div);
+    });
+
+    wrap.appendChild(points);
+    container.appendChild(wrap);
+  });
+}
+
+function updateBudget(state,textId,fillId,buttonId){
+  const count=selectedCount(state);
+  $(textId).textContent=`${count} из 5`;
+  $(fillId).style.width=`${count*20}%`;
+  $(buttonId).disabled=!(count===5 && allSelectedHaveCriteria(state));
+}
+
+function renderStage(stage){
+  if(stage===1){
+    renderTasks(tasksStage1,state1,"#taskList1",1);
+    updateBudget(state1,"#budgetText","#budgetFill","#check1");
+    $("#fb1").className="feedback";
+    $("#fb1").innerHTML="";
+    $("#go2Wrap").classList.add("hidden");
+  }else{
+    renderTasks(tasksStage2,state2,"#taskList2",2);
+    updateBudget(state2,"#budgetText2","#budgetFill2","#check2");
+    $("#fb2").className="feedback";
+    $("#fb2").innerHTML="";
+    $("#summary").classList.add("hidden");
+  }
+}
+
+function selectedIds(state){
+  return Object.entries(state).filter(([_,v])=>v?.selected).map(([id])=>id);
+}
+
+function criterionGood(tasks,state,id){
+  const point=allPoints(tasks).find(p=>p.id===id);
+  const value=state[id]?.criterion;
+  return point && point.criteria.some(([v])=>v==="good") && value==="good";
+}
+
+function checkStage1(){
+  const ids=selectedIds(state1);
+  const goodIds=Object.keys(stage1Baseline);
+  const wrong=ids.filter(id=>!goodIds.includes(id));
+  const missed=goodIds.filter(id=>!ids.includes(id));
+  const badCriteria=ids.filter(id=>!criterionGood(tasksStage1,state1,id));
+
+  const economyGood = !ids.includes("t2p2") && !ids.includes("t2p3") &&
+                      !ids.includes("t1p3") && !ids.includes("t3p2") && !ids.includes("t4p2");
+  const timingGood = ids.includes("t1p2") && ids.includes("t3p1") && ids.includes("t4p1");
+
+  stage1Scores.economy=economyGood?1:0;
+  stage1Scores.timing=timingGood?1:0;
+  stage1Scores.criteria=badCriteria.length===0?1:0;
+
+  const fb=$("#fb1");
+  fb.innerHTML="";
+
+  if(!wrong.length&&!missed.length&&!badCriteria.length){
+    addFb(fb,"ok","Пять точек распределены по риску и стабильности.",
+      "Плотнее контролируются новая работа и нестабильный результат. Привычный устойчивый процесс получает только одну легкую точку на результате.");
+  }else{
+    if(!economyGood){
+      addFb(fb,"warn","Часть времени ушла на контроль действий или стабильной работы.",
+        "Контрольная точка должна появляться из риска, новизны или нестабильного результата. Постоянный статус сам по себе не снижает риск.");
+    }
+    if(!timingGood){
+      addFb(fb,"warn","Не все критические точки стоят до дорогого решения.",
+        "Проверьте предложение до отправки клиенту, обязательства нового подрядчика — до подтверждения, а знакомый проект после срывов — до проблемного этапа, а не после него.");
+    }
+    if(badCriteria.length){
+      addFb(fb,"warn","В некоторых точках проверяется способ работы вместо результата или риска.",
+        "На контрольной точке смотрите на критерии результата, ограничения, новый риск и возможность исправления. Не проверяйте количество действий, сообщений или точное совпадение со способом руководителя.");
+    }
+    if(missed.length){
+      addFb(fb,"bad","Пять точек не закрывают все значимые рисковые зоны.",
+        "При ограниченном ресурсе контроль нужно концентрировать там, где ошибка дорога, работа новая или недавние результаты нестабильны.");
+    }
+  }
+
+  fb.classList.add("show");
+  $("#go2Wrap").classList.remove("hidden");
+}
+
+function applyBaselineAndGo(){
+  state2={};
+  Object.entries(stage1Baseline).forEach(([id,criterion])=>{
+    state2[id]={selected:true,criterion};
+  });
+
+  $("#stage1").classList.add("hidden");
+  $("#stage2").classList.remove("hidden");
+  $("#p2").classList.add("active");
+  renderStage(2);
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+
+function checkStage2(){
+  const ids=selectedIds(state2);
+  const targetIds=Object.keys(stage2Target);
+  const wrong=ids.filter(id=>!targetIds.includes(id));
+  const missed=targetIds.filter(id=>!ids.includes(id));
+  const badCriteria=ids.filter(id=>!criterionGood(tasksStage2,state2,id));
+
+  const removedStable=!ids.includes("t2p1") && !ids.includes("t2p4");
+  const addedRisk=ids.includes("t3p4");
+  const preservedOther=ids.includes("t1p1")&&ids.includes("t1p2")&&ids.includes("t3p1")&&ids.includes("t4p1");
+
+  const economy=removedStable?1:0;
+  const timing=addedRisk && criterionGood(tasksStage2,state2,"t3p4")?1:0;
+  const adaptation=removedStable && addedRisk && preservedOther ? 1 : 0;
+
+  const fb=$("#fb2");
+  fb.innerHTML="";
+
+  if(!wrong.length&&!missed.length&&!badCriteria.length){
+    addFb(fb,"ok","Вы перераспределили контроль вместе с изменением риска.",
+      "Одна точка снята со стабильного повторяющегося процесса и перенесена к новой рисковой развилке с подрядчиком. Остальные точки сохранены, потому что их условия не изменились.");
+  }else{
+    if(!removedStable){
+      addFb(fb,"warn","Контроль стабильного процесса можно уменьшить.",
+        "Еще два безошибочных цикла — достаточное основание убрать обязательную точку. Результат можно продолжать видеть по обычным показателям процесса без отдельного участия руководителя.");
+    }
+    if(!addedRisk){
+      addFb(fb,"bad","Новый сигнал подрядчика не получил отдельной контрольной точки.",
+        "Проверка нужна сейчас, до принятия нового срока подрядчика, пока решение еще обратимо и можно изменить план.");
+    }
+    if(!preservedOther){
+      addFb(fb,"warn","Вы изменили контроль там, где условия не менялись.",
+        "Пересобирайте систему адресно. Новые вводные затронули только стабильный ежемесячный процесс и работу с новым подрядчиком.");
+    }
+    if(badCriteria.length){
+      addFb(fb,"warn","Одна или несколько точек проверяют лишние действия вместо риска.",
+        "После сигнала подрядчика важно проверить влияние на критический путь, доступные варианты и границу эскалации.");
+    }
+  }
+
+  fb.classList.add("show");
+  showSummary(economy,timing,adaptation);
+}
+
+function showSummary(economy,timing,adaptation){
+  const baseEconomy=stage1Scores.economy;
+  const baseTiming=stage1Scores.timing;
+
+  const economyScore=baseEconomy+economy;
+  const timingScore=baseTiming+timing;
+  const adaptationScore=adaptation;
+
+  let title,text;
+  if(economyScore===2 && timingScore===2 && adaptationScore===1){
+    title="Вы используете контроль как переменный ресурс.";
+    text="Контроль концентрируется перед дорогими развилками, не расходуется на стабильную низкорисковую работу и меняется после новых сигналов риска или серии устойчивых результатов.";
+  }else if(economyScore<2){
+    title="Главная зона роста — экономия управленческого внимания.";
+    text="Стабильная работа не требует постоянной отдельной контрольной точки. Освобожденное время лучше переносить к новым или более рискованным задачам.";
+  }else if(timingScore<2){
+    title="Стоит точнее выбирать момент контроля.";
+    text="Контроль приносит больше пользы до внешнего обязательства, необратимого решения или дорогой переделки, а не после того, как последствие уже наступило.";
+  }else{
+    title="Контрольные точки выбраны неплохо, но система меняется недостаточно быстро.";
+    text="Частота контроля не фиксируется навсегда. Стабильность позволяет убирать точки, а новый риск — временно добавлять их в конкретную проблемную зону.";
+  }
+
+  const s=$("#summary");
+  s.innerHTML=`
+    <h3>${title}</h3>
+    <p>${text}</p>
+
+    <div class="metrics">
+      <div class="metric">
+        <div class="score">${economyScore}/2</div>
+        <div class="label">не тратить контроль зря</div>
+      </div>
+      <div class="metric">
+        <div class="score">${timingScore}/2</div>
+        <div class="label">ставить до дорогой ошибки</div>
+      </div>
+      <div class="metric">
+        <div class="score">${adaptationScore}/1</div>
+        <div class="label">менять по риску и результатам</div>
+      </div>
+    </div>
+
+    <div class="reference">
+      <div class="reference-head">Рабочая пересборка после новых вводных</div>
+      <div class="reference-row"><b>Новый сотрудник</b>Оставить две точки: первый содержательный черновик и проверка перед отправкой крупному клиенту.</div>
+      <div class="reference-row"><b>Стабильный ежемесячный процесс</b>Снять обязательную контрольную точку после дополнительной серии безошибочных циклов.</div>
+      <div class="reference-row"><b>Новый подрядчик</b>Оставить базовую точку перед обязательствами и добавить временную точку до принятия нового срока после сигнала задержки.</div>
+      <div class="reference-row"><b>Проект после двух срывов</b>Сохранить одну точку перед тем этапом, где раньше возникала проблема.</div>
+    </div>
+  `;
+  s.classList.remove("hidden");
+}
+
+$("#check1").addEventListener("click",checkStage1);
+$("#reset1").addEventListener("click",()=>{
+  state1={};
+  renderStage(1);
+});
+$("#go2").addEventListener("click",applyBaselineAndGo);
+$("#back1").addEventListener("click",()=>{
+  $("#stage2").classList.add("hidden");
+  $("#stage1").classList.remove("hidden");
+  $("#p2").classList.remove("active");
+  renderStage(1);
+  window.scrollTo({top:0,behavior:"smooth"});
+});
+$("#check2").addEventListener("click",checkStage2);
+
+renderStage(1);
+</script>
+</body>
+</html>

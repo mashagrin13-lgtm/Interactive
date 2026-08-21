@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Задавайте верные вопросы сотруднику</title>
+<style>
+
+:root{
+  --bg:#f5f6f8;
+  --card:#ffffff;
+  --text:#20242d;
+  --muted:#6d7583;
+  --line:#dfe3ea;
+  --accent:#315d9b;
+  --accent-soft:#eef3fb;
+  --ok:#2e6b4f;
+  --ok-bg:#eef7f2;
+  --warn:#8a5a10;
+  --warn-bg:#fff7e8;
+  --bad:#8b3d45;
+  --bad-bg:#fff0f1;
+  --shadow:0 6px 18px rgba(31,36,48,.07);
+}
+*{box-sizing:border-box}
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--text);
+  font-family:Arial,Helvetica,sans-serif;
+  line-height:1.42;
+}
+.app{
+  width:min(560px,calc(100% - 24px));
+  margin:18px auto;
+}
+.shell{
+  background:var(--card);
+  border:1px solid var(--line);
+  border-radius:16px;
+  box-shadow:var(--shadow);
+  overflow:hidden;
+}
+.head{
+  padding:18px 18px 14px;
+  border-bottom:1px solid var(--line);
+}
+h1{margin:0 0 8px;font-size:21px;line-height:1.2}
+.lead{margin:0;color:var(--muted);font-size:14px}
+.progress{display:flex;gap:7px;margin-top:14px}
+.progress span{flex:1;height:5px;border-radius:999px;background:#e8ebf0}
+.progress span.active{background:var(--accent)}
+.body{padding:16px}
+.stage-label{
+  font-size:12px;
+  color:var(--accent);
+  text-transform:uppercase;
+  font-weight:700;
+  letter-spacing:.03em;
+  margin-bottom:5px;
+}
+.stage-title{margin:0 0 5px;font-size:17px}
+.stage-note{margin:0 0 12px;color:var(--muted);font-size:13px}
+.rules{
+  background:#f5f7fb;
+  border:1px solid #d8e1ef;
+  border-radius:12px;
+  padding:11px 12px;
+  margin-bottom:13px;
+  font-size:13px;
+}
+.rules b{display:block;margin-bottom:5px}
+.rules ol{margin:0;padding-left:19px}
+.rules li{margin:4px 0}
+.case{
+  border:1px solid #d8e1ef;
+  background:#f5f7fb;
+  border-radius:11px;
+  padding:11px;
+  font-size:13px;
+  margin-bottom:12px;
+}
+.case b{display:block;margin-bottom:3px}
+.actions{display:flex;gap:8px;margin-top:13px}
+button{
+  appearance:none;
+  border:0;
+  border-radius:10px;
+  padding:10px 13px;
+  font-size:14px;
+  font-weight:700;
+  cursor:pointer;
+}
+.primary{background:var(--accent);color:#fff;flex:1}
+.primary:disabled{opacity:.45;cursor:not-allowed}
+.secondary{background:#edf0f4;color:var(--text)}
+.hidden{display:none!important}
+.feedback{display:none;margin-top:12px}
+.feedback.show{display:block}
+.fb{border-radius:10px;padding:10px 11px;margin-top:7px;font-size:13px}
+.fb strong{display:block;margin-bottom:3px}
+.fb.ok{background:var(--ok-bg);border:1px solid #cfe5d8;color:#214f3b}
+.fb.warn{background:var(--warn-bg);border:1px solid #f1dbb0;color:#6f480c}
+.fb.bad{background:var(--bad-bg);border:1px solid #efc9cd;color:#73343b}
+.option-list{display:grid;gap:8px}
+.option{
+  width:100%;
+  border:1px solid var(--line);
+  border-radius:10px;
+  background:#fff;
+  color:var(--text);
+  padding:10px 11px;
+  text-align:left;
+  font-size:13px;
+  cursor:pointer;
+}
+.option:hover{border-color:#b5bfcd}
+.option.selected{
+  border-color:var(--accent);
+  background:var(--accent-soft);
+  box-shadow:0 0 0 1px var(--accent) inset;
+}
+.small{font-size:12px;color:var(--muted)}
+.summary{
+  margin-top:14px;
+  border-top:1px solid var(--line);
+  padding-top:14px;
+}
+.summary h3{margin:0 0 7px;font-size:17px}
+.summary p{margin:0 0 9px;font-size:13px}
+.summary-grid{display:grid;gap:7px}
+.summary-item{
+  border:1px solid var(--line);
+  border-radius:10px;
+  padding:9px 10px;
+  font-size:12.5px;
+}
+.summary-item b{display:block;margin-bottom:2px}
+
+.check-option{
+  display:grid;
+  grid-template-columns:24px 1fr;
+  gap:8px;
+  align-items:start;
+  border:1px solid var(--line);
+  border-radius:10px;
+  padding:10px 11px;
+  cursor:pointer;
+  background:#fff;
+}
+.check-option input{margin-top:2px}
+.check-option.selected{border-color:var(--accent);background:var(--accent-soft)}
+.order-bank{
+  border:1px dashed #bcc5d4;
+  border-radius:11px;
+  padding:9px;
+  background:#fafbfc;
+  margin-bottom:10px;
+}
+.order-card{
+  border:1px solid var(--line);
+  border-radius:10px;
+  padding:9px 10px;
+  margin:6px 0;
+  background:#fff;
+  font-size:13px;
+  cursor:grab;
+  user-select:none;
+}
+.order-card.selected{border-color:var(--accent);background:var(--accent-soft)}
+.order-card.dragging{opacity:.45}
+.sequence{
+  display:grid;
+  gap:7px;
+}
+.slot{
+  border:1px solid var(--line);
+  border-radius:10px;
+  min-height:54px;
+  padding:8px;
+  background:#fff;
+}
+.slot.over{border-color:var(--accent);background:var(--accent-soft)}
+.slot-label{
+  font-size:11px;
+  color:var(--muted);
+  font-weight:700;
+  margin-bottom:4px;
+}
+.chat-preview{
+  border:1px solid var(--line);
+  border-radius:12px;
+  padding:10px;
+  background:#fafbfc;
+  margin-top:12px;
+}
+.bubble{
+  max-width:88%;
+  border-radius:12px;
+  padding:9px 10px;
+  font-size:12.5px;
+  margin:6px 0;
+}
+.employee{background:#f1f3f6}
+.manager{background:var(--accent-soft);margin-left:auto}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="shell">
+    <div class="head">
+      <h1>Что спросить у сотрудника</h1>
+      <p class="lead">Выберите вопросы, которые помогают сотруднику самому разработать решение, а затем соберите короткую последовательность разговора.</p>
+      <div class="progress">
+        <span id="q1" class="active"></span>
+        <span id="q2"></span>
+      </div>
+    </div>
+    <div class="body">
+      <div class="case">
+        <b>Сотрудник говорит</b>
+        «Я думаю, нужно менять подрядчика».
+      </div>
+
+      <section id="part1">
+        <div class="stage-label">Этап 1 из 2</div>
+        <h2 class="stage-title">Выберите вопросы, которые развивают решение сотрудника</h2>
+        <div class="rules">
+          <b>Что нужно сделать</b>
+          <ol>
+            <li>Прочитайте все шесть вариантов.</li>
+            <li>Отметьте <strong>все</strong> вопросы, которые помогают сотруднику сравнить варианты, последствия, недостающие данные и сформулировать свою рекомендацию.</li>
+            <li>Не выбирайте вопрос, который заставляет сотрудника угадывать мнение руководителя или возвращает финальный выбор наверх.</li>
+            <li>После выбора нажмите «Проверить вопросы».</li>
+          </ol>
+        </div>
+
+        <div class="option-list" id="checkList"></div>
+
+        <div class="actions">
+          <button class="secondary" id="resetChecks">Сбросить</button>
+          <button class="primary" id="checkQuestions" disabled>Проверить вопросы</button>
+        </div>
+
+        <div class="feedback" id="questionsFeedback"></div>
+        <div class="actions hidden" id="goOrderWrap">
+          <button class="primary" id="goOrder">Собрать последовательность разговора</button>
+        </div>
+      </section>
+
+      <section id="part2" class="hidden">
+        <div class="stage-label">Этап 2 из 2</div>
+        <h2 class="stage-title">Соберите короткую последовательность</h2>
+        <div class="rules">
+          <b>Правила</b>
+          <ol>
+            <li>Ниже пять полезных вопросов. Для короткого разговора вам нужны только четыре.</li>
+            <li>Перетащите в слоты те вопросы, которые создают логичную цепочку: <strong>варианты → последствия → недостающие данные → рекомендация</strong>.</li>
+            <li>Один вопрос останется в банке: он полезен как дополнительное уточнение, но не обязателен в короткой базовой последовательности.</li>
+            <li>Можно перетаскивать карточки или нажать на карточку, а затем на нужный слот.</li>
+          </ol>
+        </div>
+
+        <div class="order-bank" id="orderBank" data-zone="bank">
+          <div class="small"><b>Вопросы</b></div>
+        </div>
+
+        <div class="sequence">
+          <div class="slot" data-slot="0"><div class="slot-label">1. Сначала</div></div>
+          <div class="slot" data-slot="1"><div class="slot-label">2. Затем</div></div>
+          <div class="slot" data-slot="2"><div class="slot-label">3. Перед выбором</div></div>
+          <div class="slot" data-slot="3"><div class="slot-label">4. В конце</div></div>
+        </div>
+
+        <div class="chat-preview" id="chatPreview"></div>
+
+        <div class="actions">
+          <button class="secondary" id="backQuestions">Назад</button>
+          <button class="primary" id="checkOrder" disabled>Проверить последовательность</button>
+        </div>
+
+        <div class="feedback" id="orderFeedback"></div>
+        <div class="summary hidden" id="orderSummary"></div>
+      </section>
+    </div>
+  </div>
+</div>
+
+<script>
+const questions = [
+  {id:"alt", text:"Какие еще варианты вы рассматривали?", correct:true},
+  {id:"impact", text:"Что произойдет, если мы сменим подрядчика?", correct:true},
+  {id:"next", text:"А что будет следующим последствием после этого?", correct:true},
+  {id:"data", text:"Каких данных вам не хватает, чтобы сравнить варианты?", correct:true},
+  {id:"guess", text:"Какой вариант, по-вашему, выбрал бы я на вашем месте?", correct:false},
+  {id:"recommend", text:"Какой вариант вы рекомендуете и почему?", correct:true}
+];
+
+const baseOrder = ["alt","impact","data","recommend"];
+let selectedChecks = new Set();
+let selectedCard = null;
+
+const $ = s => document.querySelector(s);
+
+function addFb(container,type,title,text){
+  const d=document.createElement("div");
+  d.className=`fb ${type}`;
+  d.innerHTML=`<strong>${title}</strong>${text}`;
+  container.appendChild(d);
+}
+
+function renderChecks(){
+  const box=$("#checkList");
+  box.innerHTML="";
+  questions.forEach(q=>{
+    const label=document.createElement("label");
+    label.className="check-option"+(selectedChecks.has(q.id)?" selected":"");
+    const input=document.createElement("input");
+    input.type="checkbox";
+    input.checked=selectedChecks.has(q.id);
+    input.addEventListener("change",()=>{
+      if(input.checked) selectedChecks.add(q.id);
+      else selectedChecks.delete(q.id);
+      renderChecks();
+    });
+    const span=document.createElement("span");
+    span.textContent=q.text;
+    label.appendChild(input);
+    label.appendChild(span);
+    box.appendChild(label);
+  });
+  $("#checkQuestions").disabled=selectedChecks.size===0;
+  $("#questionsFeedback").className="feedback";
+  $("#questionsFeedback").innerHTML="";
+  $("#goOrderWrap").classList.add("hidden");
+}
+
+function checkQuestionSet(){
+  const fb=$("#questionsFeedback");
+  fb.innerHTML="";
+  const correctIds=questions.filter(q=>q.correct).map(q=>q.id);
+  const missed=correctIds.filter(id=>!selectedChecks.has(id));
+  const wrong=[...selectedChecks].filter(id=>!correctIds.includes(id));
+
+  if(!missed.length && !wrong.length){
+    addFb(fb,"ok","Вы выбрали вопросы, которые оставляют решение у сотрудника.",
+      "Они расширяют поле вариантов, помогают проследить последствия, определить недостающие данные и завершить разговор собственной рекомендацией сотрудника.");
+  }else{
+    if(missed.length){
+      const names=missed.map(id=>questions.find(q=>q.id===id).text);
+      addFb(fb,"warn","Часть полезных вопросов осталась невыбранной.",
+        "Проверьте, есть ли в вашем наборе вопросы про альтернативы, последствия, недостающие данные и собственную рекомендацию сотрудника.");
+    }
+    if(wrong.includes("guess")){
+      addFb(fb,"bad","Вопрос о том, что выбрал бы руководитель, возвращает ориентир наверх.",
+        "Сотрудник начинает угадывать предпочтение начальника вместо того, чтобы формировать и защищать собственное решение.");
+    }
+  }
+  fb.classList.add("show");
+  $("#goOrderWrap").classList.remove("hidden");
+}
+
+function makeOrderCard(q){
+  const el=document.createElement("div");
+  el.className="order-card";
+  el.draggable=true;
+  el.dataset.id=q.id;
+  el.textContent=q.text;
+
+  el.addEventListener("dragstart",e=>{
+    el.classList.add("dragging");
+    e.dataTransfer.setData("text/plain",q.id);
+  });
+  el.addEventListener("dragend",()=>el.classList.remove("dragging"));
+  el.addEventListener("click",e=>{
+    e.stopPropagation();
+    document.querySelectorAll(".order-card.selected").forEach(c=>c.classList.remove("selected"));
+    if(selectedCard===el){selectedCard=null;return}
+    selectedCard=el;
+    el.classList.add("selected");
+  });
+  return el;
+}
+
+function initOrder(){
+  const useful=questions.filter(q=>q.correct);
+  $("#orderBank").querySelectorAll(".order-card").forEach(c=>c.remove());
+  useful.forEach(q=>$("#orderBank").appendChild(makeOrderCard(q)));
+
+  document.querySelectorAll(".slot").forEach(slot=>{
+    slot.addEventListener("dragover",e=>{e.preventDefault();slot.classList.add("over")});
+    slot.addEventListener("dragleave",()=>slot.classList.remove("over"));
+    slot.addEventListener("drop",e=>{
+      e.preventDefault();slot.classList.remove("over");
+      const id=e.dataTransfer.getData("text/plain");
+      const card=document.querySelector(`.order-card[data-id="${id}"]`);
+      if(card){
+        const existing=slot.querySelector(".order-card");
+        if(existing) $("#orderBank").appendChild(existing);
+        slot.appendChild(card);
+      }
+      clearSelected();
+      updateOrder();
+    });
+    slot.addEventListener("click",()=>{
+      if(selectedCard){
+        const existing=slot.querySelector(".order-card");
+        if(existing) $("#orderBank").appendChild(existing);
+        slot.appendChild(selectedCard);
+        clearSelected();
+        updateOrder();
+      }
+    });
+  });
+
+  $("#orderBank").addEventListener("click",()=>{
+    if(selectedCard){
+      $("#orderBank").appendChild(selectedCard);
+      clearSelected();
+      updateOrder();
+    }
+  });
+
+  updateOrder();
+}
+
+function clearSelected(){
+  document.querySelectorAll(".order-card.selected").forEach(c=>c.classList.remove("selected"));
+  selectedCard=null;
+}
+
+function getOrder(){
+  return [...document.querySelectorAll(".slot")].map(s=>s.querySelector(".order-card")?.dataset.id||null);
+}
+
+function updateOrder(){
+  const order=getOrder();
+  $("#checkOrder").disabled=order.some(x=>!x);
+  renderPreview(order);
+  $("#orderFeedback").className="feedback";
+  $("#orderFeedback").innerHTML="";
+  $("#orderSummary").classList.add("hidden");
+}
+
+function renderPreview(order){
+  const box=$("#chatPreview");
+  box.innerHTML='<div class="bubble employee">Сотрудник: «Я думаю, нужно менять подрядчика».</div>';
+  order.forEach(id=>{
+    if(!id) return;
+    const q=questions.find(x=>x.id===id);
+    const d=document.createElement("div");
+    d.className="bubble manager";
+    d.textContent=q.text;
+    box.appendChild(d);
+  });
+}
+
+function checkOrder(){
+  const order=getOrder();
+  const fb=$("#orderFeedback");
+  fb.innerHTML="";
+
+  const exact=baseOrder.every((id,i)=>order[i]===id);
+  const recommendLast=order[3]==="recommend";
+  const alternativesFirst=order[0]==="alt";
+  const hasNext=order.includes("next");
+
+  if(exact){
+    addFb(fb,"ok","Последовательность ведет сотрудника от проблемы к собственной рекомендации.",
+      "Сначала вы расширяете варианты, затем проверяете последствия, уточняете недостающие данные и только после этого просите сделать выбор.");
+  }else{
+    if(!alternativesFirst){
+      addFb(fb,"warn","Разговор лучше начать с поля вариантов.",
+        "Если сразу обсуждать один предложенный вариант, сотрудник может преждевременно зафиксироваться на нем.");
+    }
+    if(!recommendLast){
+      addFb(fb,"warn","Финалом должна стать рекомендация сотрудника.",
+        "Разговор не заканчивается на сборе данных. Сотрудник должен сформулировать собственный выбор и объяснить его.");
+    }
+    if(hasNext){
+      addFb(fb,"warn","Вопрос про следующий уровень последствия полезен, но в короткой базовой цепочке он не обязателен.",
+        "Его стоит добавлять, когда первое последствие выглядит слишком очевидным или решение имеет заметный второй эффект.");
+    }
+    if(alternativesFirst && recommendLast && !hasNext){
+      addFb(fb,"ok","Основная логика сохранена.",
+        "Проверьте только порядок двух средних шагов: сначала оцените последствия вариантов, затем собирайте недостающие данные.");
+    }
+  }
+  fb.classList.add("show");
+
+  const summary=$("#orderSummary");
+  summary.innerHTML=`
+    <h3>Рабочая схема разговора</h3>
+    <p>Короткая последовательность, которую можно использовать в реальной 1:1 или рабочем чате:</p>
+    <div class="summary-grid">
+      <div class="summary-item"><b>1. Варианты</b>Какие еще варианты вы рассматривали?</div>
+      <div class="summary-item"><b>2. Последствия</b>Что произойдет при выбранном варианте?</div>
+      <div class="summary-item"><b>3. Данные</b>Каких данных не хватает, чтобы сравнить варианты?</div>
+      <div class="summary-item"><b>4. Рекомендация</b>Какой вариант вы рекомендуете и почему?</div>
+    </div>
+    <p class="small" style="margin-top:8px">Вопрос «А что будет следующим последствием?» подключайте дополнительно, если нужно углубить анализ.</p>
+  `;
+  summary.classList.remove("hidden");
+}
+
+$("#checkQuestions").addEventListener("click",checkQuestionSet);
+$("#resetChecks").addEventListener("click",()=>{selectedChecks.clear();renderChecks()});
+$("#goOrder").addEventListener("click",()=>{
+  $("#part1").classList.add("hidden");
+  $("#part2").classList.remove("hidden");
+  $("#q2").classList.add("active");
+  initOrder();
+  window.scrollTo({top:0,behavior:"smooth"});
+});
+$("#backQuestions").addEventListener("click",()=>{
+  $("#part2").classList.add("hidden");
+  $("#part1").classList.remove("hidden");
+  $("#q2").classList.remove("active");
+  window.scrollTo({top:0,behavior:"smooth"});
+});
+$("#checkOrder").addEventListener("click",checkOrder);
+
+renderChecks();
+</script>
+</body>
+</html>

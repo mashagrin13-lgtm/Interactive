@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Соберите сеть поддержки</title>
+<style>
+:root{
+  --bg:#f5f6f8; --card:#fff; --text:#20242d; --muted:#6d7583; --line:#dfe3ea;
+  --accent:#315d9b; --accent-soft:#eef3fb; --ok:#2e6b4f; --ok-bg:#eef7f2;
+  --warn:#8a5a10; --warn-bg:#fff7e8; --bad:#8b3d45; --bad-bg:#fff0f1;
+  --shadow:0 6px 18px rgba(31,36,48,.07);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:Arial,Helvetica,sans-serif;line-height:1.42}
+.app{width:min(560px,calc(100% - 24px));margin:18px auto}
+.shell{background:var(--card);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);overflow:hidden}
+.head{padding:18px 18px 14px;border-bottom:1px solid var(--line)}
+h1{margin:0 0 8px;font-size:21px;line-height:1.2}
+.lead{margin:0;color:var(--muted);font-size:14px}
+.progress{display:flex;gap:7px;margin-top:14px}
+.progress span{flex:1;height:5px;border-radius:999px;background:#e8ebf0}
+.progress span.active{background:var(--accent)}
+.body{padding:16px}
+.stage-label{font-size:12px;color:var(--accent);font-weight:700;text-transform:uppercase;letter-spacing:.03em;margin-bottom:5px}
+.stage-title{margin:0 0 5px;font-size:17px}
+.stage-note{margin:0 0 12px;color:var(--muted);font-size:13px}
+.rules{padding:11px 12px;border:1px solid #d8e1ef;background:#f5f7fb;border-radius:12px;font-size:13px;margin-bottom:13px}
+.rules b{display:block;margin-bottom:5px}
+.rules ol{margin:0;padding-left:19px}
+.rules li{margin:4px 0}
+.people-grid{display:grid;gap:8px}
+.person{border:1px solid var(--line);border-radius:11px;padding:10px;background:#fff}
+.person-top{display:flex;justify-content:space-between;gap:8px;align-items:flex-start}
+.person-name{font-size:13.5px;font-weight:700}
+.load{font-size:11px;padding:3px 6px;border-radius:999px;background:#f1f3f6;color:var(--muted);white-space:nowrap}
+.person-info{margin-top:7px;display:grid;gap:4px;font-size:11.5px}
+.person-info b{color:var(--muted)}
+.assignments{display:grid;gap:10px;margin-top:13px}
+.assignment{border:1px solid var(--line);border-radius:11px;padding:10px}
+.assignment h3{margin:0 0 4px;font-size:14px}
+.assignment p{margin:0 0 8px;font-size:11.5px;color:var(--muted)}
+select{width:100%;border:1px solid var(--line);border-radius:9px;background:#fff;color:var(--text);padding:8px 9px;font-size:12px}
+.boundary{margin-top:9px;padding-top:9px;border-top:1px solid #edf0f4}
+.boundary-title{font-size:11.5px;font-weight:700;margin-bottom:6px}
+.boundary-grid{display:grid;gap:7px}
+.boundary-row label{display:block;font-size:10.5px;color:var(--muted);font-weight:700;margin-bottom:3px}
+.actions{display:flex;gap:8px;margin-top:13px}
+button{appearance:none;border:0;border-radius:10px;padding:10px 13px;font-size:14px;font-weight:700;cursor:pointer}
+.primary{background:var(--accent);color:#fff;flex:1}
+.primary:disabled{opacity:.45;cursor:not-allowed}
+.secondary{background:#edf0f4;color:var(--text)}
+.feedback{display:none;margin-top:12px}
+.feedback.show{display:block}
+.fb{border-radius:10px;padding:10px 11px;margin-top:7px;font-size:13px}
+.fb strong{display:block;margin-bottom:3px}
+.fb.ok{background:var(--ok-bg);border:1px solid #cfe5d8;color:#214f3b}
+.fb.warn{background:var(--warn-bg);border:1px solid #f1dbb0;color:#6f480c}
+.fb.bad{background:var(--bad-bg);border:1px solid #efc9cd;color:#73343b}
+.hidden{display:none!important}
+.consequences{display:grid;gap:9px}
+.consequence{border:1px solid var(--line);border-radius:11px;padding:10px}
+.consequence h3{margin:0 0 4px;font-size:14px}
+.consequence p{margin:0 0 8px;font-size:12.5px}
+.signal{font-size:11.5px;color:var(--muted);margin-bottom:8px}
+.option-list{display:grid;gap:7px}
+.option{width:100%;border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--text);padding:10px 11px;text-align:left;font-size:12.5px;cursor:pointer}
+.option.selected{border-color:var(--accent);background:var(--accent-soft);box-shadow:0 0 0 1px var(--accent) inset}
+.summary{margin-top:14px;border-top:1px solid var(--line);padding-top:14px}
+.summary h3{margin:0 0 7px;font-size:17px}
+.summary p{margin:0 0 9px;font-size:13px}
+.metrics{display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px}
+.metric{border:1px solid var(--line);border-radius:10px;padding:9px 6px;text-align:center}
+.metric .score{font-size:19px;font-weight:700;color:var(--accent)}
+.metric .label{font-size:10.5px;color:var(--muted);margin-top:2px}
+.reference{margin-top:11px;border:1px solid var(--line);border-radius:11px;overflow:hidden}
+.reference-head{padding:8px 10px;background:#f4f6f9;font-size:12.5px;font-weight:700}
+.reference-row{padding:8px 10px;border-top:1px solid #edf0f4;font-size:12px}
+.reference-row b{display:block;margin-bottom:2px}
+@media(max-width:420px){.body{padding:13px}.metrics{grid-template-columns:1fr}.person-top{align-items:flex-start}}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="shell">
+    <div class="head">
+      <h1>Соберите сеть поддержки</h1>
+      <p class="lead">Назначьте наставников по трем направлениям и задайте границы роли так, чтобы помощь ускоряла развитие сотрудников, а не создавала нового человека, без которого команда снова не может работать.</p>
+      <div class="progress">
+        <span id="p1" class="active"></span>
+        <span id="p2"></span>
+      </div>
+    </div>
+
+    <div class="body">
+      <section id="stage1">
+        <div class="stage-label">Раунд 1 из 2</div>
+        <h2 class="stage-title">Назначьте наставников и задайте границы роли</h2>
+
+        <div class="rules">
+          <b>Что нужно сделать</b>
+          <ol>
+            <li>Сначала изучите карточки шести сотрудников: экспертизу, загрузку, реальные обращения коллег и особенности взаимодействия.</li>
+            <li>Назначьте по одному основному наставнику для трех направлений: <strong>работа с клиентами, аналитика, сложные операционные вопросы</strong>.</li>
+            <li>Не выбирайте человека только по стажу. Учитывайте, способен ли он помогать так, чтобы после консультации коллега продолжал работу сам.</li>
+            <li>Для каждого выбранного наставника задайте три границы: <strong>что делает наставник, что остается за сотрудником и когда подключается руководитель</strong>.</li>
+            <li>Старайтесь не создавать новое узкое горлышко: перегруженный эксперт или наставник, который решает все за коллег, делает сеть зависимой.</li>
+            <li>После заполнения всех трех направлений нажмите «Проверить сеть».</li>
+          </ol>
+        </div>
+
+        <div class="people-grid" id="peopleGrid"></div>
+
+        <div class="assignments" id="assignments"></div>
+
+        <div class="actions">
+          <button class="secondary" id="reset1">Сбросить</button>
+          <button class="primary" id="check1" disabled>Проверить сеть</button>
+        </div>
+
+        <div class="feedback" id="fb1"></div>
+        <div class="actions hidden" id="go2Wrap">
+          <button class="primary" id="go2">Применить рабочую схему и перейти к последствиям</button>
+        </div>
+      </section>
+
+      <section id="stage2" class="hidden">
+        <div class="stage-label">Раунд 2 из 2</div>
+        <h2 class="stage-title">Перераспределите поддержку по результатам</h2>
+
+        <div class="rules">
+          <b>Что нужно сделать</b>
+          <ol>
+            <li>Ниже показано, что произошло через месяц после запуска сети поддержки.</li>
+            <li>Для каждого направления выберите одно решение.</li>
+            <li>Если у наставника образовалась очередь, уменьшайте повторяющиеся обращения или добавляйте второй узел поддержки.</li>
+            <li>Если повторных обращений стало заметно меньше, ослабляйте обязательную поддержку и оставляйте помощь по запросу.</li>
+            <li>Не расширяйте роль наставника до роли руководителя: бюджет, приоритеты и решения за пределами полномочий по-прежнему эскалируются.</li>
+            <li>После трех решений нажмите «Проверить перестройку».</li>
+          </ol>
+        </div>
+
+        <div class="consequences" id="consequences"></div>
+
+        <div class="actions">
+          <button class="secondary" id="back1">Назад</button>
+          <button class="primary" id="check2" disabled>Проверить перестройку</button>
+        </div>
+
+        <div class="feedback" id="fb2"></div>
+        <div class="summary hidden" id="summary"></div>
+      </section>
+    </div>
+  </div>
+</div>
+
+<script>
+const people = [
+  {
+    id:"elena", name:"Елена", load:95,
+    expertise:"клиенты — очень сильная; аналитика — сильная",
+    asked:"к ней часто идут со сложными клиентами",
+    interaction:"объясняет хорошо, но из-за загрузки отвечает с задержкой",
+    zone:"ведет двух крупнейших клиентов и финальные переговоры"
+  },
+  {
+    id:"irina", name:"Ирина", load:68,
+    expertise:"клиенты — сильная; переговоры и претензии",
+    asked:"коллеги регулярно приходят за советом по клиентским кейсам",
+    interaction:"задает вопросы, помогает выбрать вариант; после консультации сотрудник действует сам",
+    zone:"ведет средний клиентский портфель"
+  },
+  {
+    id:"mikhail", name:"Михаил", load:56,
+    expertise:"аналитика — очень сильная; визуализация и проверка гипотез",
+    asked:"к нему уже идут с расчетами и сложными выборками",
+    interaction:"показывает метод и просит коллегу самому закончить анализ",
+    zone:"отвечает за аналитические модели, без управленческих полномочий"
+  },
+  {
+    id:"viktor", name:"Виктор", load:74,
+    expertise:"операционные вопросы — очень сильная; большой стаж",
+    asked:"к нему часто приносят сложные сбои",
+    interaction:"быстро принимает решение сам и нередко забирает выполнение у коллег",
+    zone:"ведет один критичный операционный контур"
+  },
+  {
+    id:"sergey", name:"Сергей", load:63,
+    expertise:"операционные вопросы — сильная; диагностика сбоев и чек-листы",
+    asked:"к нему обращаются сотрудники из двух смен",
+    interaction:"разбирает причину, дает алгоритм проверки; повторные обращения по тому же вопросу редки",
+    zone:"координирует смену, но не меняет бюджет и межфункциональные приоритеты"
+  },
+  {
+    id:"anna", name:"Анна", load:61,
+    expertise:"клиенты — уверенная; аналитика — базовая",
+    asked:"за советом обращаются реже, но она хорошо проводит разбор типовых клиентских ситуаций",
+    interaction:"спокойно объясняет и умеет переводить частые вопросы в памятки",
+    zone:"ведет стандартный клиентский сегмент"
+  }
+];
+
+const directions = [
+  {id:"clients", name:"Работа с клиентами", best:"irina"},
+  {id:"analytics", name:"Аналитика", best:"mikhail"},
+  {id:"ops", name:"Сложные операционные вопросы", best:"sergey"}
+];
+
+const mentorActions = [
+  ["","Выберите границу"],
+  ["good","Объясняет метод, задает вопросы, показывает пример или чек-лист"],
+  ["takeover","Принимает решение за сотрудника, если вопрос сложный"],
+  ["approve","Проверяет и одобряет каждое решение до действия"]
+];
+const employeeActions = [
+  ["","Выберите границу"],
+  ["good","Сам анализирует ситуацию, формулирует решение и отвечает за действие в своих полномочиях"],
+  ["pass","Передает наставнику сложные вопросы без собственной рекомендации"],
+  ["wait","Ждет одобрения наставника перед любым действием"]
+];
+const managerActions = [
+  ["","Выберите границу"],
+  ["good","Подключается к бюджету, приоритетам и решениям за пределами полномочий сотрудника"],
+  ["mentor","Подключается только если наставник не смог решить проблему за сотрудника"],
+  ["all","Утверждает все рекомендации наставника и сотрудника"]
+];
+
+const state1 = {};
+let round1Score = {expert:0,boundaries:0,bottleneck:0};
+
+const consequencesData = [
+  {
+    id:"clients",
+    title:"Работа с клиентами",
+    signal:"Ирина получает 16 обращений в неделю. Девять из них — повторяющиеся типовые вопросы. На консультации уходит почти четверть ее рабочего времени.",
+    options:[
+      {id:"c1", text:"Оставить все обращения у Ирины: высокая загрузка подтверждает, что она сильный наставник.", correct:false, why:"Рост очереди — сигнал нового узкого горлышка. Сильный наставник не должен становиться обязательной точкой для типовых вопросов."},
+      {id:"c2", text:"Ирина оставляет сложные клиентские случаи, Анна берет типовые разборы, а повторяющиеся вопросы переводятся в короткую памятку.", correct:true, why:"Поддержка распределяется между двумя узлами, а типовые вопросы постепенно уходят из консультаций в готовый инструмент."},
+      {id:"c3", text:"Передать все наставничество Елене, потому что у нее самая сильная экспертиза.", correct:false, why:"Елена уже загружена на 95%. Перенос поддержки к самому опытному сотруднику усилит риск очереди."}
+    ]
+  },
+  {
+    id:"analytics",
+    title:"Аналитика",
+    signal:"За месяц повторные обращения к Михаилу сократились на 60%. Коллеги чаще приходят уже с готовым анализом и просят проверить только спорное допущение.",
+    options:[
+      {id:"a1", text:"Добавить обязательную еженедельную проверку всех аналитических задач, чтобы не потерять качество.", correct:false, why:"Устойчивый результат — основание уменьшать обязательный контроль, а не расширять его."},
+      {id:"a2", text:"Оставить Михаила доступным по запросу для сложных допущений и убрать обязательные регулярные сверки.", correct:true, why:"Зависимость уменьшается, поэтому поддержка может стать менее интенсивной и точечной."},
+      {id:"a3", text:"Теперь Михаил должен утверждать все аналитические выводы команды.", correct:false, why:"Это превращает наставника в нового владельца решений и снова создает зависимость."}
+    ]
+  },
+  {
+    id:"ops",
+    title:"Сложные операционные вопросы",
+    signal:"Сергей получает 6–7 сложных обращений в неделю. Повторных вопросов по одному и тому же сбою почти нет. Один из новых кейсов требует изменения межфункционального приоритета.",
+    options:[
+      {id:"o1", text:"Сергей разбирает техническую часть и варианты, а вопрос межфункционального приоритета эскалируется руководителю.", correct:true, why:"Наставник помогает в своей экспертной зоне, но не получает полномочия руководителя."},
+      {id:"o2", text:"Разрешить Сергею самому менять приоритеты других подразделений, чтобы не замедлять помощь.", correct:false, why:"Наставничество не создает новых формальных полномочий."},
+      {id:"o3", text:"Все операционные вопросы теперь сначала проходят через Сергея, даже если сотрудник уже знает решение.", correct:false, why:"Это создаст обязательную очередь и уменьшит самостоятельность команды."}
+    ]
+  }
+];
+
+const state2 = {};
+
+const $ = s => document.querySelector(s);
+
+function addFb(container,type,title,text){
+  const d=document.createElement("div");
+  d.className=`fb ${type}`;
+  d.innerHTML=`<strong>${title}</strong>${text}`;
+  container.appendChild(d);
+}
+
+function renderPeople(){
+  const box=$("#peopleGrid"); box.innerHTML="";
+  people.forEach(p=>{
+    const d=document.createElement("div");
+    d.className="person";
+    d.innerHTML=`
+      <div class="person-top">
+        <div class="person-name">${p.name}</div>
+        <div class="load">загрузка ${p.load}%</div>
+      </div>
+      <div class="person-info">
+        <div><b>Экспертиза:</b> ${p.expertise}</div>
+        <div><b>К кому идут коллеги:</b> ${p.asked}</div>
+        <div><b>Как помогает:</b> ${p.interaction}</div>
+        <div><b>Зона ответственности:</b> ${p.zone}</div>
+      </div>
+    `;
+    box.appendChild(d);
+  });
+}
+
+function makeSelect(options,value,handler){
+  const s=document.createElement("select");
+  options.forEach(([v,label])=>{
+    const o=document.createElement("option");
+    o.value=v; o.textContent=label;
+    if(v===value)o.selected=true;
+    s.appendChild(o);
+  });
+  s.addEventListener("change",()=>handler(s.value));
+  return s;
+}
+
+function personOptions(){
+  return [["","Выберите наставника"], ...people.map(p=>[p.id,`${p.name} · загрузка ${p.load}%`])];
+}
+
+function renderAssignments(){
+  const box=$("#assignments"); box.innerHTML="";
+  directions.forEach(dir=>{
+    const st=state1[dir.id] || {mentor:"",mentorRole:"",employeeRole:"",managerRole:""};
+    state1[dir.id]=st;
+
+    const d=document.createElement("div");
+    d.className="assignment";
+    d.innerHTML=`<h3>${dir.name}</h3><p>Выберите наставника и распределите ответственность между тремя ролями.</p>`;
+
+    const mentorSelect=makeSelect(personOptions(),st.mentor,v=>{st.mentor=v; resetFeedback1(); renderAssignments()});
+    d.appendChild(mentorSelect);
+
+    const boundary=document.createElement("div");
+    boundary.className="boundary";
+    boundary.innerHTML=`<div class="boundary-title">Границы роли</div>`;
+
+    const grid=document.createElement("div");
+    grid.className="boundary-grid";
+
+    const rows = [
+      ["Что делает наставник", mentorActions, "mentorRole"],
+      ["Что остается за сотрудником", employeeActions, "employeeRole"],
+      ["Когда подключается руководитель", managerActions, "managerRole"]
+    ];
+
+    rows.forEach(([label,opts,key])=>{
+      const row=document.createElement("div");
+      row.className="boundary-row";
+      const lab=document.createElement("label");
+      lab.textContent=label;
+      row.appendChild(lab);
+      row.appendChild(makeSelect(opts,st[key],v=>{st[key]=v; resetFeedback1(); updateCheck1()}));
+      grid.appendChild(row);
+    });
+
+    boundary.appendChild(grid);
+    d.appendChild(boundary);
+    box.appendChild(d);
+  });
+  updateCheck1();
+}
+
+function updateCheck1(){
+  const ready=directions.every(d=>{
+    const s=state1[d.id];
+    return s && s.mentor && s.mentorRole && s.employeeRole && s.managerRole;
+  });
+  $("#check1").disabled=!ready;
+}
+
+function resetFeedback1(){
+  $("#fb1").className="feedback";
+  $("#fb1").innerHTML="";
+  $("#go2Wrap").classList.add("hidden");
+}
+
+function check1(){
+  let expert=0,boundaries=0;
+  const mentors=directions.map(d=>state1[d.id].mentor);
+
+  directions.forEach(d=>{
+    const s=state1[d.id];
+    if(s.mentor===d.best)expert++;
+    if(s.mentorRole==="good" && s.employeeRole==="good" && s.managerRole==="good")boundaries++;
+  });
+
+  const overloaded=mentors.includes("elena");
+  const takeover=mentors.includes("viktor");
+  const duplicate = new Set(mentors).size < mentors.length;
+
+  round1Score.expert=expert;
+  round1Score.boundaries=boundaries;
+  round1Score.bottleneck=(!overloaded && !takeover && !duplicate)?1:0;
+
+  const fb=$("#fb1"); fb.innerHTML="";
+
+  if(expert===3 && boundaries===3 && round1Score.bottleneck){
+    addFb(fb,"ok","Вы собрали сеть, в которой помощь не отбирает ответственность.",
+      "Наставники сильны в своих направлениях, имеют приемлемую загрузку и уже умеют помогать так, чтобы коллеги продолжали работу самостоятельно.");
+  }else{
+    if(overloaded){
+      addFb(fb,"warn","Самый опытный сотрудник не всегда лучший узел поддержки.",
+        "Елена сильна в клиентской работе, но ее загрузка 95%. Регулярное наставничество с высокой вероятностью создаст очередь и задержки.");
+    }
+    if(takeover){
+      addFb(fb,"bad","Сильная экспертиза Виктора сопровождается перехватом решений.",
+        "Наставник должен развивать способ решения, а не становиться человеком, который каждый раз решает за коллегу.");
+    }
+    if(duplicate){
+      addFb(fb,"warn","Несколько направлений завязаны на одного человека.",
+        "Даже сильный наставник может стать новым узким горлышком. Распределяйте поддержку между несколькими узлами экспертизы.");
+    }
+    if(expert<3){
+      addFb(fb,"warn","Не по всем направлениям выбран самый устойчивый кандидат.",
+        "Смотрите на сочетание экспертизы, текущей загрузки и реального эффекта консультаций: после хорошей помощи сотрудник должен справляться сам.");
+    }
+    if(boundaries<3){
+      addFb(fb,"bad","В одной или нескольких ролях ответственность распределена неясно.",
+        "Наставник объясняет метод и помогает проверить логику. Сотрудник сохраняет решение в своих полномочиях. Руководитель подключается к бюджету, приоритетам и другим решениям вне полномочий.");
+    }
+  }
+
+  fb.classList.add("show");
+  $("#go2Wrap").classList.remove("hidden");
+}
+
+function applyWorkingAndGo(){
+  directions.forEach(d=>{
+    state1[d.id]={
+      mentor:d.best,
+      mentorRole:"good",
+      employeeRole:"good",
+      managerRole:"good"
+    };
+  });
+  $("#stage1").classList.add("hidden");
+  $("#stage2").classList.remove("hidden");
+  $("#p2").classList.add("active");
+  renderConsequences();
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+
+function renderConsequences(){
+  const box=$("#consequences"); box.innerHTML="";
+  consequencesData.forEach(c=>{
+    const wrap=document.createElement("div");
+    wrap.className="consequence";
+    wrap.innerHTML=`<h3>${c.title}</h3><div class="signal">${c.signal}</div>`;
+
+    const opts=document.createElement("div");
+    opts.className="option-list";
+    c.options.forEach(o=>{
+      const b=document.createElement("button");
+      b.type="button";
+      b.className="option"+(state2[c.id]===o.id?" selected":"");
+      b.textContent=o.text;
+      b.addEventListener("click",()=>{
+        state2[c.id]=o.id;
+        renderConsequences();
+      });
+      opts.appendChild(b);
+    });
+    wrap.appendChild(opts);
+    box.appendChild(wrap);
+  });
+
+  $("#check2").disabled=consequencesData.some(c=>!state2[c.id]);
+  $("#fb2").className="feedback"; $("#fb2").innerHTML="";
+  $("#summary").classList.add("hidden");
+}
+
+function check2(){
+  let correct=0;
+  const fb=$("#fb2"); fb.innerHTML="";
+
+  consequencesData.forEach(c=>{
+    const chosen=c.options.find(o=>o.id===state2[c.id]);
+    if(chosen.correct)correct++;
+    else addFb(fb,"warn",`${c.title}: решение стоит пересмотреть.`,chosen.why);
+  });
+
+  if(correct===3){
+    addFb(fb,"ok","Сеть адаптируется по нагрузке и результатам.",
+      "Вы разгрузили переполненный узел, ослабили поддержку там, где зависимость уже снизилась, и сохранили границу между экспертной помощью и управленческими полномочиями.");
+  }
+
+  fb.classList.add("show");
+  showSummary(correct);
+}
+
+function showSummary(round2Correct){
+  const expertScore=round1Score.expert;
+  const boundariesScore=round1Score.boundaries;
+  const sustainability = round1Score.bottleneck + (round2Correct===3?2:round2Correct>=2?1:0);
+
+  let title,text;
+  if(expertScore===3 && boundariesScore===3 && sustainability===3){
+    title="Вы построили устойчивую сеть поддержки.";
+    text="В ней нет одного обязательного эксперта на все случаи, наставники не забирают решения, а интенсивность помощи уменьшается по мере роста самостоятельности команды.";
+  }else if(boundariesScore<3){
+    title="Экспертиза распределена, но границы наставничества требуют уточнения.";
+    text="Без четкой границы наставник быстро превращается в согласующего или заместителя руководителя. Сотрудник должен сохранять собственное решение в пределах полномочий.";
+  }else if(sustainability<2){
+    title="Сеть помогает команде, но рискует создать новое узкое горлышко.";
+    text="Следите не только за качеством консультаций, но и за количеством повторных обращений, загрузкой наставника и появлением второго узла поддержки.";
+  }else{
+    title="Основная логика сети поддержки работает.";
+    text="Для большей устойчивости выбирайте наставников не по формальному стажу, а по сочетанию экспертизы, доступности и способности передавать способ решения коллегам.";
+  }
+
+  const s=$("#summary");
+  s.innerHTML=`
+    <h3>${title}</h3>
+    <p>${text}</p>
+    <div class="metrics">
+      <div class="metric"><div class="score">${expertScore}/3</div><div class="label">выбор наставников</div></div>
+      <div class="metric"><div class="score">${boundariesScore}/3</div><div class="label">границы роли</div></div>
+      <div class="metric"><div class="score">${Math.min(sustainability,3)}/3</div><div class="label">устойчивость сети</div></div>
+    </div>
+    <div class="reference">
+      <div class="reference-head">Рабочая логика сети поддержки</div>
+      <div class="reference-row"><b>Наставник</b>Объясняет метод, задает вопросы, делится примером или чек-листом. Не принимает типовые решения за сотрудника.</div>
+      <div class="reference-row"><b>Сотрудник</b>Сохраняет анализ, рекомендацию и действие в пределах своих полномочий.</div>
+      <div class="reference-row"><b>Руководитель</b>Подключается к бюджету, приоритетам, внешним обязательствам и другим решениям за пределами полномочий.</div>
+      <div class="reference-row"><b>Сеть</b>Расширяется при росте очереди и становится легче там, где повторные обращения устойчиво сокращаются.</div>
+    </div>
+  `;
+  s.classList.remove("hidden");
+}
+
+$("#reset1").addEventListener("click",()=>{
+  directions.forEach(d=>delete state1[d.id]);
+  round1Score={expert:0,boundaries:0,bottleneck:0};
+  resetFeedback1();
+  renderAssignments();
+});
+$("#check1").addEventListener("click",check1);
+$("#go2").addEventListener("click",applyWorkingAndGo);
+$("#back1").addEventListener("click",()=>{
+  $("#stage2").classList.add("hidden");
+  $("#stage1").classList.remove("hidden");
+  $("#p2").classList.remove("active");
+  renderAssignments();
+  window.scrollTo({top:0,behavior:"smooth"});
+});
+$("#check2").addEventListener("click",check2);
+
+renderPeople();
+renderAssignments();
+</script>
+</body>
+</html>

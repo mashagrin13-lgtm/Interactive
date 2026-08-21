@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Что оставить, а что передать</title>
+<style>
+  :root{
+    --bg:#f5f6f8; --card:#ffffff; --text:#1f2430; --muted:#687083; --line:#d9dee8;
+    --accent:#2f5597; --accent-soft:#edf2fb; --ok:#2e6b4f; --ok-bg:#eef7f2;
+    --warn:#8a5a10; --warn-bg:#fff7e8; --danger:#8b3d45; --danger-bg:#fff0f1;
+    --shadow:0 6px 18px rgba(31,36,48,.07);
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:Arial,Helvetica,sans-serif;line-height:1.42}
+  .app{width:min(560px,calc(100% - 24px));margin:18px auto}
+  .panel{background:var(--card);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);overflow:hidden}
+  .head{padding:18px 18px 14px;border-bottom:1px solid var(--line)}
+  h1{font-size:21px;line-height:1.18;margin:0 0 8px}
+  .lead{margin:0;font-size:14px;color:var(--muted)}
+  .progress{display:flex;gap:8px;margin-top:14px}
+  .step{flex:1;height:5px;border-radius:999px;background:#e7eaf0}
+  .step.active{background:var(--accent)}
+  .content{padding:16px}
+  .hint{font-size:13px;color:var(--muted);margin:0 0 12px}
+  .bank{border:1px dashed #bcc5d4;border-radius:12px;padding:10px;min-height:62px;background:#fafbfc;margin-bottom:12px}
+  .bank-title{font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.03em;margin:0 0 8px}
+  .card{background:#fff;border:1px solid var(--line);border-radius:10px;padding:10px 11px;margin:7px 0;font-size:13.5px;cursor:grab;user-select:none;transition:.15s ease}
+  .card:hover{border-color:#aeb8c9}
+  .card.dragging{opacity:.45}
+  .card.selected{outline:2px solid var(--accent);outline-offset:1px;background:var(--accent-soft)}
+  .num{display:inline-block;min-width:22px;font-weight:700;color:var(--accent)}
+  .zones{display:grid;grid-template-columns:1fr;gap:10px}
+  .zone{min-height:108px;border:1px solid var(--line);border-radius:12px;padding:10px;background:#fff;transition:.15s ease}
+  .zone.over{border-color:var(--accent);background:var(--accent-soft)}
+  .zone-title{display:flex;justify-content:space-between;gap:8px;align-items:center;font-weight:700;font-size:14px;margin-bottom:6px}
+  .count{color:var(--muted);font-size:12px;font-weight:400}
+  .zone-note{margin:0 0 6px;color:var(--muted);font-size:12px}
+  .actions{display:flex;gap:8px;margin-top:14px}
+  button{appearance:none;border:0;border-radius:10px;padding:10px 13px;font-size:14px;font-weight:700;cursor:pointer}
+  .primary{background:var(--accent);color:#fff;flex:1}
+  .primary:disabled{opacity:.45;cursor:not-allowed}
+  .secondary{background:#edf0f4;color:var(--text)}
+  .feedback{margin-top:14px;display:none}
+  .feedback.show{display:block}
+  .fb-block{border-radius:11px;padding:11px 12px;margin-top:8px;font-size:13.5px}
+  .fb-block strong{display:block;margin-bottom:3px}
+  .fb-ok{background:var(--ok-bg);color:#214f3b;border:1px solid #cfe5d8}
+  .fb-warn{background:var(--warn-bg);color:#6f480c;border:1px solid #f1dbb0}
+  .fb-danger{background:var(--danger-bg);color:#73343b;border:1px solid #efc9cd}
+  .reference{margin-top:12px;border:1px solid var(--line);border-radius:12px;overflow:hidden;display:none}
+  .reference.show{display:block}
+  .ref-head{padding:9px 11px;font-size:13px;font-weight:700;background:#f5f7fa;border-bottom:1px solid var(--line)}
+  .ref-row{padding:9px 11px;border-bottom:1px solid #edf0f4;font-size:12.5px}
+  .ref-row:last-child{border-bottom:0}
+  .ref-row b{display:block;margin-bottom:3px}
+  .scenario{display:none;margin-bottom:12px;border:1px solid #cbd5e5;background:#f3f6fb;border-radius:12px;padding:12px;font-size:13.5px}
+  .scenario.show{display:block}
+  .scenario strong{display:block;margin-bottom:4px}
+  .final{display:none;margin-top:14px;padding:12px;border-radius:12px;background:var(--ok-bg);border:1px solid #cfe5d8;color:#214f3b;font-size:13.5px}
+  .final.show{display:block}
+  .micro{margin-top:6px;font-size:12px;color:var(--muted)}
+  @media (min-width:520px){.zones{grid-template-columns:1fr 1fr 1fr}.zone{min-height:150px}.zone-title{align-items:flex-start}}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="panel">
+    <div class="head">
+      <h1>Что оставить, а что передать</h1>
+      <p class="lead">Распределите задачи по трем зонам. </p>
+      <div class="progress"><div class="step active" id="p1"></div><div class="step" id="p2"></div></div>
+    </div>
+    <div class="content">
+      <div id="scenario" class="scenario">
+        <strong>Новая вводная</strong>
+        Опытный сотрудник, которому вы хотели передать координацию процесса, через месяц переходит в другой отдел.
+        <div class="micro">Пересмотрите только те карточки, на которые действительно влияет изменение.</div>
+      </div>
+
+      <p class="hint" id="instruction">Перетащите карточки. Можно также нажать на карточку, а затем на нужную зону.</p>
+
+      <div class="bank" id="bank" data-zone="bank">
+        <div class="bank-title">Задачи</div>
+      </div>
+
+      <div class="zones">
+        <div class="zone" data-zone="keep" tabindex="0">
+          <div class="zone-title">Оставить у руководителя <span class="count" id="count-keep">0</span></div>
+          <p class="zone-note">Требует полномочий или ответственности руководителя.</p>
+        </div>
+        <div class="zone" data-zone="now" tabindex="0">
+          <div class="zone-title">Передать сейчас <span class="count" id="count-now">0</span></div>
+          <p class="zone-note">Можно передать без постоянного участия руководителя.</p>
+        </div>
+        <div class="zone" data-zone="prepare" tabindex="0">
+          <div class="zone-title">Подготовить к передаче <span class="count" id="count-prepare">0</span></div>
+          <p class="zone-note">Задача подходит, но пока не готов исполнитель или условия.</p>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button class="secondary" id="resetBtn">Сбросить</button>
+        <button class="primary" id="checkBtn" disabled>Проверить логику</button>
+      </div>
+
+      <div class="feedback" id="feedback"></div>
+
+      <div class="reference" id="reference">
+        <div class="ref-head">Рекомендуемая логика для этой ситуации</div>
+        <div class="ref-row"><b>Оставить у руководителя</b>1. Утвердить изменение годового бюджета; 5. Провести разговор о систематическом нарушении договоренностей; 7. Определить приоритеты подразделения; 10. Финально утвердить новый порядок работы.</div>
+        <div class="ref-row"><b>Передать сейчас</b>2. Собрать данные в отчет; 3. Разрешить типовую претензию в лимите; 4. Распределить ежедневные задачи; 6. Проверить оформление презентаций; 8. Подготовить статистику; 9. Координировать знакомый повторяющийся процесс.</div>
+        <div class="ref-row"><b>Подготовить к передаче</b>В исходной ситуации обязательных карточек здесь нет. Не нужно заполнять каждую зону «для баланса».</div>
+      </div>
+
+      <div class="actions" id="continueActions" style="display:none">
+        <button class="primary" id="continueBtn">Применить логику и продолжить</button>
+      </div>
+
+      <div class="final" id="final"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const cardsData = [
+  [1, "Утвердить изменение годового бюджета отдела."],
+  [2, "Собрать данные трех сотрудников в еженедельный отчет."],
+  [3, "Разрешить типовую претензию клиента в пределах установленного лимита."],
+  [4, "Распределить ежедневные задачи между двумя опытными специалистами."],
+  [5, "Провести разговор с сотрудником о систематическом нарушении договоренностей."],
+  [6, "Проверить оформление каждой презентации перед внутренним совещанием."],
+  [7, "Определить три приоритета подразделения на следующий квартал."],
+  [8, "Подготовить статистику для ежемесячной встречи с директором."],
+  [9, "Координировать повторяющийся процесс, который опытный сотрудник уже несколько месяцев ведет вместе с руководителем."],
+  [10, "Финально утвердить новый порядок работы подразделения."]
+];
+const recommended = {1:"keep",2:"now",3:"now",4:"now",5:"keep",6:"now",7:"keep",8:"now",9:"now",10:"keep"};
+
+const bank = document.getElementById("bank");
+const zones = [...document.querySelectorAll("[data-zone]")];
+const checkBtn = document.getElementById("checkBtn");
+const resetBtn = document.getElementById("resetBtn");
+const feedback = document.getElementById("feedback");
+const reference = document.getElementById("reference");
+const continueActions = document.getElementById("continueActions");
+const continueBtn = document.getElementById("continueBtn");
+const scenario = document.getElementById("scenario");
+const finalBox = document.getElementById("final");
+const instruction = document.getElementById("instruction");
+let selectedCard = null;
+let stage = 1;
+let baselineStage2 = null;
+
+function makeCard(id,text){
+  const el=document.createElement("div");
+  el.className="card";
+  el.draggable=true;
+  el.dataset.id=id;
+  el.innerHTML=`<span class="num">${id}.</span>${text}`;
+  el.addEventListener("dragstart",e=>{el.classList.add("dragging");e.dataTransfer.setData("text/plain",id)});
+  el.addEventListener("dragend",()=>el.classList.remove("dragging"));
+  el.addEventListener("click",e=>{
+    e.stopPropagation();
+    document.querySelectorAll(".card.selected").forEach(c=>c.classList.remove("selected"));
+    if(selectedCard===el){selectedCard=null;return}
+    selectedCard=el;el.classList.add("selected");
+  });
+  return el;
+}
+
+function renderCards(){cardsData.forEach(([id,text])=>bank.appendChild(makeCard(id,text)));updateCounts()}
+
+zones.forEach(zone=>{
+  zone.addEventListener("dragover",e=>{e.preventDefault();if(zone.dataset.zone!=="bank")zone.classList.add("over")});
+  zone.addEventListener("dragleave",()=>zone.classList.remove("over"));
+  zone.addEventListener("drop",e=>{
+    e.preventDefault();zone.classList.remove("over");
+    const id=e.dataTransfer.getData("text/plain");
+    const card=document.querySelector(`.card[data-id="${id}"]`);
+    if(card)zone.appendChild(card);
+    clearSelection();onChange();
+  });
+  zone.addEventListener("click",()=>{
+    if(selectedCard){zone.appendChild(selectedCard);clearSelection();onChange()}
+  });
+  zone.addEventListener("keydown",e=>{
+    if((e.key==="Enter"||e.key===" ")&&selectedCard){e.preventDefault();zone.appendChild(selectedCard);clearSelection();onChange()}
+  });
+});
+
+function clearSelection(){document.querySelectorAll(".card.selected").forEach(c=>c.classList.remove("selected"));selectedCard=null}
+function getPlacements(){const r={};document.querySelectorAll(".card").forEach(card=>{r[card.dataset.id]=card.parentElement.dataset.zone});return r}
+function allPlaced(){return [...document.querySelectorAll(".card")].every(c=>c.parentElement.dataset.zone!=="bank")}
+function updateCounts(){["keep","now","prepare"].forEach(z=>{document.getElementById(`count-${z}`).textContent=document.querySelectorAll(`.zone[data-zone="${z}"] .card`).length})}
+
+function onChange(){
+  updateCounts();checkBtn.disabled=!allPlaced();
+  feedback.classList.remove("show");feedback.innerHTML="";
+  reference.classList.remove("show");continueActions.style.display="none";
+  finalBox.classList.remove("show");
+}
+
+function addFeedback(type,title,text){
+  const div=document.createElement("div");
+  div.className=`fb-block ${type}`;
+  div.innerHTML=`<strong>${title}</strong>${text}`;
+  feedback.appendChild(div);
+}
+
+function checkStage1(){
+  const p=getPlacements();feedback.innerHTML="";
+  const ops=[2,3,4,6,8,9];
+  const authority=[1,5,7,10];
+
+  const keptOps=ops.filter(id=>p[id]==="keep");
+  const delegatedAuthority=authority.filter(id=>p[id]==="now");
+  const delayedOps=ops.filter(id=>p[id]==="prepare");
+  const preparedAuthority=authority.filter(id=>p[id]==="prepare");
+
+  if(keptOps.length){
+    addFeedback("fb-warn","Вы оставили у себя слишком много операционной работы.",
+      `Карточки ${keptOps.join(", ")} не требуют постоянного участия руководителя в исходной ситуации. Если сохранить их за собой, команда продолжит зависеть от вас в повторяющихся вопросах.`);
+  }
+  if(delegatedAuthority.length){
+    addFeedback("fb-danger","Вы передали решения, где может требоваться полномочие руководителя.",
+      `Карточки ${delegatedAuthority.join(", ")} связаны с управленческой ответственностью или финальным утверждением. Подготовительную работу можно передать, но само решение в данной ситуации лучше оставить у руководителя.`);
+  }
+  if(delayedOps.length){
+    addFeedback("fb-warn","Вы откладываете часть передачи без обозначенной причины.",
+      `Карточки ${delayedOps.join(", ")} уже можно передать в описанных условиях. Зона «подготовить» нужна, когда не готов конкретный исполнитель или отсутствуют условия для передачи.`);
+  }
+  if(preparedAuthority.length){
+    addFeedback("fb-warn","Подготовка к делегированию не отменяет финальную ответственность.",
+      `По карточкам ${preparedAuthority.join(", ")} можно передать сбор данных, варианты и подготовку решения. Но сама формулировка задачи включает управленческое решение, поэтому целиком она не переходит сотруднику.`);
+  }
+
+  const exact=Object.keys(recommended).every(id=>p[id]===recommended[id]);
+  if(exact){
+    addFeedback("fb-ok","Логика распределения сбалансирована.",
+      "Операционные и повторяющиеся задачи уходят из рук руководителя, а решения, связанные с приоритетами, кадровой ответственностью и финальным утверждением, остаются на его уровне.");
+  }else if(!keptOps.length&&!delegatedAuthority.length&&!delayedOps.length&&!preparedAuthority.length){
+    addFeedback("fb-ok","Основная логика соблюдена.",
+      "Вы отделили задачи уровня руководителя от тех, которые можно передать без постоянного согласования.");
+  }
+
+  feedback.classList.add("show");
+  reference.classList.add("show");
+  continueActions.style.display="flex";
+}
+
+function applyRecommended(){
+  Object.entries(recommended).forEach(([id,zoneName])=>{
+    const card=document.querySelector(`.card[data-id="${id}"]`);
+    const zone=document.querySelector(`.zone[data-zone="${zoneName}"]`);
+    zone.appendChild(card);
+  });
+  updateCounts();
+}
+
+function startStage2(){
+  applyRecommended();
+  stage=2;baselineStage2=getPlacements();
+  document.getElementById("p2").classList.add("active");
+  scenario.classList.add("show");
+  instruction.textContent="Измените только те решения, на которые влияет новая вводная. Затем снова проверьте логику.";
+  feedback.innerHTML="";feedback.classList.remove("show");
+  reference.classList.remove("show");continueActions.style.display="none";
+  checkBtn.textContent="Проверить изменение";checkBtn.disabled=false;
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+
+function checkStage2(){
+  const p=getPlacements();feedback.innerHTML="";
+  const changed=Object.keys(p).filter(id=>p[id]!==baselineStage2[id]);
+  const card9=p["9"];
+
+  if(card9==="prepare"&&changed.length===1&&changed[0]==="9"){
+    addFeedback("fb-ok","Вы учли изменения.",
+      "Задача подходит для делегирования, но прежний кандидат скоро уйдет. Теперь ее нужно подготовить к передаче другому сотруднику: определить нового владельца, передать контекст и провести один-два совместных цикла.");
+    finalBox.innerHTML="<strong>Вывод.</strong> Категория задачи и готовность конкретного исполнителя — разные вещи. Новая вводная не возвращает операционную работу руководителю, если можно подготовить другого сотрудника.";
+    finalBox.classList.add("show");
+  }else{
+    if(card9==="now"){
+      addFeedback("fb-warn","Вы не учли изменение готовности исполнителя.",
+        "Координацию процесса по-прежнему стоит делегировать, но конкретный сотрудник скоро уйдет. Нужен этап подготовки передачи другому человеку.");
+    }else if(card9==="keep"){
+      addFeedback("fb-warn","Задача вернулась руководителю.",
+        "Уход текущего кандидата не делает координацию управленческой функцией руководителя. Лучше подготовить нового владельца задачи.");
+    }
+    const extra=changed.filter(id=>id!=="9");
+    if(extra.length){
+      addFeedback("fb-danger","Вы изменили больше, чем требует новая вводная.",
+        `Карточки ${extra.join(", ")} не связаны с уходом сотрудника. При изменении условий пересматривайте только те решения, на которые действительно влияет новое обстоятельство.`);
+    }
+  }
+  feedback.classList.add("show");
+}
+
+checkBtn.addEventListener("click",()=>stage===1?checkStage1():checkStage2());
+continueBtn.addEventListener("click",startStage2);
+
+resetBtn.addEventListener("click",()=>{
+  document.querySelectorAll(".card").forEach(card=>bank.appendChild(card));
+  clearSelection();stage=1;baselineStage2=null;
+  document.getElementById("p2").classList.remove("active");
+  scenario.classList.remove("show");
+  instruction.textContent="Перетащите карточки. Можно также нажать на карточку, а затем на нужную зону.";
+  feedback.innerHTML="";feedback.classList.remove("show");
+  reference.classList.remove("show");continueActions.style.display="none";
+  finalBox.classList.remove("show");
+  checkBtn.textContent="Проверить логику";checkBtn.disabled=true;
+  updateCounts();
+});
+
+renderCards();
+</script>
+</body>
+</html>

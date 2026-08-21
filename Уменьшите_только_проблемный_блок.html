@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Декомпозируйте задачу</title>
+<style>
+:root{
+  --bg:#f5f6f8; --card:#fff; --text:#20242d; --muted:#6d7583; --line:#dfe3ea;
+  --accent:#315d9b; --accent-soft:#eef3fb; --ok:#2e6b4f; --ok-bg:#eef7f2;
+  --warn:#8a5a10; --warn-bg:#fff7e8; --bad:#8b3d45; --bad-bg:#fff0f1;
+  --shadow:0 6px 18px rgba(31,36,48,.07);
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--bg); color:var(--text);
+  font-family:Arial,Helvetica,sans-serif; line-height:1.42;
+}
+.app{width:min(560px,calc(100% - 24px)); margin:18px auto}
+.shell{
+  background:var(--card); border:1px solid var(--line); border-radius:16px;
+  box-shadow:var(--shadow); overflow:hidden;
+}
+.head{padding:18px 18px 14px; border-bottom:1px solid var(--line)}
+h1{margin:0 0 8px; font-size:21px; line-height:1.2}
+.lead{margin:0; color:var(--muted); font-size:14px}
+.progress{display:flex; gap:7px; margin-top:14px}
+.progress span{flex:1; height:5px; border-radius:999px; background:#e8ebf0}
+.progress span.active{background:var(--accent)}
+.body{padding:16px}
+.stage-label{
+  font-size:12px; color:var(--accent); font-weight:700; text-transform:uppercase;
+  letter-spacing:.03em; margin-bottom:5px
+}
+.stage-title{margin:0 0 5px; font-size:17px}
+.stage-note{margin:0 0 12px; color:var(--muted); font-size:13px}
+.rules{
+  padding:11px 12px; border:1px solid #d8e1ef; background:#f5f7fb;
+  border-radius:12px; font-size:13px; margin-bottom:13px
+}
+.rules b{display:block; margin-bottom:5px}
+.rules ol{margin:0; padding-left:19px}
+.rules li{margin:4px 0}
+.project{
+  display:grid; grid-template-columns:repeat(3,1fr); gap:7px; margin-bottom:12px
+}
+.phase{
+  border:1px solid var(--line); border-radius:10px; padding:8px; font-size:11.5px; background:#fff
+}
+.phase b{display:block; margin-bottom:2px}
+.phase.done{background:var(--ok-bg); border-color:#cfe5d8}
+.phase.fail{background:var(--bad-bg); border-color:#efc9cd}
+.phase.future{color:var(--muted)}
+.option-list{display:grid; gap:7px}
+.option{
+  width:100%; border:1px solid var(--line); border-radius:10px; background:#fff;
+  color:var(--text); padding:10px 11px; text-align:left; font-size:13px; cursor:pointer
+}
+.option:hover{border-color:#b5bfcd}
+.option.selected{
+  border-color:var(--accent); background:var(--accent-soft);
+  box-shadow:0 0 0 1px var(--accent) inset
+}
+.option:disabled{cursor:default; opacity:.75}
+.actions{display:flex; gap:8px; margin-top:13px}
+button{
+  appearance:none; border:0; border-radius:10px; padding:10px 13px;
+  font-size:14px; font-weight:700; cursor:pointer
+}
+.primary{background:var(--accent); color:#fff; flex:1}
+.primary:disabled{opacity:.45; cursor:not-allowed}
+.secondary{background:#edf0f4; color:var(--text)}
+.feedback{display:none; margin-top:12px}
+.feedback.show{display:block}
+.fb{border-radius:10px; padding:10px 11px; margin-top:7px; font-size:13px}
+.fb strong{display:block; margin-bottom:3px}
+.fb.ok{background:var(--ok-bg); border:1px solid #cfe5d8; color:#214f3b}
+.fb.warn{background:var(--warn-bg); border:1px solid #f1dbb0; color:#6f480c}
+.fb.bad{background:var(--bad-bg); border:1px solid #efc9cd; color:#73343b}
+.hidden{display:none!important}
+.factbox{
+  margin-top:12px; padding:11px 12px; border:1px solid #d8e1ef;
+  background:#f5f7fb; border-radius:11px; font-size:13px
+}
+.factbox b{display:block; margin-bottom:3px}
+.bank{
+  border:1px dashed #bcc5d4; border-radius:12px; padding:9px;
+  background:#fafbfc; min-height:55px; margin-bottom:10px
+}
+.bank-title{
+  font-size:11px; text-transform:uppercase; color:var(--muted);
+  font-weight:700; letter-spacing:.03em; margin-bottom:5px
+}
+.card{
+  border:1px solid var(--line); border-radius:10px; background:#fff;
+  padding:9px 10px; font-size:12.5px; margin:6px 0; cursor:grab; user-select:none
+}
+.card.dragging{opacity:.45}
+.card.selected{
+  border-color:var(--accent); background:var(--accent-soft);
+  box-shadow:0 0 0 1px var(--accent) inset
+}
+.card-type{
+  display:block; color:var(--accent); font-size:10.5px; font-weight:700;
+  text-transform:uppercase; letter-spacing:.03em; margin-bottom:3px
+}
+.builder{display:grid; gap:8px}
+.slot{
+  border:1px solid var(--line); border-radius:11px; min-height:65px;
+  padding:9px; background:#fff
+}
+.slot.over{border-color:var(--accent); background:var(--accent-soft)}
+.slot-title{font-size:12px; font-weight:700; margin-bottom:3px}
+.slot-help{font-size:10.5px; color:var(--muted); margin-bottom:5px}
+.preview{
+  margin-top:12px; border:1px solid var(--line); border-radius:11px; overflow:hidden
+}
+.preview-head{
+  padding:8px 10px; background:#f4f6f9; font-size:12.5px; font-weight:700
+}
+.preview-row{padding:8px 10px; border-top:1px solid #edf0f4; font-size:12px}
+.preview-row:first-of-type{border-top:0}
+.preview-row b{display:block; margin-bottom:2px}
+.cycle{
+  display:grid; grid-template-columns:1fr 1fr; gap:8px; margin:10px 0 12px
+}
+.cycle-card{
+  border:1px solid #cfe5d8; background:var(--ok-bg); border-radius:10px;
+  padding:9px; font-size:12px
+}
+.cycle-card b{display:block; margin-bottom:2px; color:var(--ok)}
+.summary{
+  margin-top:14px; border-top:1px solid var(--line); padding-top:14px
+}
+.summary h3{margin:0 0 7px; font-size:17px}
+.summary p{margin:0 0 9px; font-size:13px}
+.metrics{display:grid; grid-template-columns:1fr 1fr 1fr; gap:7px}
+.metric{
+  border:1px solid var(--line); border-radius:10px; padding:9px 6px; text-align:center
+}
+.metric .score{font-size:19px; font-weight:700; color:var(--accent)}
+.metric .label{font-size:10.5px; color:var(--muted); margin-top:2px}
+.reference{
+  margin-top:11px; border:1px solid var(--line); border-radius:11px; overflow:hidden
+}
+.reference-head{
+  padding:8px 10px; background:#f4f6f9; font-size:12.5px; font-weight:700
+}
+.reference-row{padding:8px 10px; border-top:1px solid #edf0f4; font-size:12px}
+.reference-row b{display:block; margin-bottom:2px}
+@media(max-width:420px){
+  .project{grid-template-columns:1fr 1fr}
+  .metrics{grid-template-columns:1fr}
+  .body{padding:13px}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="shell">
+    <div class="head">
+      <h1>Уменьшите только проблемный блок</h1>
+      <p class="lead">Найдите место, где сотруднику пока не хватает самостоятельности, уменьшите только этот участок задачи и верните более крупный блок после устойчивого результата.</p>
+      <div class="progress">
+        <span id="p1" class="active"></span>
+        <span id="p2"></span>
+        <span id="p3"></span>
+      </div>
+    </div>
+
+    <div class="body">
+
+      <section id="stage1">
+        <div class="stage-label">Этап 1 из 3</div>
+        <h2 class="stage-title">Определите, где уменьшать задачу</h2>
+
+        <div class="rules">
+          <b>Что нужно сделать</b>
+          <ol>
+            <li>Посмотрите, как сотрудник прошел шесть этапов проекта.</li>
+            <li>Выберите <strong>одну</strong> реакцию руководителя на срыв пятого этапа.</li>
+            <li>Не уменьшайте весь проект автоматически. Сначала определите, где именно произошел сбой.</li>
+            <li>Не забирайте проблемный этап себе, если сотрудник способен освоить недостающий способ действия.</li>
+            <li>После выбора появится дополнительная информация о причине срыва.</li>
+          </ol>
+        </div>
+
+        <div class="project">
+          <div class="phase done"><b>1. Собрать данные</b>Выполнено в срок</div>
+          <div class="phase done"><b>2. Проанализировать</b>Выполнено самостоятельно</div>
+          <div class="phase done"><b>3. Подготовить варианты</b>Выполнено самостоятельно</div>
+          <div class="phase done"><b>4. Согласовать внутри команды</b>Выполнено в срок</div>
+          <div class="phase fail"><b>5. Согласовать общий ресурс</b>Срыв срока</div>
+          <div class="phase future"><b>6. Запустить решение</b>Еще не начато</div>
+        </div>
+
+        <div class="option-list" id="managerOptions"></div>
+
+        <div class="feedback" id="fb1"></div>
+        <div class="factbox hidden" id="factbox"></div>
+
+        <div class="actions">
+          <button class="secondary" id="reset1">Сбросить</button>
+          <button class="primary" id="go2" disabled>Собрать малый шаг</button>
+        </div>
+      </section>
+
+      <section id="stage2" class="hidden">
+        <div class="stage-label">Этап 2 из 3</div>
+        <h2 class="stage-title">Соберите новый малый шаг</h2>
+
+        <div class="rules">
+          <b>Что нужно сделать</b>
+          <ol>
+            <li>Ниже есть карточки четырех типов: <strong>результат, срок, критерий готовности, зона самостоятельности</strong>.</li>
+            <li>Перетащите по одной карточке в каждый соответствующий слот.</li>
+            <li>Малый шаг должен уменьшать только проблемный участок пятого этапа — согласование конфликтующих приоритетов.</li>
+            <li>Результат должен быть проверяемым. Формулировки вроде «проработать вопрос» не подходят.</li>
+            <li>Зона самостоятельности должна оставлять сотруднику анализ и подготовку решения, но не давать ему полномочия единолично менять приоритеты другого подразделения.</li>
+            <li>Карточки с ежедневными отчетами и согласованием каждого действия — это контроль процесса, а не развитие самостоятельности.</li>
+            <li>Когда заполните четыре слота, нажмите «Проверить малый шаг».</li>
+          </ol>
+        </div>
+
+        <div class="bank" id="bank" data-zone="bank">
+          <div class="bank-title">Карточки</div>
+        </div>
+
+        <div class="builder">
+          <div class="slot" data-slot="result">
+            <div class="slot-title">Результат</div>
+            <div class="slot-help">Какой конкретный результат сотрудник должен получить?</div>
+          </div>
+          <div class="slot" data-slot="deadline">
+            <div class="slot-title">Срок</div>
+            <div class="slot-help">Когда этот результат должен быть готов?</div>
+          </div>
+          <div class="slot" data-slot="criterion">
+            <div class="slot-title">Критерий готовности</div>
+            <div class="slot-help">По чему понятно, что шаг завершен?</div>
+          </div>
+          <div class="slot" data-slot="autonomy">
+            <div class="slot-title">Зона самостоятельности</div>
+            <div class="slot-help">Что сотрудник решает сам, а где нужен руководитель?</div>
+          </div>
+        </div>
+
+        <div class="preview">
+          <div class="preview-head">Ваш малый шаг</div>
+          <div id="previewRows"></div>
+        </div>
+
+        <div class="actions">
+          <button class="secondary" id="back1">Назад</button>
+          <button class="primary" id="check2" disabled>Проверить малый шаг</button>
+        </div>
+
+        <div class="feedback" id="fb2"></div>
+        <div class="actions hidden" id="go3Wrap">
+          <button class="primary" id="go3">Перейти ко второму раунду</button>
+        </div>
+      </section>
+
+      <section id="stage3" class="hidden">
+        <div class="stage-label">Этап 3 из 3</div>
+        <h2 class="stage-title">Что делать после двух успешных циклов</h2>
+
+        <div class="rules">
+          <b>Что нужно сделать</b>
+          <ol>
+            <li>Сотрудник два раза подряд выполнил уменьшенный блок без срыва.</li>
+            <li>Посмотрите не только на итог, но и на признаки самостоятельности: он сам подготовил варианты, заранее обозначил риск и вовремя принес вопрос, который действительно требовал полномочий руководителя.</li>
+            <li>Выберите <strong>одно</strong> следующее действие руководителя.</li>
+            <li>Цель — увеличивать самостоятельность после подтвержденного результата, а не оставлять сотрудника на микрошаге навсегда.</li>
+          </ol>
+        </div>
+
+        <div class="cycle">
+          <div class="cycle-card"><b>Цикл 1</b>Два варианта подготовлены в срок. Риск конфликта обозначен заранее. Решение руководителя потребовалось только по межфункциональному приоритету.</div>
+          <div class="cycle-card"><b>Цикл 2</b>Сотрудник самостоятельно собрал позиции сторон, предложил рекомендацию и вовремя эскалировал единственный вопрос вне своих полномочий.</div>
+        </div>
+
+        <div class="option-list" id="round2Options"></div>
+
+        <div class="actions">
+          <button class="secondary" id="back2">Назад</button>
+          <button class="primary" id="check3" disabled>Проверить решение</button>
+        </div>
+
+        <div class="feedback" id="fb3"></div>
+        <div class="summary hidden" id="summary"></div>
+      </section>
+
+    </div>
+  </div>
+</div>
+
+<script>
+const managerOptions = [
+  {
+    id:"all",
+    text:"Разбить весь проект на ежедневные задания и проверять выполнение каждого дня.",
+    correct:false,
+    kind:"micro",
+    feedback:"Сотрудник успешно прошел первые четыре этапа. Дробление всего проекта игнорирует фактическую зону успеха и превращает локальную проблему в тотальный контроль."
+  },
+  {
+    id:"take",
+    text:"Забрать пятый этап себе и самому согласовать конфликтующие приоритеты.",
+    correct:false,
+    kind:"takeover",
+    feedback:"Так руководитель закрывает текущий риск, но сотрудник не осваивает недостающий способ действия. Следующий похожий конфликт снова вернется наверх."
+  },
+  {
+    id:"local",
+    text:"Определить, какое действие внутри пятого этапа не удается, и уменьшить только этот блок.",
+    correct:true,
+    kind:"diagnose",
+    feedback:"Вы сохраняете четыре успешно освоенных этапа и уменьшаете только тот участок, где сотруднику пока не хватает опыта."
+  },
+  {
+    id:"reports",
+    text:"Увеличить количество отчетов по всем этапам проекта.",
+    correct:false,
+    kind:"reports",
+    feedback:"Больше отчетов делает работу руководителя видимой, но не развивает навык, которого не хватает сотруднику."
+  }
+];
+
+const cards = [
+  {id:"r1",type:"result",typeLabel:"Результат",text:"До среды подготовить два реалистичных варианта распределения общего ресурса между подразделениями.",correct:true},
+  {id:"r2",type:"result",typeLabel:"Результат",text:"Проработать вопрос с подразделениями и держать руководителя в курсе.",correct:false,issue:"vague"},
+  {id:"r3",type:"result",typeLabel:"Результат",text:"Полностью согласовать приоритеты двух подразделений без участия руководителя.",correct:false,issue:"authority"},
+
+  {id:"d1",type:"deadline",typeLabel:"Срок",text:"До среды, 15:00.",correct:true},
+  {id:"d2",type:"deadline",typeLabel:"Срок",text:"Как можно скорее.",correct:false,issue:"vague"},
+  {id:"d3",type:"deadline",typeLabel:"Срок",text:"Отчитываться каждый день до завершения проекта.",correct:false,issue:"micro"},
+
+  {id:"c1",type:"criterion",typeLabel:"Критерий готовности",text:"В каждом варианте указаны влияние на срок, нагрузку подразделений и главный риск; есть рекомендация сотрудника.",correct:true},
+  {id:"c2",type:"criterion",typeLabel:"Критерий готовности",text:"Руководитель получил подробный отчет обо всех разговорах и звонках.",correct:false,issue:"process"},
+  {id:"c3",type:"criterion",typeLabel:"Критерий готовности",text:"Оба руководителя подразделений заранее согласились с предложением.",correct:false,issue:"approval"},
+
+  {id:"a1",type:"autonomy",typeLabel:"Зона самостоятельности",text:"Сотрудник сам собирает позиции, готовит варианты и рекомендацию. Руководитель подключается только к финальному выбору межфункционального приоритета.",correct:true},
+  {id:"a2",type:"autonomy",typeLabel:"Зона самостоятельности",text:"Каждый звонок и каждое изменение варианта заранее согласовывать с руководителем.",correct:false,issue:"micro"},
+  {id:"a3",type:"autonomy",typeLabel:"Зона самостоятельности",text:"Сотрудник сам определяет приоритет другого подразделения, если считает свой вариант сильнее.",correct:false,issue:"authority"}
+];
+
+const round2Options = [
+  {
+    id:"same",
+    text:"Оставить тот же уменьшенный блок еще на несколько месяцев: так надежнее.",
+    correct:false,
+    issue:"freeze",
+    feedback:"Временное уменьшение задачи не должно становиться постоянным режимом. Два успешных цикла уже дают основание увеличить размер самостоятельного результата."
+  },
+  {
+    id:"daily",
+    text:"Добавить еще одну ежедневную проверку, чтобы закрепить успех.",
+    correct:false,
+    issue:"control",
+    feedback:"Дополнительная проверка не нужна: сотрудник уже показывает нужные сигналы — сам анализирует, предупреждает о рисках и эскалирует только вопрос вне своих полномочий."
+  },
+  {
+    id:"grow",
+    text:"Укрупнить передаваемый блок: вернуть сотруднику весь пятый этап, сохранив только заранее определенную точку эскалации по межфункциональному приоритету.",
+    correct:true,
+    issue:null,
+    feedback:"Самостоятельность расширяется на основе доказанного результата. Сотрудник получает более крупный блок, а руководитель остается только в точке реального полномочия."
+  },
+  {
+    id:"return",
+    text:"Вернуть пятый этап руководителю: два успешных цикла еще не гарантируют отсутствие ошибок.",
+    correct:false,
+    issue:"takeover",
+    feedback:"Так успех сотрудника никак не меняет объем передаваемой ответственности. Развитие останавливается, хотя факты уже подтверждают готовность к следующему уровню."
+  }
+];
+
+let selectedManager=null;
+let selectedCard=null;
+let round2Sel=null;
+let score1=0,score2=0,score3=0;
+
+const $=s=>document.querySelector(s);
+
+function addFb(container,type,title,text){
+  const d=document.createElement("div");
+  d.className=`fb ${type}`;
+  d.innerHTML=`<strong>${title}</strong>${text}`;
+  container.appendChild(d);
+}
+
+function renderManagerOptions(){
+  const box=$("#managerOptions"); box.innerHTML="";
+  managerOptions.forEach(o=>{
+    const b=document.createElement("button");
+    b.type="button";
+    b.className="option"+(selectedManager===o.id?" selected":"");
+    b.textContent=o.text;
+    b.disabled=selectedManager!==null;
+    b.addEventListener("click",()=>chooseManager(o.id));
+    box.appendChild(b);
+  });
+}
+
+function chooseManager(id){
+  if(selectedManager!==null)return;
+  selectedManager=id;
+  const chosen=managerOptions.find(o=>o.id===id);
+  score1=chosen.correct?1:0;
+  renderManagerOptions();
+
+  const fb=$("#fb1"); fb.innerHTML="";
+  addFb(fb,chosen.correct?"ok":(chosen.kind==="takeover"||chosen.kind==="micro"?"bad":"warn"),
+    chosen.correct?"Вы уменьшаете задачу в точке сбоя.":"Решение не связано с реальной зоной дефицита.",
+    chosen.feedback
+  );
+  fb.classList.add("show");
+
+  $("#factbox").innerHTML=`
+    <b>Что выяснилось после разбора</b>
+    Сотрудник уверенно анализирует данные и умеет готовить варианты. Срыв произошел потому, что он впервые самостоятельно столкнулся с конфликтующими приоритетами двух подразделений. Он собрал позиции сторон, но не смог превратить их в варианты распределения ресурса и вовремя вынести на руководителя только ту часть решения, которая требовала межфункционального полномочия.
+  `;
+  $("#factbox").classList.remove("hidden");
+  $("#go2").disabled=false;
+}
+
+function reset1(){
+  selectedManager=null; score1=0;
+  $("#fb1").className="feedback"; $("#fb1").innerHTML="";
+  $("#factbox").classList.add("hidden");
+  $("#go2").disabled=true;
+  renderManagerOptions();
+}
+
+function makeCard(c){
+  const d=document.createElement("div");
+  d.className="card"; d.draggable=true; d.dataset.id=c.id;
+  d.innerHTML=`<span class="card-type">${c.typeLabel}</span>${c.text}`;
+
+  d.addEventListener("dragstart",e=>{
+    d.classList.add("dragging");
+    e.dataTransfer.setData("text/plain",c.id);
+  });
+  d.addEventListener("dragend",()=>d.classList.remove("dragging"));
+  d.addEventListener("click",e=>{
+    e.stopPropagation();
+    document.querySelectorAll(".card.selected").forEach(x=>x.classList.remove("selected"));
+    if(selectedCard===d){selectedCard=null;return}
+    selectedCard=d; d.classList.add("selected");
+  });
+  return d;
+}
+
+function initBuilder(){
+  $("#bank").querySelectorAll(".card").forEach(c=>c.remove());
+  cards.forEach(c=>$("#bank").appendChild(makeCard(c)));
+
+  document.querySelectorAll(".slot").forEach(slot=>{
+    if(slot.dataset.bound==="1")return;
+    slot.dataset.bound="1";
+
+    slot.addEventListener("dragover",e=>{e.preventDefault();slot.classList.add("over")});
+    slot.addEventListener("dragleave",()=>slot.classList.remove("over"));
+    slot.addEventListener("drop",e=>{
+      e.preventDefault(); slot.classList.remove("over");
+      const id=e.dataTransfer.getData("text/plain");
+      const card=document.querySelector(`.card[data-id="${id}"]`);
+      placeCard(card,slot);
+    });
+    slot.addEventListener("click",()=>{
+      if(selectedCard)placeCard(selectedCard,slot);
+    });
+  });
+
+  $("#bank").addEventListener("click",()=>{
+    if(selectedCard){
+      $("#bank").appendChild(selectedCard);
+      clearSelection(); updateBuilder();
+    }
+  });
+
+  updateBuilder();
+}
+
+function placeCard(card,slot){
+  if(!card)return;
+  const data=cards.find(c=>c.id===card.dataset.id);
+  if(data.type!==slot.dataset.slot){
+    const fb=$("#fb2"); fb.innerHTML="";
+    addFb(fb,"warn","Эта карточка относится к другому элементу.",
+      `Карточка типа «${data.typeLabel}» должна находиться в соответствующем слоте.`);
+    fb.classList.add("show");
+    clearSelection();
+    return;
+  }
+  const existing=slot.querySelector(".card");
+  if(existing)$("#bank").appendChild(existing);
+  slot.appendChild(card);
+  clearSelection(); updateBuilder();
+}
+
+function clearSelection(){
+  document.querySelectorAll(".card.selected").forEach(x=>x.classList.remove("selected"));
+  selectedCard=null;
+}
+
+function builderSelection(){
+  const out={};
+  document.querySelectorAll(".slot").forEach(s=>{
+    out[s.dataset.slot]=s.querySelector(".card")?.dataset.id||null;
+  });
+  return out;
+}
+
+function updateBuilder(){
+  const sel=builderSelection();
+  $("#check2").disabled=Object.values(sel).some(v=>!v);
+  $("#fb2").className="feedback"; $("#fb2").innerHTML="";
+  $("#go3Wrap").classList.add("hidden");
+
+  const labels={
+    result:"Результат",deadline:"Срок",criterion:"Критерий готовности",autonomy:"Зона самостоятельности"
+  };
+  const box=$("#previewRows"); box.innerHTML="";
+  Object.entries(labels).forEach(([key,label])=>{
+    const c=cards.find(x=>x.id===sel[key]);
+    const row=document.createElement("div");
+    row.className="preview-row";
+    row.innerHTML=`<b>${label}</b>${c?c.text:"—"}`;
+    box.appendChild(row);
+  });
+}
+
+function check2(){
+  const sel=builderSelection();
+  const chosen=Object.values(sel).map(id=>cards.find(c=>c.id===id));
+  const correct=chosen.filter(c=>c.correct).length;
+  score2=correct===4?1:0;
+
+  const fb=$("#fb2"); fb.innerHTML="";
+  if(correct===4){
+    addFb(fb,"ok","Малый шаг собран по проблемному навыку.",
+      "Сотрудник сохраняет анализ и подготовку решения. Руководитель не контролирует каждый шаг и подключается только в точке межфункционального полномочия.");
+  }else{
+    chosen.filter(c=>!c.correct).forEach(c=>{
+      if(c.issue==="vague"){
+        addFb(fb,"warn","Один из элементов нельзя проверить однозначно.",
+          "Замените размытые формулировки на конкретный результат или срок.");
+      }
+      if(c.issue==="micro" || c.issue==="process"){
+        addFb(fb,"bad","В малый шаг попал микроконтроль.",
+          "Ежедневные отчеты, согласование звонков и подробная фиксация действий не развивают недостающий навык.");
+      }
+      if(c.issue==="authority"){
+        addFb(fb,"bad","Граница самостоятельности вышла за реальные полномочия.",
+          "Сотрудник может подготовить варианты и рекомендацию, но не вправе единолично менять приоритет другого подразделения.");
+      }
+      if(c.issue==="approval"){
+        addFb(fb,"warn","Критерий готовности зависит от чужого согласия.",
+          "Малый шаг должен проверять качество подготовленного решения сотрудника, а не гарантировать, что все участники заранее согласились.");
+      }
+    });
+  }
+  fb.classList.add("show");
+  $("#go3Wrap").classList.remove("hidden");
+}
+
+function renderRound2(){
+  const box=$("#round2Options"); box.innerHTML="";
+  round2Options.forEach(o=>{
+    const b=document.createElement("button");
+    b.type="button";
+    b.className="option"+(round2Sel===o.id?" selected":"");
+    b.textContent=o.text;
+    b.addEventListener("click",()=>{round2Sel=o.id;renderRound2()});
+    box.appendChild(b);
+  });
+  $("#check3").disabled=!round2Sel;
+  $("#fb3").className="feedback"; $("#fb3").innerHTML="";
+  $("#summary").classList.add("hidden");
+}
+
+function check3(){
+  const chosen=round2Options.find(o=>o.id===round2Sel);
+  score3=chosen.correct?1:0;
+  const fb=$("#fb3"); fb.innerHTML="";
+  addFb(fb,chosen.correct?"ok":(chosen.issue==="takeover"||chosen.issue==="control"?"bad":"warn"),
+    chosen.correct?"Размер самостоятельного блока увеличивается.":"Контроль не должен становиться постоянным режимом.",
+    chosen.feedback
+  );
+  fb.classList.add("show");
+  showSummary();
+}
+
+function showSummary(){
+  const total=score1+score2+score3;
+  let title,text;
+
+  if(total===3){
+    title="Вы используете декомпозицию как временную поддержку, а не как постоянный микроконтроль.";
+    text="Вы нашли локальный дефицит, уменьшили только проблемный блок, задали проверяемый результат и после двух успешных циклов снова увеличили объем самостоятельной работы.";
+  }else if(score1===0){
+    title="Главная зона роста — искать точку сбоя до усиления контроля.";
+    text="Если четыре этапа сотрудник уже проходит самостоятельно, нет оснований дробить весь проект. Сначала найдите конкретное действие, которое пока не получается.";
+  }else if(score2===0){
+    title="Проблемный блок найден, но малый шаг пока устроен как контроль действий.";
+    text="Хороший малый шаг содержит результат, срок, критерий готовности и границу самостоятельности. Он не требует согласовывать каждый звонок или ежедневно отчитываться.";
+  }else{
+    title="Малый шаг работает, но вы слишком долго оставляете сотрудника в уменьшенном режиме.";
+    text="После устойчивых успешных циклов размер передаваемого результата нужно увеличивать. Иначе декомпозиция перестает развивать самостоятельность.";
+  }
+
+  const s=$("#summary");
+  s.innerHTML=`
+    <h3>${title}</h3>
+    <p>${text}</p>
+    <div class="metrics">
+      <div class="metric"><div class="score">${score1}/1</div><div class="label">диагностика точки сбоя</div></div>
+      <div class="metric"><div class="score">${score2}/1</div><div class="label">качество малого шага</div></div>
+      <div class="metric"><div class="score">${score3}/1</div><div class="label">расширение самостоятельности</div></div>
+    </div>
+    <div class="reference">
+      <div class="reference-head">Рабочая логика</div>
+      <div class="reference-row"><b>1. Найти точку сбоя</b>Уменьшать только тот участок, где сотруднику пока не хватает способа действия.</div>
+      <div class="reference-row"><b>2. Задать малый шаг</b>Результат + срок + критерий готовности + зона самостоятельности.</div>
+      <div class="reference-row"><b>3. Проверить несколько циклов</b>Смотреть не только на итог, но и на ранние сигналы риска, качество анализа и соблюдение границ полномочий.</div>
+      <div class="reference-row"><b>4. Снова укрупнить блок</b>После стабильного результата вернуть сотруднику более крупную часть задачи.</div>
+    </div>
+  `;
+  s.classList.remove("hidden");
+}
+
+$("#reset1").addEventListener("click",reset1);
+$("#go2").addEventListener("click",()=>{
+  $("#stage1").classList.add("hidden");
+  $("#stage2").classList.remove("hidden");
+  $("#p2").classList.add("active");
+  initBuilder();
+  window.scrollTo({top:0,behavior:"smooth"});
+});
+$("#back1").addEventListener("click",()=>{
+  $("#stage2").classList.add("hidden");
+  $("#stage1").classList.remove("hidden");
+  $("#p2").classList.remove("active");
+  window.scrollTo({top:0,behavior:"smooth"});
+});
+$("#check2").addEventListener("click",check2);
+$("#go3").addEventListener("click",()=>{
+  $("#stage2").classList.add("hidden");
+  $("#stage3").classList.remove("hidden");
+  $("#p3").classList.add("active");
+  renderRound2();
+  window.scrollTo({top:0,behavior:"smooth"});
+});
+$("#back2").addEventListener("click",()=>{
+  $("#stage3").classList.add("hidden");
+  $("#stage2").classList.remove("hidden");
+  $("#p3").classList.remove("active");
+  updateBuilder();
+  window.scrollTo({top:0,behavior:"smooth"});
+});
+$("#check3").addEventListener("click",check3);
+
+renderManagerOptions();
+</script>
+</body>
+</html>

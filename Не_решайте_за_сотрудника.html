@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Не решайте за сотрудника</title>
+<style>
+:root{
+  --bg:#f5f6f8; --card:#fff; --text:#20242d; --muted:#6d7583; --line:#dfe3ea;
+  --accent:#315d9b; --accent-soft:#eef3fb; --ok:#2e6b4f; --ok-bg:#eef7f2;
+  --warn:#8a5a10; --warn-bg:#fff7e8; --bad:#8b3d45; --bad-bg:#fff0f1;
+  --shadow:0 6px 18px rgba(31,36,48,.07);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:Arial,Helvetica,sans-serif;line-height:1.42}
+.app{width:min(560px,calc(100% - 24px));margin:18px auto}
+.shell{background:var(--card);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);overflow:hidden}
+.head{padding:18px 18px 14px;border-bottom:1px solid var(--line)}
+h1{margin:0 0 8px;font-size:21px;line-height:1.2}
+.lead{margin:0;color:var(--muted);font-size:14px}
+.progress{display:flex;gap:7px;margin-top:14px}
+.progress span{flex:1;height:5px;border-radius:999px;background:#e8ebf0}
+.progress span.active{background:var(--accent)}
+.body{padding:16px}
+.stage-label{font-size:12px;color:var(--accent);font-weight:700;text-transform:uppercase;letter-spacing:.03em;margin-bottom:5px}
+.stage-title{margin:0 0 5px;font-size:17px}
+.stage-note{margin:0 0 12px;color:var(--muted);font-size:13px}
+.rules{padding:11px 12px;border:1px solid #d8e1ef;background:#f5f7fb;border-radius:12px;font-size:13px;margin-bottom:13px}
+.rules b{display:block;margin-bottom:5px}
+.rules ol{margin:0;padding-left:19px}
+.rules li{margin:4px 0}
+.chat{display:flex;flex-direction:column;gap:9px;margin-top:10px}
+.bubble{max-width:91%;border-radius:13px;padding:10px 11px;font-size:13.5px}
+.employee{align-self:flex-start;background:#f1f3f6;border-bottom-left-radius:5px}
+.manager{align-self:flex-end;background:var(--accent);color:#fff;border-bottom-right-radius:5px}
+.meta{display:block;font-size:11px;opacity:.72;margin-bottom:3px}
+.question{margin-top:14px;font-size:13px;font-weight:700}
+.option-list{display:grid;gap:7px;margin-top:8px}
+.option{width:100%;border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--text);padding:10px 11px;text-align:left;font-size:13px;cursor:pointer}
+.option:hover{border-color:#b5bfcd}
+.option.selected{border-color:var(--accent);background:var(--accent-soft);box-shadow:0 0 0 1px var(--accent) inset}
+.option:disabled{cursor:default;opacity:.72}
+.actions{display:flex;gap:8px;margin-top:13px}
+button{appearance:none;border:0;border-radius:10px;padding:10px 13px;font-size:14px;font-weight:700;cursor:pointer}
+.primary{background:var(--accent);color:#fff;flex:1}
+.primary:disabled{opacity:.45;cursor:not-allowed}
+.secondary{background:#edf0f4;color:var(--text)}
+.feedback{display:none;margin-top:12px}
+.feedback.show{display:block}
+.fb{border-radius:10px;padding:10px 11px;margin-top:7px;font-size:13px}
+.fb strong{display:block;margin-bottom:3px}
+.fb.ok{background:var(--ok-bg);border:1px solid #cfe5d8;color:#214f3b}
+.fb.warn{background:var(--warn-bg);border:1px solid #f1dbb0;color:#6f480c}
+.fb.bad{background:var(--bad-bg);border:1px solid #efc9cd;color:#73343b}
+.hidden{display:none!important}
+.case-counter{display:flex;justify-content:space-between;gap:8px;align-items:center;margin-bottom:8px;font-size:12px;color:var(--muted)}
+.badge{padding:3px 7px;border-radius:999px;background:var(--accent-soft);color:var(--accent);font-weight:700}
+.note{margin-top:8px;padding:9px 10px;border-left:3px solid var(--accent);background:var(--accent-soft);font-size:12.5px}
+.metrics{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:12px}
+.metric{border:1px solid var(--line);border-radius:10px;padding:9px}
+.metric .score{font-size:18px;font-weight:700;color:var(--accent)}
+.metric .label{font-size:10.5px;color:var(--muted);margin-top:2px}
+.bank{border:1px dashed #bcc5d4;border-radius:12px;padding:9px;background:#fafbfc;min-height:55px;margin-bottom:10px}
+.bank-title{font-size:11px;text-transform:uppercase;color:var(--muted);font-weight:700;letter-spacing:.03em;margin-bottom:5px}
+.card{border:1px solid var(--line);border-radius:10px;background:#fff;padding:9px 10px;font-size:12.5px;margin:6px 0;cursor:grab;user-select:none}
+.card.dragging{opacity:.45}
+.card.selected{border-color:var(--accent);background:var(--accent-soft);box-shadow:0 0 0 1px var(--accent) inset}
+.zones{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.zone{border:1px solid var(--line);border-radius:11px;padding:9px;min-height:126px;background:#fff}
+.zone.over{border-color:var(--accent);background:var(--accent-soft)}
+.zone-title{font-size:12.5px;font-weight:700}
+.zone-note{font-size:11px;color:var(--muted);margin:3px 0 5px}
+.count{font-weight:400;color:var(--muted)}
+.breakdown{margin-top:12px;border:1px solid var(--line);border-radius:11px;overflow:hidden}
+.breakdown-head{padding:8px 10px;background:#f4f6f9;font-size:12.5px;font-weight:700}
+.breakdown-row{padding:8px 10px;border-top:1px solid #edf0f4;font-size:12px}
+.breakdown-row b{display:block;margin-bottom:2px}
+.summary{margin-top:14px;border-top:1px solid var(--line);padding-top:14px}
+.summary h3{margin:0 0 7px;font-size:17px}
+.summary p{margin:0 0 9px;font-size:13px}
+@media(max-width:420px){.zones{grid-template-columns:1fr}.body{padding:13px}.bubble{max-width:96%}}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="shell">
+    <div class="head">
+      <h1>Не решайте за сотрудника</h1>
+      <p class="lead">Разные обращения требуют разной реакции: иногда сотруднику действительно не хватает данных, иногда он может провести анализ сам, а иногда решение находится только в зоне полномочий руководителя.</p>
+      <div class="progress">
+        <span id="p1" class="active"></span>
+        <span id="p2"></span>
+      </div>
+    </div>
+
+    <div class="body">
+      <section id="stage1">
+        <div class="stage-label">Часть 1 из 2</div>
+        <h2 class="stage-title">Выберите реакцию руководителя</h2>
+
+        <div class="rules">
+          <b>Что нужно сделать</b>
+          <ol>
+            <li>Пройдите три ситуации по очереди.</li>
+            <li>В каждой прочитайте сообщение сотрудника и выберите <strong>один</strong> ответ руководителя.</li>
+            <li>Сначала определите, чего именно не хватает для решения: информации, самостоятельного анализа или полномочий.</li>
+            <li>Не используйте один и тот же прием во всех случаях. Готовый ответ полезен только тогда, когда решение действительно должно принять руководство.</li>
+            <li>После выбора система покажет реакцию сотрудника и объяснит, какой способ поведения вы закрепляете.</li>
+          </ol>
+        </div>
+
+        <div class="case-counter">
+          <span id="caseLabel">Ситуация 1 из 3</span>
+          <span class="badge" id="caseType">нужно определить причину</span>
+        </div>
+
+        <div class="chat" id="chat"></div>
+
+        <div class="question">Как ответите?</div>
+        <div class="option-list" id="responseOptions"></div>
+
+        <div class="feedback" id="fb1"></div>
+
+        <div class="actions">
+          <button class="secondary" id="restart1">Начать заново</button>
+          <button class="primary" id="next1" disabled>Следующая ситуация</button>
+        </div>
+
+        <div class="summary hidden" id="stage1Summary"></div>
+      </section>
+
+      <section id="stage2" class="hidden">
+        <div class="stage-label">Часть 2 из 2</div>
+        <h2 class="stage-title">Подготовленное решение или сброс проблемы наверх</h2>
+
+        <div class="rules">
+          <b>Что нужно сделать</b>
+          <ol>
+            <li>Ниже восемь сообщений сотрудников. В каждом может быть много фактов, но это еще не означает, что управленческая работа выполнена.</li>
+            <li>Перетащите сообщение в <strong>«Подготовленное решение»</strong>, если сотрудник описал проблему, рассмотрел варианты или последствия, дал свою рекомендацию и понятно сформулировал, что требуется от руководителя.</li>
+            <li>Перетащите сообщение в <strong>«Сброс проблемы наверх»</strong>, если сотрудник просто передает факты, просит руководителя выбрать за него или не формулирует свою рекомендацию.</li>
+            <li>Если решение выходит за полномочия сотрудника, оно все равно может быть подготовленным: сотрудник должен принести анализ и точный запрос на решение руководителя.</li>
+            <li>Когда распределите все карточки, нажмите «Проверить».</li>
+          </ol>
+        </div>
+
+        <div class="bank" id="bank" data-zone="bank">
+          <div class="bank-title">Сообщения сотрудников</div>
+        </div>
+
+        <div class="zones">
+          <div class="zone" data-zone="prepared">
+            <div class="zone-title">Подготовленное решение <span class="count" id="countPrepared">0</span></div>
+            <div class="zone-note">Есть анализ, рекомендация и точный запрос.</div>
+          </div>
+          <div class="zone" data-zone="dump">
+            <div class="zone-title">Сброс проблемы наверх <span class="count" id="countDump">0</span></div>
+            <div class="zone-note">Факты переданы, но выбор остается руководителю.</div>
+          </div>
+        </div>
+
+        <div class="actions">
+          <button class="secondary" id="reset2">Сбросить</button>
+          <button class="primary" id="check2" disabled>Проверить</button>
+        </div>
+
+        <div class="feedback" id="fb2"></div>
+        <div class="breakdown hidden" id="breakdown"></div>
+        <div class="summary hidden" id="finalSummary"></div>
+      </section>
+    </div>
+  </div>
+</div>
+
+<script>
+const situations = [
+  {
+    label:"Ситуация 1",
+    employee:"В отчете расходятся две версии лимита скидки: в регламенте — 7%, в карточке клиента — 10%. Я раньше с этим клиентом не работал. Какой лимит считать действующим?",
+    type:"Не хватает важной информации",
+    options:[
+      {
+        text:"Считай 7%. Это безопаснее.",
+        correct:false,
+        kind:"ready",
+        reply:"Понял. В следующий раз при расхождении тоже буду спрашивать, какое значение использовать.",
+        note:"Вы дали готовый ответ, но не закрыли источник неопределенности. Сотрудник по-прежнему не знает, где брать действующий лимит."
+      },
+      {
+        text:"Действующий лимит хранится в реестре клиентских условий. Проверь запись по этому клиенту и дальше используй ее как источник.",
+        correct:true,
+        kind:"data",
+        reply:"Нашел: в реестре 10%. Тогда беру этот лимит и фиксирую ссылку в карточке клиента.",
+        note:"Здесь сотруднику действительно не хватало данных. Руководитель дал источник информации и вернул решение сотруднику."
+      },
+      {
+        text:"Какой лимит ты сам считаешь правильным и почему?",
+        correct:false,
+        kind:"analysis-too-early",
+        reply:"Не уверен. У меня нет основания выбрать между двумя официальными значениями.",
+        note:"Просить анализ бессмысленно, пока сотруднику недоступен ключевой факт. Сначала нужно закрыть дефицит информации."
+      },
+      {
+        text:"Напиши клиенту и уточни, какой лимит ему обещали.",
+        correct:false,
+        kind:"unsafe",
+        reply:"Хорошо, уточню у клиента.",
+        note:"Вы переложили внутреннюю неопределенность на клиента. Сначала нужно найти действующий источник внутри компании."
+      }
+    ]
+  },
+  {
+    label:"Ситуация 2",
+    employee:"Подрядчик предлагает перенести внутренний этап на два дня. Финальная дата не меняется, бюджет прежний. Я обычно такие изменения приносил вам. Согласуем перенос?",
+    type:"Сотрудник способен решить сам",
+    options:[
+      {
+        text:"Да, перенос согласую.",
+        correct:false,
+        kind:"ready",
+        reply:"Спасибо. Тогда и следующие небольшие переносы буду присылать на подтверждение.",
+        note:"Вы закрепили привычку приносить наверх решение, которое уже укладывается в полномочия сотрудника."
+      },
+      {
+        text:"Какие риски ты проверил и какой вариант рекомендуешь?",
+        correct:true,
+        kind:"return-analysis",
+        reply:"Проверил зависимые задачи и финальную дату — риска нет. Рекомендую согласовать перенос и обновить план. Сделаю сам.",
+        note:"Сотрудник уже располагает данными и полномочиями. Вопрос возвращает ему анализ и собственную рекомендацию."
+      },
+      {
+        text:"Лучше не менять план. Оставляем старый срок.",
+        correct:false,
+        kind:"ready",
+        reply:"Понял. Тогда изменения сроков буду сначала согласовывать с вами.",
+        note:"Руководитель снова сделал типовой выбор за сотрудника и усилил зависимость."
+      },
+      {
+        text:"Пришли мне всю переписку с подрядчиком, я посмотрю.",
+        correct:false,
+        kind:"takeover",
+        reply:"Хорошо. Перешлю переписку и подожду вашего решения.",
+        note:"Сотрудник передал проблему целиком. Руководитель забрал анализ, хотя сотрудник способен провести его сам."
+      }
+    ]
+  },
+  {
+    label:"Ситуация 3",
+    employee:"Чтобы сохранить срок запуска, нужно на неделю привлечь внешнего специалиста. Это +180 000 ₽ сверх утвержденного бюджета. Я сравнил три варианта: перенос даты дороже для клиента, сокращение объема не подходит. Рекомендую дополнительный ресурс. Нужен ваш выбор по бюджету.",
+    type:"Решение требует полномочия руководителя",
+    options:[
+      {
+        text:"Решай сам, проект твой.",
+        correct:false,
+        kind:"false-autonomy",
+        reply:"Я не могу утвердить расход сверх бюджета. Тогда решение все равно зависнет.",
+        note:"Самостоятельность не создает новых полномочий. Сотрудник подготовил решение, но финансовый выбор должен сделать руководитель."
+      },
+      {
+        text:"Одобряю дополнительные 180 000 ₽. За исполнение и дальнейший план отвечаешь ты.",
+        correct:true,
+        kind:"manager-zone",
+        reply:"Принято. Подключаю специалиста и обновляю план. Если появится новый риск по бюджету или сроку, эскалирую отдельно.",
+        note:"Руководитель своевременно принял решение в своей зоне и не забрал остальную задачу."
+      },
+      {
+        text:"Почему ты вообще допустил такую ситуацию?",
+        correct:false,
+        kind:"blame",
+        reply:"Могу разобрать причины, но сейчас решение по бюджету остается открытым.",
+        note:"Разбор причин не заменяет решение, которое требуется прямо сейчас в зоне полномочий руководителя."
+      },
+      {
+        text:"Пришли еще пять вариантов, потом решим.",
+        correct:false,
+        kind:"delay",
+        reply:"Соберу еще варианты, хотя три уже сравнил и рекомендация у меня есть.",
+        note:"Дополнительный анализ не нужен, если сотрудник уже подготовил решение, а блокирующая точка — полномочие руководителя."
+      }
+    ]
+  }
+];
+
+const messages = [
+  {
+    id:1,
+    text:"Клиент просит перенести срок на три дня. Текущий план, загрузку команды и переписку приложил. Посмотрите, пожалуйста, что делать.",
+    zone:"dump",
+    why:"Фактов много, но нет вариантов, рекомендации и точного управленческого запроса."
+  },
+  {
+    id:2,
+    text:"Клиент просит перенос на три дня. Проверил финальную дату и зависимости: они не меняются. Варианты — оставить срок или согласовать перенос. Рекомендую перенос. Он в моих полномочиях, поэтому подтверждения не нужно; сообщаю о решении.",
+    zone:"prepared",
+    why:"Есть проблема, проверка последствий, варианты, рекомендация и ясность по полномочию."
+  },
+  {
+    id:3,
+    text:"Подрядчик поднял цену на 12%. Бюджет, договор, прогноз расходов и три прошлых счета приложены. Как будем поступать?",
+    zone:"dump",
+    why:"Сообщение насыщено данными, но управленческий выбор целиком передан руководителю."
+  },
+  {
+    id:4,
+    text:"Подрядчик поднял цену на 12%. Варианты: принять повышение, сократить объем или сменить поставщика. По сроку безопаснее принять повышение, но это +90 000 ₽ сверх моего лимита. Рекомендую принять. Нужен ваш выбор по дополнительному бюджету.",
+    zone:"prepared",
+    why:"Сотрудник выполнил анализ и эскалирует только ту часть решения, которая выходит за его полномочия."
+  },
+  {
+    id:5,
+    text:"На проекте снова конфликт приоритетов между двумя командами. Я поговорил со всеми, собрал позиции и расписание. Можете решить, чей приоритет важнее?",
+    zone:"dump",
+    why:"Сотрудник собрал факты, но не сформулировал варианты, последствия и свою рекомендацию."
+  },
+  {
+    id:6,
+    text:"Есть конфликт приоритетов двух команд. Вижу два варианта: сдвинуть наш внутренний этап на день или запросить общий ресурс у директора. Первый вариант не влияет на запуск. Рекомендую сдвиг и готов реализовать его сам.",
+    zone:"prepared",
+    why:"Сообщение заканчивается собственным решением сотрудника, а не просьбой выбрать за него."
+  },
+  {
+    id:7,
+    text:"Сбой повторился третий раз. Логи, время инцидентов и обращения пользователей собраны. Я не понимаю, какой вариант лучше. Подскажите, что выбрать.",
+    zone:"dump",
+    why:"Проблема хорошо описана, но сотрудник не провел сравнение вариантов и не сформулировал рекомендацию."
+  },
+  {
+    id:8,
+    text:"Сбой повторился третий раз. Можно перезапустить сервис или временно переключить поток на резерв. Перезапуск быстрее, но даст 10 минут простоя; резерв займет 20 минут без простоя. Для ключевых клиентов рекомендую резерв. Переключение в моих полномочиях — запускаю его, если нет новых ограничений.",
+    zone:"prepared",
+    why:"Есть варианты, последствия, рекомендация и понятное следующее действие."
+  }
+];
+
+let caseIndex=0;
+let selectedResponse=null;
+let stage1Score=0;
+const stage1Kinds=[];
+let selectedCard=null;
+
+const $=s=>document.querySelector(s);
+
+function addFb(container,type,title,text){
+  const d=document.createElement("div");
+  d.className=`fb ${type}`;
+  d.innerHTML=`<strong>${title}</strong>${text}`;
+  container.appendChild(d);
+}
+
+function bubble(role,text,meta){
+  const d=document.createElement("div");
+  d.className=`bubble ${role}`;
+  d.innerHTML=`<span class="meta">${meta}</span>${text}`;
+  $("#chat").appendChild(d);
+}
+
+function renderCase(){
+  const s=situations[caseIndex];
+  $("#caseLabel").textContent=`Ситуация ${caseIndex+1} из 3`;
+  $("#caseType").textContent="определите, чего не хватает";
+  $("#chat").innerHTML="";
+  bubble("employee",s.employee,"Сотрудник");
+
+  const box=$("#responseOptions"); box.innerHTML="";
+  s.options.forEach((o,i)=>{
+    const b=document.createElement("button");
+    b.type="button";
+    b.className="option"+(selectedResponse===i?" selected":"");
+    b.textContent=`${String.fromCharCode(1040+i)}. ${o.text}`;
+    b.disabled=selectedResponse!==null;
+    b.addEventListener("click",()=>chooseResponse(i));
+    box.appendChild(b);
+  });
+
+  $("#fb1").className="feedback";
+  $("#fb1").innerHTML="";
+  $("#next1").disabled=selectedResponse===null;
+  $("#next1").textContent=caseIndex===2?"Показать итог части 1":"Следующая ситуация";
+}
+
+function chooseResponse(i){
+  if(selectedResponse!==null)return;
+  selectedResponse=i;
+  const s=situations[caseIndex];
+  const o=s.options[i];
+
+  [...$("#responseOptions").children].forEach((b,j)=>{
+    b.disabled=true;
+    if(j===i)b.classList.add("selected");
+  });
+
+  bubble("manager",o.text,"Вы");
+  bubble("employee",o.reply,"Сотрудник");
+
+  const fb=$("#fb1");fb.innerHTML="";
+  addFb(fb,o.correct?"ok":(o.kind==="ready"||o.kind==="takeover"?"bad":"warn"),
+    o.correct?"Реакция соответствует причине обращения.":"Реакция не соответствует причине обращения.",
+    o.note
+  );
+  fb.classList.add("show");
+
+  if(o.correct)stage1Score++;
+  stage1Kinds.push(o.kind);
+  $("#caseType").textContent=s.type;
+  $("#next1").disabled=false;
+}
+
+function nextCase(){
+  if(selectedResponse===null)return;
+  if(caseIndex<2){
+    caseIndex++;
+    selectedResponse=null;
+    renderCase();
+    window.scrollTo({top:0,behavior:"smooth"});
+  }else{
+    showStage1Summary();
+  }
+}
+
+function showStage1Summary(){
+  const readyCount=stage1Kinds.filter(k=>["ready","takeover"].includes(k)).length;
+  let title,text;
+
+  if(stage1Score===3){
+    title="Вы меняете реакцию в зависимости от причины.";
+    text="Вы дали данные там, где их действительно не хватало, вернули сотруднику анализ в типовой ситуации и сами приняли решение только в своей зоне полномочий.";
+  }else if(readyCount>=2){
+    title="Вы слишком часто закрываете вопрос готовым ответом.";
+    text="Так руководитель ускоряет отдельный эпизод, но сотрудник учится приносить следующий похожий выбор наверх. Сначала проверьте: не может ли он решить вопрос сам после недостающих данных или анализа.";
+  }else{
+    title="Вы различаете ситуации, но в одной или нескольких точках выбрали не тот тип поддержки.";
+    text="Проверяйте последовательность: есть ли у сотрудника нужная информация, способен ли он провести анализ сам, и только затем — требуется ли ваше полномочие.";
+  }
+
+  const s=$("#stage1Summary");
+  s.innerHTML=`
+    <h3>${title}</h3>
+    <p>${text}</p>
+    <div class="metrics">
+      <div class="metric"><div class="score">${stage1Score}/3</div><div class="label">реакция по причине</div></div>
+      <div class="metric"><div class="score">${3-readyCount}/3</div><div class="label">без лишнего перехвата</div></div>
+    </div>
+    <div class="actions"><button class="primary" id="go2">Перейти ко второй части</button></div>
+  `;
+  s.classList.remove("hidden");
+  $("#next1").classList.add("hidden");
+  document.getElementById("go2").addEventListener("click",goStage2);
+}
+
+function restart1(){
+  caseIndex=0; selectedResponse=null; stage1Score=0; stage1Kinds.length=0;
+  $("#stage1Summary").classList.add("hidden");
+  $("#next1").classList.remove("hidden");
+  renderCase();
+}
+
+function goStage2(){
+  $("#stage1").classList.add("hidden");
+  $("#stage2").classList.remove("hidden");
+  $("#p2").classList.add("active");
+  initCards();
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+
+function makeCard(m){
+  const d=document.createElement("div");
+  d.className="card";
+  d.draggable=true;
+  d.dataset.id=m.id;
+  d.innerHTML=`<b>${m.id}.</b> ${m.text}`;
+
+  d.addEventListener("dragstart",e=>{
+    d.classList.add("dragging");
+    e.dataTransfer.setData("text/plain",m.id);
+  });
+  d.addEventListener("dragend",()=>d.classList.remove("dragging"));
+  d.addEventListener("click",e=>{
+    e.stopPropagation();
+    document.querySelectorAll(".card.selected").forEach(x=>x.classList.remove("selected"));
+    if(selectedCard===d){selectedCard=null;return}
+    selectedCard=d;d.classList.add("selected");
+  });
+  return d;
+}
+
+function initCards(){
+  $("#bank").querySelectorAll(".card").forEach(c=>c.remove());
+  messages.forEach(m=>$("#bank").appendChild(makeCard(m)));
+
+  document.querySelectorAll("[data-zone]").forEach(zone=>{
+    if(zone.dataset.bound==="1")return;
+    zone.dataset.bound="1";
+
+    zone.addEventListener("dragover",e=>{e.preventDefault();zone.classList.add("over")});
+    zone.addEventListener("dragleave",()=>zone.classList.remove("over"));
+    zone.addEventListener("drop",e=>{
+      e.preventDefault();zone.classList.remove("over");
+      const id=e.dataTransfer.getData("text/plain");
+      const card=document.querySelector(`.card[data-id="${id}"]`);
+      if(card)zone.appendChild(card);
+      clearSelection();updateStage2();
+    });
+    zone.addEventListener("click",()=>{
+      if(selectedCard){
+        zone.appendChild(selectedCard);
+        clearSelection();updateStage2();
+      }
+    });
+  });
+
+  updateStage2();
+}
+
+function clearSelection(){
+  document.querySelectorAll(".card.selected").forEach(x=>x.classList.remove("selected"));
+  selectedCard=null;
+}
+
+function placements(){
+  const p={};
+  document.querySelectorAll(".card").forEach(c=>p[c.dataset.id]=c.parentElement.dataset.zone);
+  return p;
+}
+
+function updateStage2(){
+  $("#countPrepared").textContent=document.querySelectorAll('.zone[data-zone="prepared"] .card').length;
+  $("#countDump").textContent=document.querySelectorAll('.zone[data-zone="dump"] .card').length;
+  const all=[...document.querySelectorAll(".card")].every(c=>c.parentElement.dataset.zone!=="bank");
+  $("#check2").disabled=!all;
+  $("#fb2").className="feedback";$("#fb2").innerHTML="";
+  $("#breakdown").classList.add("hidden");
+  $("#finalSummary").classList.add("hidden");
+}
+
+function check2(){
+  const p=placements();
+  const wrong=messages.filter(m=>p[m.id]!==m.zone);
+  const correct=messages.length-wrong.length;
+
+  const fb=$("#fb2");fb.innerHTML="";
+  if(!wrong.length){
+    addFb(fb,"ok","Вы отличили подготовленное решение от передачи проблемы наверх.",
+      "Количество фактов не заменяет управленческую работу. Подготовленное сообщение заканчивается рекомендацией сотрудника и ясным запросом к руководителю — если его решение действительно нужно.");
+  }else{
+    wrong.forEach(m=>{
+      addFb(fb,"warn",`Сообщение ${m.id}: классификацию стоит пересмотреть.`,m.why);
+    });
+  }
+  fb.classList.add("show");
+
+  const bd=$("#breakdown");
+  bd.innerHTML=`
+    <div class="breakdown-head">Как проверять сообщения сотрудников</div>
+    <div class="breakdown-row"><b>1. Проблема</b>Понятно, что именно произошло и почему это требует решения?</div>
+    <div class="breakdown-row"><b>2. Варианты и последствия</b>Сотрудник сравнил реальные способы действия или только передал исходные данные?</div>
+    <div class="breakdown-row"><b>3. Рекомендация</b>Есть собственный выбор сотрудника и аргумент, почему он его предлагает?</div>
+    <div class="breakdown-row"><b>4. Точный запрос</b>Если решение выходит за полномочия, ясно ли, что именно должен решить руководитель?</div>
+  `;
+  bd.classList.remove("hidden");
+
+  const sum=$("#finalSummary");
+  let title,text;
+  if(correct===8 && stage1Score===3){
+    title="Вы не создаете зависимость одним универсальным ответом.";
+    text="Вы различаете дефицит информации, самостоятельный анализ и реальную эскалацию, а в сообщениях сотрудников видите разницу между большим объемом данных и подготовленным управленческим решением.";
+  }else if(correct>=6){
+    title="Основная логика освоена.";
+    text="Проверьте сообщения, где много фактов: если в конце руководитель все равно должен сам придумать варианты и выбрать, проблема фактически передана наверх.";
+  }else{
+    title="Стоит еще раз проверить конструкцию подготовленного решения.";
+    text="Сотрудник не обязан сам принимать решения за пределами полномочий, но обязан выполнить доступную ему управленческую работу: анализ вариантов, последствия, рекомендацию и точный запрос.";
+  }
+  sum.innerHTML=`
+    <h3>${title}</h3>
+    <p>${text}</p>
+    <div class="metrics">
+      <div class="metric"><div class="score">${stage1Score}/3</div><div class="label">реакция руководителя</div></div>
+      <div class="metric"><div class="score">${correct}/8</div><div class="label">подготовленное решение</div></div>
+    </div>
+  `;
+  sum.classList.remove("hidden");
+}
+
+$("#next1").addEventListener("click",nextCase);
+$("#restart1").addEventListener("click",restart1);
+$("#reset2").addEventListener("click",initCards);
+$("#check2").addEventListener("click",check2);
+
+renderCase();
+</script>
+</body>
+</html>

@@ -1,0 +1,914 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Что стандартизировать</title>
+<style>
+:root{
+  --bg:#f5f6f8;
+  --card:#ffffff;
+  --text:#20242d;
+  --muted:#6d7583;
+  --line:#dfe3ea;
+  --accent:#315d9b;
+  --accent-soft:#eef3fb;
+  --ok:#2e6b4f;
+  --ok-bg:#eef7f2;
+  --warn:#8a5a10;
+  --warn-bg:#fff7e8;
+  --bad:#8b3d45;
+  --bad-bg:#fff0f1;
+  --shadow:0 6px 18px rgba(31,36,48,.07);
+}
+*{box-sizing:border-box}
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--text);
+  font-family:Arial,Helvetica,sans-serif;
+  line-height:1.42;
+}
+.app{
+  width:min(560px,calc(100% - 24px));
+  margin:18px auto;
+}
+.shell{
+  background:var(--card);
+  border:1px solid var(--line);
+  border-radius:16px;
+  box-shadow:var(--shadow);
+  overflow:hidden;
+}
+.head{
+  padding:18px 18px 14px;
+  border-bottom:1px solid var(--line);
+}
+h1{
+  margin:0 0 8px;
+  font-size:21px;
+  line-height:1.2;
+}
+.lead{
+  margin:0;
+  font-size:14px;
+  color:var(--muted);
+}
+.progress{
+  display:flex;
+  gap:7px;
+  margin-top:14px;
+}
+.progress span{
+  flex:1;
+  height:5px;
+  border-radius:999px;
+  background:#e8ebf0;
+}
+.progress span.active{background:var(--accent)}
+.body{padding:16px}
+.stage-label{
+  font-size:12px;
+  color:var(--accent);
+  text-transform:uppercase;
+  font-weight:700;
+  letter-spacing:.03em;
+  margin-bottom:5px;
+}
+.stage-title{
+  margin:0 0 5px;
+  font-size:17px;
+}
+.stage-note{
+  margin:0 0 13px;
+  color:var(--muted);
+  font-size:13px;
+}
+.bank{
+  border:1px dashed #bcc5d4;
+  border-radius:12px;
+  padding:9px;
+  background:#fafbfc;
+  min-height:54px;
+  margin-bottom:11px;
+}
+.bank-title{
+  font-size:11px;
+  text-transform:uppercase;
+  color:var(--muted);
+  font-weight:700;
+  letter-spacing:.03em;
+  margin-bottom:6px;
+}
+.card{
+  border:1px solid var(--line);
+  border-radius:10px;
+  padding:9px 10px;
+  background:#fff;
+  font-size:13px;
+  margin:6px 0;
+  cursor:grab;
+  user-select:none;
+}
+.card.selected{
+  border-color:var(--accent);
+  background:var(--accent-soft);
+  box-shadow:0 0 0 1px var(--accent) inset;
+}
+.card.dragging{opacity:.45}
+.num{
+  display:inline-block;
+  min-width:21px;
+  color:var(--accent);
+  font-weight:700;
+}
+.zones{
+  display:grid;
+  grid-template-columns:1fr;
+  gap:8px;
+}
+.zone{
+  border:1px solid var(--line);
+  border-radius:11px;
+  padding:9px;
+  min-height:92px;
+  background:#fff;
+}
+.zone.over{
+  border-color:var(--accent);
+  background:var(--accent-soft);
+}
+.zone-title{
+  font-size:13px;
+  font-weight:700;
+  display:flex;
+  justify-content:space-between;
+  gap:6px;
+}
+.zone-note{
+  font-size:11.5px;
+  color:var(--muted);
+  margin:3px 0 5px;
+}
+.count{
+  color:var(--muted);
+  font-weight:400;
+}
+.actions{
+  display:flex;
+  gap:8px;
+  margin-top:13px;
+}
+button{
+  appearance:none;
+  border:0;
+  border-radius:10px;
+  padding:10px 13px;
+  font-size:14px;
+  font-weight:700;
+  cursor:pointer;
+}
+.primary{
+  background:var(--accent);
+  color:#fff;
+  flex:1;
+}
+.primary:disabled{opacity:.45;cursor:not-allowed}
+.secondary{
+  background:#edf0f4;
+  color:var(--text);
+}
+.feedback{
+  display:none;
+  margin-top:12px;
+}
+.feedback.show{display:block}
+.fb{
+  border-radius:10px;
+  padding:10px 11px;
+  margin-top:7px;
+  font-size:13px;
+}
+.fb strong{display:block;margin-bottom:3px}
+.fb.ok{background:var(--ok-bg);border:1px solid #cfe5d8;color:#214f3b}
+.fb.warn{background:var(--warn-bg);border:1px solid #f1dbb0;color:#6f480c}
+.fb.bad{background:var(--bad-bg);border:1px solid #efc9cd;color:#73343b}
+.logic{
+  display:none;
+  margin-top:10px;
+  border:1px solid var(--line);
+  border-radius:11px;
+  overflow:hidden;
+}
+.logic.show{display:block}
+.logic-head{
+  background:#f4f6f9;
+  padding:8px 10px;
+  font-size:12.5px;
+  font-weight:700;
+}
+.logic-row{
+  padding:8px 10px;
+  border-top:1px solid #edf0f4;
+  font-size:12px;
+}
+.logic-row b{display:block;margin-bottom:2px}
+.hidden{display:none!important}
+.case{
+  border:1px solid #d8e1ef;
+  background:#f5f7fb;
+  border-radius:11px;
+  padding:11px;
+  font-size:13px;
+  margin-bottom:12px;
+}
+.builder-step{
+  font-size:12px;
+  color:var(--muted);
+  margin-bottom:5px;
+}
+.builder-name{
+  font-size:16px;
+  font-weight:700;
+  margin-bottom:4px;
+}
+.builder-help{
+  color:var(--muted);
+  font-size:12.5px;
+  margin-bottom:10px;
+}
+.options{
+  display:grid;
+  gap:7px;
+}
+.option{
+  border:1px solid var(--line);
+  border-radius:10px;
+  background:#fff;
+  padding:10px 11px;
+  text-align:left;
+  color:var(--text);
+  font-size:13px;
+  cursor:pointer;
+}
+.option:hover{border-color:#b5bfcd}
+.option.selected{
+  border-color:var(--accent);
+  background:var(--accent-soft);
+  box-shadow:0 0 0 1px var(--accent) inset;
+}
+.rule-preview{
+  margin-top:12px;
+  border:1px solid var(--line);
+  border-radius:11px;
+  overflow:hidden;
+}
+.rule-head{
+  background:#f4f6f9;
+  padding:8px 10px;
+  font-size:12.5px;
+  font-weight:700;
+}
+.rule-line{
+  display:grid;
+  grid-template-columns:88px 1fr;
+  gap:7px;
+  padding:7px 10px;
+  border-top:1px solid #edf0f4;
+  font-size:12px;
+}
+.rule-line span:first-child{
+  color:var(--muted);
+  font-weight:700;
+}
+.test-card{
+  border:1px solid var(--line);
+  border-radius:11px;
+  padding:11px;
+  margin-bottom:9px;
+}
+.test-num{
+  color:var(--accent);
+  font-size:11px;
+  font-weight:700;
+  text-transform:uppercase;
+}
+.test-card p{
+  margin:4px 0 9px;
+  font-size:13px;
+}
+.choice-row{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:7px;
+}
+.choice{
+  border:1px solid var(--line);
+  background:#fff;
+  color:var(--text);
+  border-radius:9px;
+  padding:8px;
+  font-size:12px;
+  cursor:pointer;
+}
+.choice.selected{
+  border-color:var(--accent);
+  background:var(--accent-soft);
+}
+.summary{
+  margin-top:14px;
+  border-top:1px solid var(--line);
+  padding-top:14px;
+}
+.summary h3{
+  margin:0 0 7px;
+  font-size:17px;
+}
+.summary p{
+  margin:0 0 9px;
+  font-size:13px;
+}
+.summary-grid{
+  display:grid;
+  gap:7px;
+}
+.summary-item{
+  border:1px solid var(--line);
+  border-radius:10px;
+  padding:9px 10px;
+  font-size:12.5px;
+}
+.summary-item b{display:block;margin-bottom:2px}
+@media(min-width:520px){
+  .zones{grid-template-columns:1fr 1fr 1fr}
+  .zone{min-height:138px}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="shell">
+    <div class="head">
+      <h1>Что стандартизировать</h1>
+      <p class="lead">Отделите типовые решения от процедур и ситуаций, где нужен отдельный анализ. Затем соберите правило, которое действительно снимает лишнее согласование.</p>
+      <div class="progress">
+        <span id="p1" class="active"></span>
+        <span id="p2"></span>
+        <span id="p3"></span>
+      </div>
+    </div>
+
+    <div class="body">
+
+      <!-- STAGE 1 -->
+      <section id="stage1">
+        <div class="stage-label">Этап 1 из 3</div>
+        <h2 class="stage-title">Выберите подходящий инструмент</h2>
+        <p class="stage-note">Обратите внимание на третью зону: чек-лист. Он нужен там, где решение уже понятно, а риск возникает из-за пропущенного шага.</p>
+
+        <div class="bank" id="bank" data-zone="bank">
+          <div class="bank-title">Ситуации</div>
+        </div>
+
+        <div class="zones">
+          <div class="zone" data-zone="decision">
+            <div class="zone-title">В базу решений <span class="count" id="count-decision">0</span></div>
+            <div class="zone-note">Повторяется, понятен триггер и стандартное действие.</div>
+          </div>
+          <div class="zone" data-zone="checklist">
+            <div class="zone-title">В чек-лист <span class="count" id="count-checklist">0</span></div>
+            <div class="zone-note">Решение известно, важно не пропустить обязательные шаги.</div>
+          </div>
+          <div class="zone" data-zone="separate">
+            <div class="zone-title">Отдельный разбор <span class="count" id="count-separate">0</span></div>
+            <div class="zone-note">Новая, высокорисковая или конфликтная ситуация.</div>
+          </div>
+        </div>
+
+        <div class="actions">
+          <button class="secondary" id="reset1">Сбросить</button>
+          <button class="primary" id="check1" disabled>Проверить логику</button>
+        </div>
+
+        <div class="feedback" id="fb1"></div>
+
+        <div class="logic" id="logic1">
+          <div class="logic-head">Рабочая логика</div>
+          <div class="logic-row"><b>База готовых решений</b>1 — небольшой перенос в понятных границах; 2 — повторяющийся известный сбой; 6 — повторный гарантийный случай по известным условиям.</div>
+          <div class="logic-row"><b>Чек-лист</b>4 — регулярное распределение заявок по стандартной последовательности; 8 — проверка комплектности документов.</div>
+          <div class="logic-row"><b>Отдельный разбор</b>3 — изменение ключевого условия договора; 5 — межфункциональный конфликт за общий ресурс; 7 — новая ситуация с крупным финансовым риском.</div>
+        </div>
+
+        <div class="actions hidden" id="go2Wrap">
+          <button class="primary" id="go2">Показать рабочую раскладку и продолжить</button>
+        </div>
+      </section>
+
+      <!-- STAGE 2 -->
+      <section id="stage2" class="hidden">
+        <div class="stage-label">Этап 2 из 3</div>
+        <h2 class="stage-title">Соберите правило для типовой ситуации</h2>
+        <div class="case"><b>Ситуация:</b> клиент просит перенести промежуточный срок на два рабочих дня.</div>
+
+        <div class="builder-step" id="builderStep"></div>
+        <div class="builder-name" id="builderName"></div>
+        <div class="builder-help" id="builderHelp"></div>
+        <div class="options" id="builderOptions"></div>
+
+        <div class="feedback" id="fb2"></div>
+
+        <div class="rule-preview">
+          <div class="rule-head">Ваше правило</div>
+          <div id="ruleLines"></div>
+        </div>
+
+        <div class="actions">
+          <button class="secondary" id="back2">Назад</button>
+          <button class="primary" id="next2" disabled>Дальше</button>
+        </div>
+      </section>
+
+      <!-- STAGE 3 -->
+      <section id="stage3" class="hidden">
+        <div class="stage-label">Этап 3 из 3</div>
+        <h2 class="stage-title">Проверьте правило на границах</h2>
+        <p class="stage-note">Для каждого случая решите: правило можно применить без согласования или ситуация уже вышла за его пределы.</p>
+
+        <div id="stressTests"></div>
+
+        <div class="actions">
+          <button class="secondary" id="back3">Назад</button>
+          <button class="primary" id="check3" disabled>Показать результат</button>
+        </div>
+
+        <div class="feedback" id="fb3"></div>
+        <div class="summary hidden" id="summary"></div>
+      </section>
+
+    </div>
+  </div>
+</div>
+
+<script>
+const cards = [
+  [1,"Клиент просит перенести промежуточный срок на один день. Итоговая дата и бюджет не меняются."],
+  [2,"Один и тот же технический сбой повторяется несколько раз в неделю и имеет известный способ устранения."],
+  [3,"Крупный клиент требует изменить ключевое условие действующего договора."],
+  [4,"Каждый месяц сотрудник распределяет стандартный набор заявок: проверяет загрузку, назначает исполнителя и обновляет систему."],
+  [5,"Два руководителя подразделений спорят, чей проект должен получить общий дефицитный ресурс."],
+  [6,"Клиент повторно обращается по той же неисправности в пределах действующих гарантийных условий."],
+  [7,"Возникла новая ситуация с риском значительных финансовых потерь. Аналогичных случаев раньше не было."],
+  [8,"Перед стандартным согласованием нужно проверить комплектность обязательных документов."]
+];
+
+const correctSort = {
+  1:"decision",2:"decision",3:"separate",4:"checklist",
+  5:"separate",6:"decision",7:"separate",8:"checklist"
+};
+
+const builder = [
+  {
+    name:"Триггер",
+    help:"Сформулируйте событие так, чтобы сотрудник мог однозначно понять, что правило относится к этой ситуации.",
+    options:[
+      {id:"t1",text:"Клиент просит перенести промежуточный срок не более чем на два рабочих дня.",correct:true,issue:null},
+      {id:"t2",text:"Клиент просит любой перенос срока.",correct:false,issue:"broad"},
+      {id:"t3",text:"Клиент недоволен текущим сроком и просит что-то изменить.",correct:false,issue:"vague"}
+    ]
+  },
+  {
+    name:"Условия применения",
+    help:"Условия отделяют безопасный типовой случай от ситуации, где решение уже требует нового анализа.",
+    options:[
+      {id:"c1",text:"Финальная дата, общий бюджет и обязательства смежных участников не меняются.",correct:true,issue:null},
+      {id:"c2",text:"Перенос небольшой и в целом выглядит безопасным.",correct:false,issue:"vague"},
+      {id:"c3",text:"Руководитель не возражает против переноса.",correct:false,issue:"approval"}
+    ]
+  },
+  {
+    name:"Что проверить",
+    help:"Оставьте только проверки, которые способны изменить решение.",
+    options:[
+      {id:"q1",text:"Проверить влияние на финальную дату, зависимые задачи и загрузку команды.",correct:true,issue:null},
+      {id:"q2",text:"Проверить только текущую загрузку исполнителя.",correct:false,issue:"narrow"},
+      {id:"q3",text:"Согласовать перенос со всеми участниками проекта до ответа клиенту.",correct:false,issue:"overcontrol"}
+    ]
+  },
+  {
+    name:"Действие",
+    help:"После проверок сотруднику должно быть понятно, что он действительно вправе сделать сам.",
+    options:[
+      {id:"a1",text:"Согласовать перенос, обновить план и уведомить участников, которых затрагивает изменение.",correct:true,issue:null},
+      {id:"a2",text:"Подготовить предложение и отправить руководителю на согласование.",correct:false,issue:"approval"},
+      {id:"a3",text:"Всегда соглашаться на перенос до двух дней.",correct:false,issue:"broad"}
+    ]
+  },
+  {
+    name:"Эскалация",
+    help:"Граница должна быть наблюдаемой: сотрудник понимает, когда правило больше не действует.",
+    options:[
+      {id:"e1",text:"Подключить руководителя, если меняется финальная дата, нужен дополнительный бюджет или возникает конфликт обязательств.",correct:true,issue:null},
+      {id:"e2",text:"Подключить руководителя, если ситуация кажется рискованной.",correct:false,issue:"vague"},
+      {id:"e3",text:"Любое отклонение от исходного плана заранее согласовывать с руководителем.",correct:false,issue:"approval"}
+    ]
+  }
+];
+
+const stress = [
+  {
+    text:"Перенос на два дня. Финальная дата не меняется, бюджет прежний, зависимые задачи не затронуты.",
+    answer:"apply",
+    explain:"Это именно типовой случай внутри заданных условий."
+  },
+  {
+    text:"Перенос всего на один день, но из-за него финальный запуск сдвинется на сутки.",
+    answer:"separate",
+    explain:"Размер переноса небольшой, но нарушено ключевое условие: меняется финальная дата."
+  },
+  {
+    text:"Перенос на два дня сохраняет финальную дату, но требует срочно купить внешний ресурс сверх бюджета.",
+    answer:"separate",
+    explain:"Ситуация вышла за границу правила из-за дополнительного бюджета."
+  },
+  {
+    text:"Клиент просит перенос на три рабочих дня. Остальные условия пока не меняются.",
+    answer:"separate",
+    explain:"Триггер правила ограничен двумя днями. Трехдневный перенос требует отдельного решения или нового правила после накопления опыта."
+  }
+];
+
+let selectedCard = null;
+let builderIndex = 0;
+const builderAnswers = {};
+const stressAnswers = {};
+
+const $ = s => document.querySelector(s);
+
+function makeCard(id,text){
+  const el=document.createElement("div");
+  el.className="card";
+  el.draggable=true;
+  el.dataset.id=id;
+  el.innerHTML=`<span class="num">${id}.</span>${text}`;
+
+  el.addEventListener("dragstart",e=>{
+    el.classList.add("dragging");
+    e.dataTransfer.setData("text/plain",id);
+  });
+  el.addEventListener("dragend",()=>el.classList.remove("dragging"));
+  el.addEventListener("click",e=>{
+    e.stopPropagation();
+    document.querySelectorAll(".card.selected").forEach(c=>c.classList.remove("selected"));
+    if(selectedCard===el){selectedCard=null;return}
+    selectedCard=el;
+    el.classList.add("selected");
+  });
+  return el;
+}
+
+function initStage1(){
+  cards.forEach(([id,text])=>$("#bank").appendChild(makeCard(id,text)));
+  document.querySelectorAll("[data-zone]").forEach(zone=>{
+    zone.addEventListener("dragover",e=>{e.preventDefault(); if(zone.dataset.zone!=="bank") zone.classList.add("over")});
+    zone.addEventListener("dragleave",()=>zone.classList.remove("over"));
+    zone.addEventListener("drop",e=>{
+      e.preventDefault();
+      zone.classList.remove("over");
+      const id=e.dataTransfer.getData("text/plain");
+      const card=document.querySelector(`.card[data-id="${id}"]`);
+      if(card) zone.appendChild(card);
+      clearSelected();
+      updateStage1();
+    });
+    zone.addEventListener("click",()=>{
+      if(selectedCard){
+        zone.appendChild(selectedCard);
+        clearSelected();
+        updateStage1();
+      }
+    });
+  });
+  updateStage1();
+}
+
+function clearSelected(){
+  document.querySelectorAll(".card.selected").forEach(c=>c.classList.remove("selected"));
+  selectedCard=null;
+}
+
+function placements(){
+  const p={};
+  document.querySelectorAll(".card").forEach(c=>p[c.dataset.id]=c.parentElement.dataset.zone);
+  return p;
+}
+
+function updateStage1(){
+  ["decision","checklist","separate"].forEach(z=>{
+    $(`#count-${z}`).textContent=document.querySelectorAll(`.zone[data-zone="${z}"] .card`).length;
+  });
+  const all=[...document.querySelectorAll(".card")].every(c=>c.parentElement.dataset.zone!=="bank");
+  $("#check1").disabled=!all;
+  $("#fb1").className="feedback";
+  $("#fb1").innerHTML="";
+  $("#logic1").classList.remove("show");
+  $("#go2Wrap").classList.add("hidden");
+}
+
+function addFb(container,type,title,text){
+  const d=document.createElement("div");
+  d.className=`fb ${type}`;
+  d.innerHTML=`<strong>${title}</strong>${text}`;
+  container.appendChild(d);
+}
+
+function checkStage1(){
+  const p=placements();
+  const fb=$("#fb1");
+  fb.innerHTML="";
+
+  const risky=[3,5,7].filter(id=>p[id]!=="separate");
+  const checklistWrong=[4,8].filter(id=>p[id]!=="checklist");
+  const decisionHeld=[1,2,6].filter(id=>p[id]!=="decision");
+
+  if(risky.length){
+    addFb(fb,"bad","Вы пытаетесь стандартизировать ситуации, где пока нужен отдельный анализ.",
+      `Карточки ${risky.join(", ")} связаны с новой, конфликтной или высокорисковой ситуацией. Здесь опасно создавать готовое правило раньше, чем понятна повторяющаяся логика.`);
+  }
+  if(checklistWrong.length){
+    addFb(fb,"warn","Вы смешали готовое решение и чек-лист.",
+      `Карточки ${checklistWrong.join(", ")} описывают повторяющуюся последовательность действий. Здесь важнее не выбрать решение, а не пропустить обязательный шаг.`);
+  }
+  if(decisionHeld.length){
+    addFb(fb,"warn","Вы оставили типовые решения без стандарта.",
+      `Карточки ${decisionHeld.join(", ")} уже имеют повторяемый триггер и понятную логику. Если каждый раз разбирать их заново, сотрудник продолжит обращаться к руководителю.`);
+  }
+
+  if(!risky.length && !checklistWrong.length && !decisionHeld.length){
+    addFb(fb,"ok","Вы разделили три разных инструмента.",
+      "База решений отвечает на вопрос «что делать в типовой ситуации», чек-лист — «какие шаги нельзя пропустить», отдельный разбор нужен там, где логика еще не стандартизирована.");
+  }
+
+  fb.classList.add("show");
+  $("#logic1").classList.add("show");
+  $("#go2Wrap").classList.remove("hidden");
+}
+
+function applyCorrectSort(){
+  Object.entries(correctSort).forEach(([id,z])=>{
+    const card=document.querySelector(`.card[data-id="${id}"]`);
+    document.querySelector(`.zone[data-zone="${z}"]`).appendChild(card);
+  });
+}
+
+function goStage2(){
+  applyCorrectSort();
+  $("#stage1").classList.add("hidden");
+  $("#stage2").classList.remove("hidden");
+  $("#p2").classList.add("active");
+  builderIndex=0;
+  renderBuilder();
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+
+function renderBuilder(){
+  const step=builder[builderIndex];
+  $("#builderStep").textContent=`Блок ${builderIndex+1} из ${builder.length}`;
+  $("#builderName").textContent=step.name;
+  $("#builderHelp").textContent=step.help;
+  $("#builderOptions").innerHTML="";
+
+  step.options.forEach(opt=>{
+    const b=document.createElement("button");
+    b.type="button";
+    b.className="option"+(builderAnswers[builderIndex]===opt.id?" selected":"");
+    b.textContent=opt.text;
+    b.addEventListener("click",()=>{
+      builderAnswers[builderIndex]=opt.id;
+      renderBuilder();
+    });
+    $("#builderOptions").appendChild(b);
+  });
+
+  $("#next2").disabled=!builderAnswers[builderIndex];
+  $("#next2").textContent=builderIndex===builder.length-1?"Проверить правило":"Следующий блок";
+  $("#back2").textContent=builderIndex===0?"К сортировке":"Назад";
+  $("#fb2").className="feedback";
+  $("#fb2").innerHTML="";
+  renderRulePreview();
+}
+
+function renderRulePreview(){
+  const box=$("#ruleLines");
+  box.innerHTML="";
+  builder.forEach((step,i)=>{
+    const selected=step.options.find(o=>o.id===builderAnswers[i]);
+    const row=document.createElement("div");
+    row.className="rule-line";
+    row.innerHTML=`<span>${step.name}</span><span>${selected?selected.text:"—"}</span>`;
+    box.appendChild(row);
+  });
+}
+
+function builderIssues(){
+  const issues=[];
+  builder.forEach((step,i)=>{
+    const sel=step.options.find(o=>o.id===builderAnswers[i]);
+    if(sel && !sel.correct) issues.push(sel.issue);
+  });
+  return issues;
+}
+
+function checkBuilder(){
+  const fb=$("#fb2");
+  fb.innerHTML="";
+  const issues=builderIssues();
+
+  const broad=issues.filter(x=>x==="broad").length;
+  const approval=issues.filter(x=>x==="approval").length;
+  const vague=issues.filter(x=>x==="vague").length;
+  const narrow=issues.filter(x=>x==="narrow").length;
+  const overcontrol=issues.filter(x=>x==="overcontrol").length;
+
+  if(!issues.length){
+    addFb(fb,"ok","Правило можно использовать без постоянного согласования.",
+      "Триггер конкретный, условия проверяемы, сотрудник получает право действовать сам, а граница эскалации видна заранее.");
+  }else{
+    if(broad){
+      addFb(fb,"bad","Правило получилось слишком широким.",
+        "Оно может сработать и в безопасном переносе, и в ситуации, которая уже меняет срок или обязательства. Сузьте триггер или условия применения.");
+    }
+    if(approval){
+      addFb(fb,"bad","Согласование с руководителем осталось частью типового случая.",
+        "Так база решений не снимает зависимость. Внутри заданных границ сотрудник должен принять решение сам.");
+    }
+    if(vague){
+      addFb(fb,"warn","Часть границ нельзя проверить по факту.",
+        "Формулировки вроде «небольшой» или «кажется рискованным» сотрудники будут трактовать по-разному. Замените их наблюдаемыми условиями.");
+    }
+    if(narrow){
+      addFb(fb,"warn","Проверок недостаточно.",
+        "Текущая загрузка — только один фактор. Решение может затронуть финальную дату или зависимые задачи.");
+    }
+    if(overcontrol){
+      addFb(fb,"warn","Проверка превратилась в дополнительный круг согласований.",
+        "Оставьте только те проверки, которые способны изменить решение. Не включайте в типовой случай обязательное согласование со всеми участниками.");
+    }
+  }
+
+  fb.classList.add("show");
+
+  const wrap=document.createElement("div");
+  wrap.className="actions";
+  const btn=document.createElement("button");
+  btn.type="button";
+  btn.className="primary";
+  btn.textContent=issues.length?"Показать рабочее правило и проверить на кейсах":"Проверить правило на кейсах";
+  btn.addEventListener("click",()=>{
+    builder.forEach((step,i)=>{
+      builderAnswers[i]=step.options.find(o=>o.correct).id;
+    });
+    renderRulePreview();
+    goStage3();
+  });
+  wrap.appendChild(btn);
+  fb.appendChild(wrap);
+}
+
+function nextBuilder(){
+  if(builderIndex<builder.length-1){
+    builderIndex++;
+    renderBuilder();
+  }else{
+    checkBuilder();
+  }
+}
+
+function backBuilder(){
+  if(builderIndex===0){
+    $("#stage2").classList.add("hidden");
+    $("#stage1").classList.remove("hidden");
+    $("#p2").classList.remove("active");
+    window.scrollTo({top:0,behavior:"smooth"});
+  }else{
+    builderIndex--;
+    renderBuilder();
+  }
+}
+
+function goStage3(){
+  $("#stage2").classList.add("hidden");
+  $("#stage3").classList.remove("hidden");
+  $("#p3").classList.add("active");
+  renderStress();
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+
+function renderStress(){
+  const box=$("#stressTests");
+  box.innerHTML="";
+  stress.forEach((s,i)=>{
+    const card=document.createElement("div");
+    card.className="test-card";
+    card.innerHTML=`<div class="test-num">Случай ${i+1}</div><p>${s.text}</p>`;
+
+    const row=document.createElement("div");
+    row.className="choice-row";
+
+    [["apply","Применить правило"],["separate","Отдельный разбор"]].forEach(([value,label])=>{
+      const b=document.createElement("button");
+      b.type="button";
+      b.className="choice"+(stressAnswers[i]===value?" selected":"");
+      b.textContent=label;
+      b.addEventListener("click",()=>{
+        stressAnswers[i]=value;
+        renderStress();
+      });
+      row.appendChild(b);
+    });
+
+    card.appendChild(row);
+    box.appendChild(card);
+  });
+
+  $("#check3").disabled=Object.keys(stressAnswers).length!==stress.length;
+  $("#fb3").className="feedback";
+  $("#fb3").innerHTML="";
+  $("#summary").classList.add("hidden");
+}
+
+function checkStress(){
+  const fb=$("#fb3");
+  fb.innerHTML="";
+  const wrong=[];
+  stress.forEach((s,i)=>{
+    if(stressAnswers[i]!==s.answer) wrong.push(i);
+  });
+
+  if(!wrong.length){
+    addFb(fb,"ok","Вы применяете правило только внутри его границ.",
+      "Это ключевой признак рабочей базы решений: сотрудник не согласовывает типовой случай, но замечает момент, когда ситуация перестает быть типовой.");
+  }else{
+    wrong.forEach(i=>{
+      addFb(fb,"warn",`Случай ${i+1}: границу стоит пересмотреть.`,stress[i].explain);
+    });
+  }
+  fb.classList.add("show");
+  renderSummary(wrong.length);
+}
+
+function renderSummary(stressWrong){
+  const sortP=placements();
+  const sortErrors=Object.keys(correctSort).filter(id=>sortP[id]!==correctSort[id]).length;
+  const buildErrors=builderIssues().length;
+
+  let title,text;
+  if(sortErrors===0 && buildErrors===0 && stressWrong===0){
+    title="Вы создаете правила, которые действительно снимают лишнее согласование.";
+    text="Вы различаете готовое решение, чек-лист и уникальный случай; задаете наблюдаемые границы и не применяете правило за пределами типовой ситуации.";
+  }else if(buildErrors>0){
+    title="Основная зона роста — качество самого правила.";
+    text="Проверьте, чтобы в нем были конкретный триггер, условия, достаточные проверки, самостоятельное действие и наблюдаемая эскалация.";
+  }else if(stressWrong>0){
+    title="Правило собрано, но его границы пока применяются нестабильно.";
+    text="Типовой сценарий работает только до тех пор, пока сохраняются его условия. Даже небольшое отклонение может потребовать отдельного решения, если меняется финальная дата, бюджет или полномочия.";
+  }else{
+    title="Стоит точнее различать стандартизацию и процедуру.";
+    text="Готовое решение отвечает на вопрос выбора. Чек-лист помогает не пропустить шаги после того, как решение уже понятно.";
+  }
+
+  const s=$("#summary");
+  s.innerHTML=`
+    <h3>${title}</h3>
+    <p>${text}</p>
+    <div class="summary-grid">
+      <div class="summary-item"><b>1. Что стандартизировать</b>${sortErrors===0?"Логика верная.":"Есть смешение базы решений, чек-листа и отдельных кейсов."}</div>
+      <div class="summary-item"><b>2. Как построить правило</b>${buildErrors===0?"Все пять элементов собраны корректно.":"В рабочую версию пришлось внести корректировки."}</div>
+      <div class="summary-item"><b>3. Когда правило перестает работать</b>${stressWrong===0?"Границы распознаются точно.":`Ошибок в проверке границ: ${stressWrong}.`}</div>
+    </div>
+  `;
+  s.classList.remove("hidden");
+}
+
+$("#check1").addEventListener("click",checkStage1);
+$("#reset1").addEventListener("click",()=>{
+  document.querySelectorAll(".card").forEach(c=>$("#bank").appendChild(c));
+  clearSelected();
+  updateStage1();
+});
+$("#go2").addEventListener("click",goStage2);
+$("#next2").addEventListener("click",nextBuilder);
+$("#back2").addEventListener("click",backBuilder);
+$("#back3").addEventListener("click",()=>{
+  $("#stage3").classList.add("hidden");
+  $("#stage2").classList.remove("hidden");
+  $("#p3").classList.remove("active");
+  builderIndex=builder.length-1;
+  renderBuilder();
+  window.scrollTo({top:0,behavior:"smooth"});
+});
+$("#check3").addEventListener("click",checkStress);
+
+initStage1();
+</script>
+</body>
+</html>

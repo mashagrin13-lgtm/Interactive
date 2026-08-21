@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Решение под давлением</title>
+<style>
+
+:root{
+  --bg:#f5f6f8;
+  --card:#ffffff;
+  --text:#20242d;
+  --muted:#6d7583;
+  --line:#dfe3ea;
+  --accent:#315d9b;
+  --accent-soft:#eef3fb;
+  --ok:#2e6b4f;
+  --ok-bg:#eef7f2;
+  --warn:#8a5a10;
+  --warn-bg:#fff7e8;
+  --bad:#8b3d45;
+  --bad-bg:#fff0f1;
+  --shadow:0 6px 18px rgba(31,36,48,.07);
+}
+*{box-sizing:border-box}
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--text);
+  font-family:Arial,Helvetica,sans-serif;
+  line-height:1.42;
+}
+.app{
+  width:min(560px,calc(100% - 24px));
+  margin:18px auto;
+}
+.shell{
+  background:var(--card);
+  border:1px solid var(--line);
+  border-radius:16px;
+  box-shadow:var(--shadow);
+  overflow:hidden;
+}
+.head{
+  padding:18px 18px 14px;
+  border-bottom:1px solid var(--line);
+}
+h1{margin:0 0 8px;font-size:21px;line-height:1.2}
+.lead{margin:0;color:var(--muted);font-size:14px}
+.progress{display:flex;gap:7px;margin-top:14px}
+.progress span{flex:1;height:5px;border-radius:999px;background:#e8ebf0}
+.progress span.active{background:var(--accent)}
+.body{padding:16px}
+.stage-label{
+  font-size:12px;
+  color:var(--accent);
+  text-transform:uppercase;
+  font-weight:700;
+  letter-spacing:.03em;
+  margin-bottom:5px;
+}
+.stage-title{margin:0 0 5px;font-size:17px}
+.stage-note{margin:0 0 12px;color:var(--muted);font-size:13px}
+.rules{
+  background:#f5f7fb;
+  border:1px solid #d8e1ef;
+  border-radius:12px;
+  padding:11px 12px;
+  margin-bottom:13px;
+  font-size:13px;
+}
+.rules b{display:block;margin-bottom:5px}
+.rules ol{margin:0;padding-left:19px}
+.rules li{margin:4px 0}
+.case{
+  border:1px solid #d8e1ef;
+  background:#f5f7fb;
+  border-radius:11px;
+  padding:11px;
+  font-size:13px;
+  margin-bottom:12px;
+}
+.case b{display:block;margin-bottom:3px}
+.actions{display:flex;gap:8px;margin-top:13px}
+button{
+  appearance:none;
+  border:0;
+  border-radius:10px;
+  padding:10px 13px;
+  font-size:14px;
+  font-weight:700;
+  cursor:pointer;
+}
+.primary{background:var(--accent);color:#fff;flex:1}
+.primary:disabled{opacity:.45;cursor:not-allowed}
+.secondary{background:#edf0f4;color:var(--text)}
+.hidden{display:none!important}
+.feedback{display:none;margin-top:12px}
+.feedback.show{display:block}
+.fb{border-radius:10px;padding:10px 11px;margin-top:7px;font-size:13px}
+.fb strong{display:block;margin-bottom:3px}
+.fb.ok{background:var(--ok-bg);border:1px solid #cfe5d8;color:#214f3b}
+.fb.warn{background:var(--warn-bg);border:1px solid #f1dbb0;color:#6f480c}
+.fb.bad{background:var(--bad-bg);border:1px solid #efc9cd;color:#73343b}
+.option-list{display:grid;gap:8px}
+.option{
+  width:100%;
+  border:1px solid var(--line);
+  border-radius:10px;
+  background:#fff;
+  color:var(--text);
+  padding:10px 11px;
+  text-align:left;
+  font-size:13px;
+  cursor:pointer;
+}
+.option:hover{border-color:#b5bfcd}
+.option.selected{
+  border-color:var(--accent);
+  background:var(--accent-soft);
+  box-shadow:0 0 0 1px var(--accent) inset;
+}
+.small{font-size:12px;color:var(--muted)}
+.summary{
+  margin-top:14px;
+  border-top:1px solid var(--line);
+  padding-top:14px;
+}
+.summary h3{margin:0 0 7px;font-size:17px}
+.summary p{margin:0 0 9px;font-size:13px}
+.summary-grid{display:grid;gap:7px}
+.summary-item{
+  border:1px solid var(--line);
+  border-radius:10px;
+  padding:9px 10px;
+  font-size:12.5px;
+}
+.summary-item b{display:block;margin-bottom:2px}
+
+.variants{display:grid;gap:9px}
+.variant-card{
+  border:1px solid var(--line);
+  border-radius:12px;
+  overflow:hidden;
+}
+.variant-top{padding:10px 11px}
+.variant-name{font-weight:700;font-size:13.5px}
+.variant-immediate{font-size:12.5px;color:var(--muted);margin-top:3px}
+.reveal-btn{
+  width:100%;
+  border-radius:0;
+  background:#f2f4f7;
+  color:var(--text);
+  padding:8px 10px;
+  font-size:12px;
+  text-align:left;
+}
+.second-level{
+  display:none;
+  padding:9px 11px;
+  border-top:1px solid var(--line);
+  background:var(--accent-soft);
+  font-size:12.5px;
+}
+.second-level.show{display:block}
+.data-grid{display:grid;gap:8px}
+.data-card{
+  border:1px solid var(--line);
+  border-radius:11px;
+  padding:10px 11px;
+  background:#fff;
+}
+.data-card.used{background:#f7f8fa}
+.data-title{font-weight:700;font-size:13px}
+.data-result{margin-top:7px;font-size:12.5px;display:none}
+.data-result.show{display:block}
+.data-btn{margin-top:8px;width:100%;background:#edf0f4;color:var(--text);font-size:12px}
+.counter{
+  display:flex;justify-content:space-between;gap:10px;
+  align-items:center;margin-bottom:10px;font-size:12.5px
+}
+.counter strong{color:var(--accent)}
+.badge{
+  display:inline-block;padding:3px 7px;border-radius:999px;
+  background:var(--accent-soft);color:var(--accent);font-size:11px;font-weight:700
+}
+.decision-block{margin-top:12px}
+.reason-title{font-weight:700;font-size:13px;margin:12px 0 7px}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="shell">
+    <div class="head">
+      <h1>Решение под давлением</h1>
+      <p class="lead">Сравните варианты, соберите только те данные, которые могут изменить выбор, и примите решение до запуска проекта.</p>
+      <div class="progress">
+        <span id="p1" class="active"></span>
+        <span id="p2"></span>
+        <span id="p3"></span>
+      </div>
+    </div>
+    <div class="body">
+      <div class="case">
+        <b>Ситуация</b>
+        Вы руководите проектной командой. До запуска осталось три недели. Ключевой подрядчик сообщил, что задержит свою часть работы минимум на семь дней.
+      </div>
+
+      <section id="stage1">
+        <div class="stage-label">Этап 1 из 3</div>
+        <h2 class="stage-title">Проследите последствия на два шага вперед</h2>
+        <div class="rules">
+          <b>Что нужно сделать</b>
+          <ol>
+            <li>Посмотрите на три возможных решения.</li>
+            <li>У каждого уже показано непосредственное последствие.</li>
+            <li>Нажмите «Показать следующий эффект» у всех трех вариантов.</li>
+            <li>Переходите дальше только после того, как сравните последствия второго уровня.</li>
+          </ol>
+        </div>
+
+        <div class="variants" id="variants"></div>
+
+        <div class="actions">
+          <button class="primary" id="go2" disabled>Перейти к данным</button>
+        </div>
+      </section>
+
+      <section id="stage2" class="hidden">
+        <div class="stage-label">Этап 2 из 3</div>
+        <h2 class="stage-title">Выберите три факта, которые стоит запросить</h2>
+        <div class="rules">
+          <b>Правила</b>
+          <ol>
+            <li>У вас есть только <strong>3 запроса</strong> из 6 возможных.</li>
+            <li>Нажмите «Запросить факт», чтобы открыть данные.</li>
+            <li>Выбирайте информацию, которая способна изменить решение или оценку риска.</li>
+            <li>После третьего запроса кнопки остальных фактов заблокируются.</li>
+          </ol>
+        </div>
+
+        <div class="counter">
+          <span>Использовано запросов: <strong id="usedCount">0 из 3</strong></span>
+          <span class="badge">лимит 3</span>
+        </div>
+
+        <div class="data-grid" id="dataGrid"></div>
+
+        <div class="feedback" id="dataFeedback"></div>
+
+        <div class="actions">
+          <button class="secondary" id="back1">Назад</button>
+          <button class="primary" id="go3" disabled>Принять решение</button>
+        </div>
+      </section>
+
+      <section id="stage3" class="hidden">
+        <div class="stage-label">Этап 3 из 3</div>
+        <h2 class="stage-title">Выберите решение и обоснуйте его</h2>
+        <div class="rules">
+          <b>Что нужно сделать</b>
+          <ol>
+            <li>Выберите один из трех вариантов действий.</li>
+            <li>Затем выберите аргументацию, которая лучше всего опирается на последствия и полученные данные.</li>
+            <li>После этого нажмите «Проверить решение».</li>
+          </ol>
+        </div>
+
+        <div class="reason-title">Ваше решение</div>
+        <div class="option-list" id="decisionOptions"></div>
+
+        <div class="reason-title">Почему вы выбираете этот вариант?</div>
+        <div class="option-list" id="reasonOptions"></div>
+
+        <div class="actions">
+          <button class="secondary" id="back2">Назад</button>
+          <button class="primary" id="checkFinal" disabled>Проверить решение</button>
+        </div>
+
+        <div class="feedback" id="finalFeedback"></div>
+        <div class="summary hidden" id="summary"></div>
+      </section>
+    </div>
+  </div>
+</div>
+
+<script>
+const variants = [
+  {
+    id:"A",
+    name:"А. Перенести запуск на неделю",
+    immediate:"Команда получает возможность закончить весь объем.",
+    second:"Перенос затронет уже согласованный график смежного подразделения и запланированную кампанию."
+  },
+  {
+    id:"B",
+    name:"Б. Сократить объем первой версии",
+    immediate:"Дата запуска сохраняется.",
+    second:"Часть функций придется перенести на следующий релиз, поэтому нужно проверить, какие функции действительно обязательны для первого запуска."
+  },
+  {
+    id:"C",
+    name:"В. Подключить внешнего специалиста",
+    immediate:"Появляется дополнительный ресурс.",
+    second:"Потребуются дополнительный бюджет и время команды на ввод нового человека; ресурс начнет приносить эффект не сразу."
+  }
+];
+
+const facts = [
+  {
+    id:1,
+    title:"Стоимость внешнего специалиста",
+    value:"220 000 ₽ за три недели. Резерв бюджета проекта — 250 000 ₽.",
+    quality:"medium",
+    note:"Факт полезен для оценки цены варианта В, но сам по себе не показывает, успеет ли специалист повлиять на срок."
+  },
+  {
+    id:2,
+    title:"Какие функции критичны для первого запуска",
+    value:"Из пяти функций только две обязательны для первого запуска. Остальные три можно выпустить через две недели без потери основной ценности.",
+    quality:"high",
+    note:"Этот факт напрямую меняет оценку варианта Б."
+  },
+  {
+    id:3,
+    title:"Сколько времени потребуется на подключение внешнего специалиста",
+    value:"На доступы, ввод в контекст и проверку первой работы потребуется около четырех рабочих дней.",
+    quality:"high",
+    note:"Этот факт показывает второй шаг варианта В: дополнительный ресурс не начинает работать мгновенно."
+  },
+  {
+    id:4,
+    title:"Сколько сотрудников было в проекте год назад",
+    value:"Год назад в похожем проекте работало семь человек, сейчас — восемь.",
+    quality:"low",
+    note:"Сведения почти не влияют на текущую развилку: важнее критичность функций, срок подключения ресурса и обязательства по дате."
+  },
+  {
+    id:5,
+    title:"Есть ли внешнее обязательство по дате запуска",
+    value:"Дата уже подтверждена смежному подразделению и привязана к кампании. Перенос потребует пересобрать их график.",
+    quality:"high",
+    note:"Этот факт существенно повышает цену варианта А."
+  },
+  {
+    id:6,
+    title:"Сколько встреч команда провела в прошлом месяце",
+    value:"Команда провела 18 рабочих встреч.",
+    quality:"low",
+    note:"Количество встреч не помогает выбрать между переносом, сокращением объема и дополнительным ресурсом."
+  }
+];
+
+const decisions = [
+  ["A","Перенести запуск на неделю"],
+  ["B","Сократить объем первой версии и сохранить дату"],
+  ["C","Подключить внешнего специалиста"]
+];
+
+const reasons = [
+  ["r1","Полный объем важнее всего: лучше перенести дату и избежать любого сокращения функций."],
+  ["r2","Для первого запуска обязательны только две функции, а перенос даты затрагивает другие команды. Логичнее сохранить дату и перенести некритичные функции."],
+  ["r3","Дополнительный специалист — самый надежный способ ускориться: больше людей почти всегда означает более быстрый результат."],
+  ["r4","Нельзя менять дату, поэтому выбираю сокращение объема независимо от того, какие функции попадут под сокращение."]
+];
+
+let revealed = new Set();
+let requested = [];
+let decision = null;
+let reason = null;
+
+const $ = s => document.querySelector(s);
+
+function renderVariants(){
+  const box=$("#variants");
+  box.innerHTML="";
+  variants.forEach(v=>{
+    const card=document.createElement("div");
+    card.className="variant-card";
+    card.innerHTML=`
+      <div class="variant-top">
+        <div class="variant-name">${v.name}</div>
+        <div class="variant-immediate">Первый эффект: ${v.immediate}</div>
+      </div>
+    `;
+    const btn=document.createElement("button");
+    btn.type="button";
+    btn.className="reveal-btn";
+    btn.textContent=revealed.has(v.id)?"Следующий эффект открыт":"Показать следующий эффект";
+    btn.disabled=revealed.has(v.id);
+
+    const second=document.createElement("div");
+    second.className="second-level"+(revealed.has(v.id)?" show":"");
+    second.textContent="Следующий эффект: "+v.second;
+
+    btn.addEventListener("click",()=>{
+      revealed.add(v.id);
+      renderVariants();
+      $("#go2").disabled=revealed.size!==variants.length;
+    });
+
+    card.appendChild(btn);
+    card.appendChild(second);
+    box.appendChild(card);
+  });
+  $("#go2").disabled=revealed.size!==variants.length;
+}
+
+function renderFacts(){
+  $("#usedCount").textContent=`${requested.length} из 3`;
+  const box=$("#dataGrid");
+  box.innerHTML="";
+
+  facts.forEach(f=>{
+    const used=requested.includes(f.id);
+    const locked=!used && requested.length>=3;
+    const card=document.createElement("div");
+    card.className="data-card"+(used?" used":"");
+    card.innerHTML=`<div class="data-title">${f.id}. ${f.title}</div>`;
+
+    const result=document.createElement("div");
+    result.className="data-result"+(used?" show":"");
+    if(used) result.innerHTML=`<b>Данные:</b> ${f.value}`;
+    card.appendChild(result);
+
+    const btn=document.createElement("button");
+    btn.type="button";
+    btn.className="data-btn";
+    btn.textContent=used?"Факт получен":(locked?"Лимит запросов исчерпан":"Запросить факт");
+    btn.disabled=used||locked;
+    btn.addEventListener("click",()=>{
+      requested.push(f.id);
+      renderFacts();
+      if(requested.length===3) showDataFeedback();
+    });
+    card.appendChild(btn);
+    box.appendChild(card);
+  });
+
+  $("#go3").disabled=requested.length!==3;
+}
+
+function showDataFeedback(){
+  const fb=$("#dataFeedback");
+  fb.innerHTML="";
+  const high=requested.filter(id=>facts.find(f=>f.id===id).quality==="high").length;
+  const low=requested.filter(id=>facts.find(f=>f.id===id).quality==="low");
+
+  if(high===3){
+    addFb(fb,"ok","Вы использовали все три запроса на данные, которые способны изменить выбор.",
+      "Вы проверили критичность функций, реальную скорость подключения дополнительного ресурса и цену переноса даты.");
+  }else{
+    if(low.length){
+      addFb(fb,"warn","Часть лимита ушла на данные, которые почти не меняют решение.",
+        `Запросы ${low.join(", ")} дают контекст, но слабо помогают сравнить три варианта. При ограниченном времени сначала ищите сведения, которые могут изменить выбор.`);
+    }
+    if(high<3){
+      const missed=facts.filter(f=>f.quality==="high"&&!requested.includes(f.id)).map(f=>f.id);
+      addFb(fb,"warn","Вы оставили без проверки один или несколько решающих факторов.",
+        `Особенно полезны данные из запросов ${missed.join(", ")}: они напрямую меняют оценку срока, объема или зависимости от других команд.`);
+    }
+  }
+  fb.classList.add("show");
+}
+
+function addFb(container,type,title,text){
+  const d=document.createElement("div");
+  d.className=`fb ${type}`;
+  d.innerHTML=`<strong>${title}</strong>${text}`;
+  container.appendChild(d);
+}
+
+function renderSingleOptions(containerId, items, selected, callback){
+  const box=$(containerId);
+  box.innerHTML="";
+  items.forEach(([id,label])=>{
+    const b=document.createElement("button");
+    b.type="button";
+    b.className="option"+(selected===id?" selected":"");
+    b.textContent=label;
+    b.addEventListener("click",()=>callback(id));
+    box.appendChild(b);
+  });
+}
+
+function renderDecision(){
+  renderSingleOptions("#decisionOptions",decisions,decision,id=>{
+    decision=id; renderDecision(); updateCheck();
+  });
+  renderSingleOptions("#reasonOptions",reasons,reason,id=>{
+    reason=id; renderDecision(); updateCheck();
+  });
+  updateCheck();
+}
+
+function updateCheck(){
+  $("#checkFinal").disabled=!(decision&&reason);
+}
+
+function checkFinal(){
+  const fb=$("#finalFeedback");
+  fb.innerHTML="";
+
+  const highCount=requested.filter(id=>facts.find(f=>f.id===id).quality==="high").length;
+  const dataScore=highCount;
+  const consequenceScore=revealed.size===3?1:0;
+  let decisionScore=0;
+
+  if(decision==="B" && reason==="r2") decisionScore=3;
+  else if(decision==="B" && reason==="r4") decisionScore=1;
+  else if(decision==="C"){
+    const saw3=requested.includes(3);
+    decisionScore=saw3?0:1;
+  } else if(decision==="A"){
+    const saw5=requested.includes(5);
+    decisionScore=saw5?0:1;
+  }
+
+  if(decision==="B" && reason==="r2"){
+    addFb(fb,"ok","Решение согласовано с последствиями и данными.",
+      "Вы сохраняете внешнюю дату, оставляете в первой версии обязательные функции и переносите некритичный объем. Это использует факты, а не только первое впечатление от проблемы.");
+  } else if(decision==="C" && requested.includes(3)){
+    addFb(fb,"bad","Дополнительный ресурс выглядит быстрым решением, но почти вся доступная неделя уйдет на подключение.",
+      "Вы открыли факт о четырех днях адаптации, поэтому вариант В уже не дает того выигрыша во времени, который обещает на первом шаге.");
+  } else if(decision==="A" && requested.includes(5)){
+    addFb(fb,"bad","Перенос решает проблему команды, но переводит ее на других участников.",
+      "Дата связана со смежным подразделением и кампанией. Второй уровень последствий делает этот вариант дороже, чем он выглядит сначала.");
+  } else if(reason==="r3"){
+    addFb(fb,"warn","Аргументация опирается только на первый эффект.",
+      "Дополнительный человек дает ресурс, но не начинает работать мгновенно. В сложных решениях всегда проверяйте следующий шаг последствия.");
+  } else if(reason==="r4"){
+    addFb(fb,"warn","Вы выбрали направление верно, но аргументация слишком общая.",
+      "Сокращать объем безопасно только после проверки, какие функции действительно можно перенести. Иначе решение сохраняет дату ценой случайной потери качества.");
+  } else {
+    addFb(fb,"warn","Решение использует не все доступные сигналы.",
+      "Сопоставьте цену переноса даты, критичность функций и реальное время подключения нового ресурса. Эти три фактора меняют относительную силу вариантов.");
+  }
+
+  fb.classList.add("show");
+
+  const total=dataScore+consequenceScore+decisionScore;
+  const summary=$("#summary");
+
+  let title,text;
+  if(total>=7){
+    title="Вы принимаете решение через последствия и значимые данные.";
+    text="Вы не тратите ограниченное время на фоновые сведения, смотрите дальше первого эффекта и связываете выбор с конкретными условиями.";
+  }else if(total>=5){
+    title="Логика решения в целом эффективная, но один из этапов можно улучшить.";
+    text="Проверьте, какие данные действительно способны изменить выбор, и не останавливайтесь на непосредственном эффекте варианта.";
+  }else{
+    title="Вы слишком рано переходите от проблемы к выбору.";
+    text="Сначала сравните второй уровень последствий, затем соберите несколько решающих фактов и только после этого выбирайте вариант.";
+  }
+
+  summary.innerHTML=`
+    <h3>${title}</h3>
+    <p>${text}</p>
+    <div class="summary-grid">
+      <div class="summary-item"><b>Качество запросов данных</b>${dataScore} из 3 значимых фактов выбраны.</div>
+      <div class="summary-item"><b>Логика последствий</b>${consequenceScore?"Все три варианта просмотрены на два шага вперед.":"Не все последствия второго уровня были учтены."}</div>
+      <div class="summary-item"><b>Соответствие решения фактам</b>${decisionScore===3?"Высокое.":decisionScore===1?"Частичное.":"Низкое."}</div>
+    </div>
+  `;
+  summary.classList.remove("hidden");
+}
+
+$("#go2").addEventListener("click",()=>{
+  $("#stage1").classList.add("hidden");
+  $("#stage2").classList.remove("hidden");
+  $("#p2").classList.add("active");
+  renderFacts();
+  window.scrollTo({top:0,behavior:"smooth"});
+});
+$("#back1").addEventListener("click",()=>{
+  $("#stage2").classList.add("hidden");
+  $("#stage1").classList.remove("hidden");
+  $("#p2").classList.remove("active");
+  window.scrollTo({top:0,behavior:"smooth"});
+});
+$("#go3").addEventListener("click",()=>{
+  $("#stage2").classList.add("hidden");
+  $("#stage3").classList.remove("hidden");
+  $("#p3").classList.add("active");
+  renderDecision();
+  window.scrollTo({top:0,behavior:"smooth"});
+});
+$("#back2").addEventListener("click",()=>{
+  $("#stage3").classList.add("hidden");
+  $("#stage2").classList.remove("hidden");
+  $("#p3").classList.remove("active");
+  window.scrollTo({top:0,behavior:"smooth"});
+});
+$("#checkFinal").addEventListener("click",checkFinal);
+
+renderVariants();
+</script>
+</body>
+</html>

@@ -1,0 +1,814 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Убираем оценки</title>
+<style>
+:root{
+  --bg:#f5f6f8;
+  --card:#ffffff;
+  --text:#20242d;
+  --muted:#6d7583;
+  --line:#dfe3ea;
+  --accent:#315d9b;
+  --accent-soft:#eef3fb;
+  --ok:#2e6b4f;
+  --ok-bg:#eef7f2;
+  --warn:#8a5a10;
+  --warn-bg:#fff7e8;
+  --bad:#8b3d45;
+  --bad-bg:#fff0f1;
+  --shadow:0 6px 18px rgba(31,36,48,.07);
+}
+*{box-sizing:border-box}
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--text);
+  font-family:Arial,Helvetica,sans-serif;
+  line-height:1.42;
+}
+.app{
+  width:min(560px,calc(100% - 24px));
+  margin:18px auto;
+}
+.shell{
+  background:var(--card);
+  border:1px solid var(--line);
+  border-radius:16px;
+  box-shadow:var(--shadow);
+  overflow:hidden;
+}
+.head{
+  padding:18px 18px 14px;
+  border-bottom:1px solid var(--line);
+}
+h1{
+  margin:0 0 8px;
+  font-size:21px;
+  line-height:1.2;
+}
+.lead{
+  margin:0;
+  color:var(--muted);
+  font-size:14px;
+}
+.progress{
+  display:flex;
+  gap:7px;
+  margin-top:14px;
+}
+.progress span{
+  flex:1;
+  height:5px;
+  border-radius:999px;
+  background:#e8ebf0;
+}
+.progress span.active{background:var(--accent)}
+.body{padding:16px}
+.stage-label{
+  font-size:12px;
+  color:var(--accent);
+  font-weight:700;
+  text-transform:uppercase;
+  letter-spacing:.03em;
+  margin-bottom:5px;
+}
+.stage-title{
+  margin:0 0 5px;
+  font-size:17px;
+}
+.stage-note{
+  margin:0 0 12px;
+  color:var(--muted);
+  font-size:13px;
+}
+.rules{
+  padding:11px 12px;
+  border:1px solid #d8e1ef;
+  background:#f5f7fb;
+  border-radius:12px;
+  font-size:13px;
+  margin-bottom:13px;
+}
+.rules b{display:block;margin-bottom:5px}
+.rules ol{margin:0;padding-left:19px}
+.rules li{margin:4px 0}
+.case{
+  padding:11px 12px;
+  border:1px solid #d8e1ef;
+  background:#f5f7fb;
+  border-radius:11px;
+  font-size:13px;
+  margin-bottom:12px;
+}
+.case b{display:block;margin-bottom:3px}
+.hidden{display:none!important}
+.actions{
+  display:flex;
+  gap:8px;
+  margin-top:13px;
+}
+button{
+  appearance:none;
+  border:0;
+  border-radius:10px;
+  padding:10px 13px;
+  font-size:14px;
+  font-weight:700;
+  cursor:pointer;
+}
+.primary{
+  background:var(--accent);
+  color:#fff;
+  flex:1;
+}
+.primary:disabled{opacity:.45;cursor:not-allowed}
+.secondary{
+  background:#edf0f4;
+  color:var(--text);
+}
+.feedback{display:none;margin-top:12px}
+.feedback.show{display:block}
+.fb{
+  border-radius:10px;
+  padding:10px 11px;
+  margin-top:7px;
+  font-size:13px;
+}
+.fb strong{display:block;margin-bottom:3px}
+.fb.ok{background:var(--ok-bg);border:1px solid #cfe5d8;color:#214f3b}
+.fb.warn{background:var(--warn-bg);border:1px solid #f1dbb0;color:#6f480c}
+.fb.bad{background:var(--bad-bg);border:1px solid #efc9cd;color:#73343b}
+.bank{
+  border:1px dashed #bcc5d4;
+  border-radius:12px;
+  padding:9px;
+  background:#fafbfc;
+  min-height:55px;
+  margin-bottom:10px;
+}
+.bank-title{
+  font-size:11px;
+  text-transform:uppercase;
+  font-weight:700;
+  color:var(--muted);
+  letter-spacing:.03em;
+  margin-bottom:5px;
+}
+.card{
+  border:1px solid var(--line);
+  border-radius:10px;
+  background:#fff;
+  padding:9px 10px;
+  font-size:13px;
+  margin:6px 0;
+  cursor:grab;
+  user-select:none;
+}
+.card.dragging{opacity:.45}
+.card.selected{
+  border-color:var(--accent);
+  background:var(--accent-soft);
+  box-shadow:0 0 0 1px var(--accent) inset;
+}
+.num{
+  display:inline-block;
+  min-width:21px;
+  color:var(--accent);
+  font-weight:700;
+}
+.zones{
+  display:grid;
+  grid-template-columns:1fr;
+  gap:8px;
+}
+.zone{
+  border:1px solid var(--line);
+  border-radius:11px;
+  padding:9px;
+  min-height:100px;
+  background:#fff;
+}
+.zone.over{
+  border-color:var(--accent);
+  background:var(--accent-soft);
+}
+.zone-title{
+  display:flex;
+  justify-content:space-between;
+  gap:7px;
+  font-size:13px;
+  font-weight:700;
+}
+.zone-note{
+  margin:3px 0 5px;
+  color:var(--muted);
+  font-size:11.5px;
+}
+.count{
+  font-weight:400;
+  color:var(--muted);
+}
+.sbi-grid{
+  display:grid;
+  gap:10px;
+}
+.sbi-block{
+  border:1px solid var(--line);
+  border-radius:11px;
+  padding:10px;
+}
+.sbi-title{
+  font-size:13px;
+  font-weight:700;
+  margin-bottom:4px;
+}
+.sbi-help{
+  font-size:11.5px;
+  color:var(--muted);
+  margin-bottom:7px;
+}
+.option-list{
+  display:grid;
+  gap:7px;
+}
+.option{
+  width:100%;
+  border:1px solid var(--line);
+  border-radius:10px;
+  background:#fff;
+  color:var(--text);
+  padding:10px 11px;
+  text-align:left;
+  font-size:13px;
+  cursor:pointer;
+}
+.option:hover{border-color:#b5bfcd}
+.option.selected{
+  border-color:var(--accent);
+  background:var(--accent-soft);
+  box-shadow:0 0 0 1px var(--accent) inset;
+}
+.preview{
+  margin-top:12px;
+  border:1px solid var(--line);
+  border-radius:11px;
+  overflow:hidden;
+}
+.preview-head{
+  padding:8px 10px;
+  background:#f4f6f9;
+  font-size:12.5px;
+  font-weight:700;
+}
+.preview-body{
+  padding:10px;
+  font-size:13px;
+}
+.quote{
+  padding:10px 11px;
+  border-left:3px solid var(--accent);
+  background:#f6f8fb;
+  border-radius:8px;
+  font-size:13px;
+  margin-bottom:11px;
+}
+.summary{
+  margin-top:14px;
+  border-top:1px solid var(--line);
+  padding-top:14px;
+}
+.summary h3{
+  margin:0 0 7px;
+  font-size:17px;
+}
+.summary p{
+  margin:0 0 9px;
+  font-size:13px;
+}
+.metrics{
+  display:grid;
+  grid-template-columns:1fr 1fr 1fr;
+  gap:7px;
+  margin-top:10px;
+}
+.metric{
+  border:1px solid var(--line);
+  border-radius:10px;
+  padding:9px;
+  text-align:center;
+}
+.metric .score{
+  font-size:19px;
+  font-weight:700;
+  color:var(--accent);
+}
+.metric .label{
+  margin-top:2px;
+  font-size:10.5px;
+  color:var(--muted);
+}
+.reference{
+  margin-top:11px;
+  border:1px solid var(--line);
+  border-radius:10px;
+  overflow:hidden;
+}
+.reference-row{
+  padding:8px 10px;
+  border-top:1px solid #edf0f4;
+  font-size:12px;
+}
+.reference-row:first-child{border-top:0}
+.reference-row b{display:block;margin-bottom:2px}
+@media(min-width:500px){
+  .zones{grid-template-columns:1fr 1fr}
+}
+@media(max-width:390px){
+  .metrics{grid-template-columns:1fr}
+  .body{padding:13px}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="shell">
+    <div class="head">
+      <h1>Уберите оценки</h1>
+      <p class="lead">Отделите наблюдаемые факты от интерпретаций, соберите SBI-обратную связь и продолжите разговор так, чтобы сотрудник сам сформулировал следующий способ действия.</p>
+      <div class="progress">
+        <span id="p1" class="active"></span>
+        <span id="p2"></span>
+        <span id="p3"></span>
+      </div>
+    </div>
+
+    <div class="body">
+
+      <section id="stage1">
+        <div class="stage-label">Этап 1 из 3</div>
+        <h2 class="stage-title">Факт или интерпретация</h2>
+        <div class="rules">
+          <b>Что нужно сделать</b>
+          <ol>
+            <li>Прочитайте все шесть карточек.</li>
+            <li>Перетащите каждую карточку в одну из двух зон.</li>
+            <li>В «Наблюдаемое поведение / факт» помещайте только то, что можно было увидеть, услышать или зафиксировать по данным.</li>
+            <li>В «Оценка или предположение» помещайте характеристики человека, выводы о его отношении и предположения о намерении.</li>
+            <li>Когда распределите все карточки, нажмите «Проверить».</li>
+          </ol>
+        </div>
+
+        <div class="bank" id="bank" data-zone="bank">
+          <div class="bank-title">Карточки</div>
+        </div>
+
+        <div class="zones">
+          <div class="zone" data-zone="fact">
+            <div class="zone-title">Наблюдаемое поведение / факт <span class="count" id="count-fact">0</span></div>
+            <div class="zone-note">Можно зафиксировать без догадки о характере или мотиве.</div>
+          </div>
+          <div class="zone" data-zone="interpretation">
+            <div class="zone-title">Оценка или предположение <span class="count" id="count-interpretation">0</span></div>
+            <div class="zone-note">Содержит ярлык, оценку отношения или догадку о намерении.</div>
+          </div>
+        </div>
+
+        <div class="actions">
+          <button class="secondary" id="reset1">Сбросить</button>
+          <button class="primary" id="check1" disabled>Проверить</button>
+        </div>
+
+        <div class="feedback" id="fb1"></div>
+        <div class="actions hidden" id="go2Wrap">
+          <button class="primary" id="go2">Перейти к SBI</button>
+        </div>
+      </section>
+
+      <section id="stage2" class="hidden">
+        <div class="stage-label">Этап 2 из 3</div>
+        <h2 class="stage-title">Соберите SBI</h2>
+        <div class="rules">
+          <b>Что нужно сделать</b>
+          <ol>
+            <li>Прочитайте исходную ситуацию.</li>
+            <li>В каждом из трех блоков выберите одну формулировку.</li>
+            <li><strong>Situation</strong> должна называть конкретный эпизод или момент.</li>
+            <li><strong>Behavior</strong> — только наблюдаемое действие, без оценки личности и мотива.</li>
+            <li><strong>Impact</strong> — конкретное рабочее последствие для результата, команды, срока или затрат.</li>
+            <li>После выбора трех частей нажмите «Проверить SBI».</li>
+          </ol>
+        </div>
+
+        <div class="case">
+          <b>Исходная ситуация</b>
+          Сотрудник самостоятельно вел изменение графика проекта. О подтвержденном риске переноса он узнал во вторник, но сообщил команде только в пятницу. К этому моменту два отдела уже спланировали работу по старым срокам и потратили день на перепланирование.
+        </div>
+
+        <div class="sbi-grid">
+          <div class="sbi-block">
+            <div class="sbi-title">S — Situation</div>
+            <div class="sbi-help">Назовите конкретный момент, к которому относится обратная связь.</div>
+            <div class="option-list" id="sOptions"></div>
+          </div>
+
+          <div class="sbi-block">
+            <div class="sbi-title">B — Behavior</div>
+            <div class="sbi-help">Опишите действие, которое можно наблюдать или проверить.</div>
+            <div class="option-list" id="bOptions"></div>
+          </div>
+
+          <div class="sbi-block">
+            <div class="sbi-title">I — Impact</div>
+            <div class="sbi-help">Покажите рабочее последствие этого действия.</div>
+            <div class="option-list" id="iOptions"></div>
+          </div>
+        </div>
+
+        <div class="preview">
+          <div class="preview-head">Получившаяся обратная связь</div>
+          <div class="preview-body" id="previewText">Выберите три части SBI.</div>
+        </div>
+
+        <div class="actions">
+          <button class="secondary" id="back1">Назад</button>
+          <button class="primary" id="check2" disabled>Проверить SBI</button>
+        </div>
+
+        <div class="feedback" id="fb2"></div>
+        <div class="actions hidden" id="go3Wrap">
+          <button class="primary" id="go3">Продолжить разговор</button>
+        </div>
+      </section>
+
+      <section id="stage3" class="hidden">
+        <div class="stage-label">Этап 3 из 3</div>
+        <h2 class="stage-title">Продолжите разговор</h2>
+        <div class="rules">
+          <b>Что нужно сделать</b>
+          <ol>
+            <li>Представьте, что вы только что дали сотруднику собранную SBI-обратную связь.</li>
+            <li>Теперь выберите следующий вопрос руководителя.</li>
+            <li>Хороший следующий шаг сначала помогает сотруднику объяснить свою логику и самому предложить изменение поведения.</li>
+            <li>Не выдавайте новое правило до того, как услышите позицию сотрудника.</li>
+          </ol>
+        </div>
+
+        <div class="quote">
+          Сотрудник отвечает: «Я видел риск во вторник, но рассчитывал, что подрядчик подтвердит старую дату. Не хотел поднимать тревогу раньше времени».
+        </div>
+
+        <div class="option-list" id="followOptions"></div>
+
+        <div class="actions">
+          <button class="secondary" id="back2">Назад</button>
+          <button class="primary" id="check3" disabled>Проверить продолжение</button>
+        </div>
+
+        <div class="feedback" id="fb3"></div>
+        <div class="summary hidden" id="summary"></div>
+      </section>
+
+    </div>
+  </div>
+</div>
+
+<script>
+const cards = [
+  {id:1,text:"Ты безответственно отнесся к сроку.",zone:"interpretation",why:"«Безответственно» — оценка поведения, а не наблюдаемый факт."},
+  {id:2,text:"Ты сообщил о риске в четверг в 17:40.",zone:"fact",why:"Время сообщения можно проверить по переписке или системе."},
+  {id:3,text:"Ты не уважаешь время коллег.",zone:"interpretation",why:"Это вывод об отношении человека, а не описание конкретного действия."},
+  {id:4,text:"Два участника получили новый график только после начала работ.",zone:"fact",why:"Это наблюдаемая последовательность событий."},
+  {id:5,text:"Ты специально ничего не сказал заранее.",zone:"interpretation",why:"Слово «специально» приписывает сотруднику намерение, которого руководитель не может наблюдать напрямую."},
+  {id:6,text:"На встрече ты представил один вариант вместо трех, о которых мы договаривались.",zone:"fact",why:"Количество представленных вариантов и договоренность можно проверить."}
+];
+
+const sbi = {
+  S:[
+    {id:"s1",text:"Во время работы над проектом…",correct:false,issue:"vague"},
+    {id:"s2",text:"Когда во вторник появился подтвержденный риск переноса…",correct:true,issue:null},
+    {id:"s3",text:"В последнее время…",correct:false,issue:"vague"}
+  ],
+  B:[
+    {id:"b1",text:"…вы повели себя недостаточно ответственно.",correct:false,issue:"evaluation"},
+    {id:"b2",text:"…вы сообщили о риске команде только в пятницу.",correct:true,issue:null},
+    {id:"b3",text:"…вы решили скрыть проблему.",correct:false,issue:"intent"}
+  ],
+  I:[
+    {id:"i1",text:"…поэтому я разочарован.",correct:false,issue:"emotion"},
+    {id:"i2",text:"…из-за этого два отдела планировали работу по старому графику и потратили день на перепланирование.",correct:true,issue:null},
+    {id:"i3",text:"…это показывает, что вам пока нельзя доверять такие проекты.",correct:false,issue:"judgment"}
+  ]
+};
+
+const follow = [
+  {
+    id:"f1",
+    text:"В следующий раз сообщайте о любом риске сразу, как только он появился.",
+    correct:false,
+    issue:"rule",
+    feedback:"Вы сразу задали новое правило. Сначала полезно понять, как сотрудник сам оценивает решение и какое изменение предлагает."
+  },
+  {
+    id:"f2",
+    text:"Как вы сами сейчас оцениваете это решение и что в похожей ситуации сделали бы иначе?",
+    correct:true,
+    issue:null,
+    feedback:"Вопрос сначала возвращает сотруднику анализ собственного решения, а затем просит сформулировать следующий способ действия."
+  },
+  {
+    id:"f3",
+    text:"Почему вы решили скрыть риск от команды?",
+    correct:false,
+    issue:"intent",
+    feedback:"Вопрос снова содержит предположение о намерении. Сотрудник уже объяснил, что рассчитывал на сохранение срока, а не хотел скрыть проблему."
+  },
+  {
+    id:"f4",
+    text:"Согласны, что теперь все изменения сроков нужно заранее согласовывать со мной?",
+    correct:false,
+    issue:"takeover",
+    feedback:"Так локальная ошибка превращается в постоянное согласование и уменьшает самостоятельность сотрудника."
+  }
+];
+
+let selectedCard = null;
+let sSel=null,bSel=null,iSel=null,followSel=null;
+let stage1Score=0;
+let stage2Score=0;
+let stage3Score=0;
+
+const $=s=>document.querySelector(s);
+
+function addFb(container,type,title,text){
+  const d=document.createElement("div");
+  d.className=`fb ${type}`;
+  d.innerHTML=`<strong>${title}</strong>${text}`;
+  container.appendChild(d);
+}
+
+function makeCard(c){
+  const el=document.createElement("div");
+  el.className="card";
+  el.draggable=true;
+  el.dataset.id=c.id;
+  el.innerHTML=`<span class="num">${c.id}.</span>${c.text}`;
+
+  el.addEventListener("dragstart",e=>{
+    el.classList.add("dragging");
+    e.dataTransfer.setData("text/plain",c.id);
+  });
+  el.addEventListener("dragend",()=>el.classList.remove("dragging"));
+  el.addEventListener("click",e=>{
+    e.stopPropagation();
+    document.querySelectorAll(".card.selected").forEach(x=>x.classList.remove("selected"));
+    if(selectedCard===el){selectedCard=null;return}
+    selectedCard=el;
+    el.classList.add("selected");
+  });
+  return el;
+}
+
+function initStage1(){
+  cards.forEach(c=>$("#bank").appendChild(makeCard(c)));
+
+  document.querySelectorAll("[data-zone]").forEach(zone=>{
+    zone.addEventListener("dragover",e=>{
+      e.preventDefault();
+      if(zone.dataset.zone!=="bank")zone.classList.add("over");
+    });
+    zone.addEventListener("dragleave",()=>zone.classList.remove("over"));
+    zone.addEventListener("drop",e=>{
+      e.preventDefault();
+      zone.classList.remove("over");
+      const id=e.dataTransfer.getData("text/plain");
+      const card=document.querySelector(`.card[data-id="${id}"]`);
+      if(card)zone.appendChild(card);
+      clearCardSelection();
+      updateStage1();
+    });
+    zone.addEventListener("click",()=>{
+      if(selectedCard){
+        zone.appendChild(selectedCard);
+        clearCardSelection();
+        updateStage1();
+      }
+    });
+  });
+  updateStage1();
+}
+
+function clearCardSelection(){
+  document.querySelectorAll(".card.selected").forEach(x=>x.classList.remove("selected"));
+  selectedCard=null;
+}
+
+function placements(){
+  const p={};
+  document.querySelectorAll(".card").forEach(c=>p[c.dataset.id]=c.parentElement.dataset.zone);
+  return p;
+}
+
+function updateStage1(){
+  $("#count-fact").textContent=document.querySelectorAll('.zone[data-zone="fact"] .card').length;
+  $("#count-interpretation").textContent=document.querySelectorAll('.zone[data-zone="interpretation"] .card').length;
+  const all=[...document.querySelectorAll(".card")].every(c=>c.parentElement.dataset.zone!=="bank");
+  $("#check1").disabled=!all;
+  $("#fb1").className="feedback";
+  $("#fb1").innerHTML="";
+  $("#go2Wrap").classList.add("hidden");
+}
+
+function checkStage1(){
+  const p=placements();
+  const wrong=cards.filter(c=>p[c.id]!==c.zone);
+  stage1Score=cards.length-wrong.length;
+
+  const fb=$("#fb1");fb.innerHTML="";
+  if(!wrong.length){
+    addFb(fb,"ok","Все формулировки разделены корректно.",
+      "Вы оставили в фактах только наблюдаемые действия и события, а оценки характера, отношения и намерения вынесли отдельно.");
+  }else{
+    wrong.forEach(c=>{
+      addFb(fb,"warn",`Карточка ${c.id}: проверьте формулировку.`,c.why);
+    });
+  }
+  fb.classList.add("show");
+  $("#go2Wrap").classList.remove("hidden");
+}
+
+function resetStage1(){
+  document.querySelectorAll(".card").forEach(c=>$("#bank").appendChild(c));
+  clearCardSelection();
+  updateStage1();
+}
+
+function renderChoices(containerId,items,selected,handler){
+  const box=$(containerId);box.innerHTML="";
+  items.forEach(item=>{
+    const b=document.createElement("button");
+    b.type="button";
+    b.className="option"+(selected===item.id?" selected":"");
+    b.textContent=item.text;
+    b.addEventListener("click",()=>handler(item.id));
+    box.appendChild(b);
+  });
+}
+
+function renderStage2(){
+  renderChoices("#sOptions",sbi.S,sSel,id=>{sSel=id;renderStage2()});
+  renderChoices("#bOptions",sbi.B,bSel,id=>{bSel=id;renderStage2()});
+  renderChoices("#iOptions",sbi.I,iSel,id=>{iSel=id;renderStage2()});
+  $("#check2").disabled=!(sSel&&bSel&&iSel);
+  $("#fb2").className="feedback";$("#fb2").innerHTML="";
+  $("#go3Wrap").classList.add("hidden");
+
+  const s=sbi.S.find(x=>x.id===sSel)?.text||"";
+  const b=sbi.B.find(x=>x.id===bSel)?.text||"";
+  const i=sbi.I.find(x=>x.id===iSel)?.text||"";
+  $("#previewText").textContent=(s||b||i)?`${s} ${b} ${i}`:"Выберите три части SBI.";
+}
+
+function checkStage2(){
+  const S=sbi.S.find(x=>x.id===sSel);
+  const B=sbi.B.find(x=>x.id===bSel);
+  const I=sbi.I.find(x=>x.id===iSel);
+  stage2Score=[S,B,I].filter(x=>x.correct).length;
+
+  const fb=$("#fb2");fb.innerHTML="";
+  if(S.correct&&B.correct&&I.correct){
+    addFb(fb,"ok","SBI собрана точно.",
+      "Ситуация привязана к конкретному моменту, поведение описано наблюдаемым действием, а влияние связано с реальным последствием для работы двух отделов.");
+  }else{
+    if(!S.correct){
+      addFb(fb,"warn","Situation слишком размыта.",
+        "Формулировки «во время проекта» и «в последнее время» не задают конкретный эпизод. Привяжите обратную связь к подтвержденному риску во вторник.");
+    }
+    if(!B.correct){
+      if(B.issue==="intent"){
+        addFb(fb,"bad","В Behavior осталось предположение о намерении.",
+          "Формулировка «решили скрыть» требует знания мотива сотрудника. Назовите наблюдаемое действие, а причину уточните в разговоре.");
+      }else{
+        addFb(fb,"bad","Behavior содержит оценку.",
+          "«Недостаточно ответственно» — характеристика, которую сотрудник может оспорить. Опишите, что именно он сделал или не сделал.");
+      }
+    }
+    if(!I.correct){
+      if(I.issue==="emotion"){
+        addFb(fb,"warn","Impact сведен к эмоции руководителя.",
+          "Для рабочей обратной связи полезнее назвать последствие для сроков, коллег, клиента, бюджета или переделок.");
+      }else{
+        addFb(fb,"bad","Impact превратился в вывод о человеке.",
+          "Фраза о недоверии оценивает сотрудника целиком. Покажите конкретное последствие этого эпизода.");
+      }
+    }
+  }
+  fb.classList.add("show");
+  $("#go3Wrap").classList.remove("hidden");
+}
+
+function renderStage3(){
+  renderChoices("#followOptions",follow,followSel,id=>{followSel=id;renderStage3()});
+  $("#check3").disabled=!followSel;
+  $("#fb3").className="feedback";$("#fb3").innerHTML="";
+  $("#summary").classList.add("hidden");
+}
+
+function checkStage3(){
+  const chosen=follow.find(x=>x.id===followSel);
+  stage3Score=chosen.correct?1:0;
+
+  const fb=$("#fb3");fb.innerHTML="";
+  addFb(fb,chosen.correct?"ok":"warn",
+    chosen.correct?"Вы продолжили разговор через позицию сотрудника.":"Следующий шаг можно сделать сильнее.",
+    chosen.feedback
+  );
+  fb.classList.add("show");
+  showSummary();
+}
+
+function showSummary(){
+  const total=stage1Score+stage2Score+stage3Score;
+  const max=10;
+  let title,text;
+
+  if(total===10){
+    title="Вы удержали обратную связь на уровне фактов и рабочих последствий.";
+    text="Вы отделяете наблюдение от оценки, строите SBI без предположений о мотивах и после обратной связи возвращаете сотруднику анализ следующего действия.";
+  }else if(stage1Score<5){
+    title="Главная зона роста — отделять наблюдение от интерпретации.";
+    text="Перед обратной связью проверьте каждую формулировку: могло ли это действие быть записано камерой, системой или протоколом? Если нет, скорее всего, в ней есть оценка или предположение.";
+  }else if(stage2Score<3){
+    title="Факты вы видите хорошо, но в SBI еще остаются оценочные элементы.";
+    text="Проверьте три части отдельно: конкретный эпизод, наблюдаемое действие, рабочее последствие. Личностные выводы и мотивы в эту конструкцию не входят.";
+  }else{
+    title="SBI собрана хорошо, но разговор слишком быстро переходит к правилу руководителя.";
+    text="После обратной связи сначала попросите сотрудника оценить собственное решение и предложить, что он изменит в похожей ситуации.";
+  }
+
+  const s=$("#summary");
+  s.innerHTML=`
+    <h3>${title}</h3>
+    <p>${text}</p>
+    <div class="metrics">
+      <div class="metric">
+        <div class="score">${stage1Score}/6</div>
+        <div class="label">факт / оценка</div>
+      </div>
+      <div class="metric">
+        <div class="score">${stage2Score}/3</div>
+        <div class="label">структура SBI</div>
+      </div>
+      <div class="metric">
+        <div class="score">${stage3Score}/1</div>
+        <div class="label">продолжение</div>
+      </div>
+    </div>
+    <div class="reference">
+      <div class="reference-row"><b>Рабочая Situation</b>Когда во вторник появился подтвержденный риск переноса…</div>
+      <div class="reference-row"><b>Рабочая Behavior</b>…вы сообщили о риске команде только в пятницу.</div>
+      <div class="reference-row"><b>Рабочая Impact</b>…из-за этого два отдела планировали работу по старому графику и потратили день на перепланирование.</div>
+      <div class="reference-row"><b>Продолжение</b>Сначала запросить позицию сотрудника и его предложение по следующему действию.</div>
+    </div>
+  `;
+  s.classList.remove("hidden");
+}
+
+$("#check1").addEventListener("click",checkStage1);
+$("#reset1").addEventListener("click",resetStage1);
+$("#go2").addEventListener("click",()=>{
+  $("#stage1").classList.add("hidden");
+  $("#stage2").classList.remove("hidden");
+  $("#p2").classList.add("active");
+  renderStage2();
+  window.scrollTo({top:0,behavior:"smooth"});
+});
+$("#back1").addEventListener("click",()=>{
+  $("#stage2").classList.add("hidden");
+  $("#stage1").classList.remove("hidden");
+  $("#p2").classList.remove("active");
+  window.scrollTo({top:0,behavior:"smooth"});
+});
+$("#check2").addEventListener("click",checkStage2);
+$("#go3").addEventListener("click",()=>{
+  $("#stage2").classList.add("hidden");
+  $("#stage3").classList.remove("hidden");
+  $("#p3").classList.add("active");
+  renderStage3();
+  window.scrollTo({top:0,behavior:"smooth"});
+});
+$("#back2").addEventListener("click",()=>{
+  $("#stage3").classList.add("hidden");
+  $("#stage2").classList.remove("hidden");
+  $("#p3").classList.remove("active");
+  renderStage2();
+  window.scrollTo({top:0,behavior:"smooth"});
+});
+$("#check3").addEventListener("click",checkStage3);
+
+initStage1();
+</script>
+</body>
+</html>

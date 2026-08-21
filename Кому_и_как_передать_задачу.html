@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Кому и как передать задачу</title>
+<style>
+:root{
+  --bg:#f5f6f8;
+  --card:#ffffff;
+  --text:#20242d;
+  --muted:#6c7483;
+  --line:#dfe3ea;
+  --accent:#315d9b;
+  --accent-soft:#eef3fb;
+  --good:#2e6b4f;
+  --good-bg:#eef7f2;
+  --warn:#8a5a10;
+  --warn-bg:#fff7e8;
+  --bad:#8b3d45;
+  --bad-bg:#fff0f1;
+  --shadow:0 6px 18px rgba(31,36,48,.07);
+}
+*{box-sizing:border-box}
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--text);
+  font-family:Arial,Helvetica,sans-serif;
+  line-height:1.42;
+}
+.app{
+  width:min(560px,calc(100% - 24px));
+  margin:18px auto;
+}
+.shell{
+  background:var(--card);
+  border:1px solid var(--line);
+  border-radius:16px;
+  box-shadow:var(--shadow);
+  overflow:hidden;
+}
+.head{
+  padding:18px 18px 14px;
+  border-bottom:1px solid var(--line);
+}
+h1{
+  margin:0 0 8px;
+  font-size:21px;
+  line-height:1.2;
+}
+.lead{
+  margin:0;
+  color:var(--muted);
+  font-size:14px;
+}
+.task{
+  margin-top:13px;
+  padding:10px 12px;
+  border-radius:11px;
+  background:#f3f6fb;
+  border:1px solid #d8e1ef;
+  font-size:13.5px;
+}
+.progress{
+  display:flex;
+  gap:6px;
+  margin-top:14px;
+}
+.progress span{
+  height:5px;
+  flex:1;
+  border-radius:999px;
+  background:#e8ebf0;
+}
+.progress span.active{background:var(--accent)}
+.body{padding:16px}
+.stage-title{
+  margin:0 0 5px;
+  font-size:16px;
+}
+.stage-note{
+  margin:0 0 13px;
+  font-size:13px;
+  color:var(--muted);
+}
+.people{
+  display:flex;
+  gap:6px;
+  margin-bottom:12px;
+}
+.person-tab{
+  flex:1;
+  border:1px solid var(--line);
+  background:#fff;
+  border-radius:9px;
+  padding:8px 4px;
+  font-size:12px;
+  color:var(--muted);
+  cursor:pointer;
+}
+.person-tab.active{
+  border-color:var(--accent);
+  background:var(--accent-soft);
+  color:var(--accent);
+  font-weight:700;
+}
+.person-tab.done::after{
+  content:" ✓";
+  color:var(--good);
+}
+.employee{
+  border:1px solid var(--line);
+  border-radius:13px;
+  padding:13px;
+  background:#fff;
+}
+.employee h2{
+  margin:0 0 5px;
+  font-size:17px;
+}
+.employee p{
+  margin:0;
+  font-size:13.5px;
+  color:#3f4652;
+}
+.question{
+  margin-top:14px;
+}
+.q-label{
+  margin:0 0 7px;
+  font-weight:700;
+  font-size:13.5px;
+}
+.options{
+  display:grid;
+  gap:7px;
+}
+.option{
+  border:1px solid var(--line);
+  border-radius:10px;
+  background:#fff;
+  padding:9px 10px;
+  text-align:left;
+  color:var(--text);
+  font-size:13px;
+  cursor:pointer;
+  transition:.12s ease;
+}
+.option:hover{border-color:#b6c0cf}
+.option.selected{
+  border-color:var(--accent);
+  background:var(--accent-soft);
+  box-shadow:0 0 0 1px var(--accent) inset;
+}
+.actions{
+  display:flex;
+  gap:8px;
+  margin-top:14px;
+}
+button{
+  appearance:none;
+  border:0;
+  border-radius:10px;
+  padding:10px 13px;
+  font-size:14px;
+  font-weight:700;
+  cursor:pointer;
+}
+.primary{
+  background:var(--accent);
+  color:white;
+  flex:1;
+}
+.primary:disabled{
+  opacity:.45;
+  cursor:not-allowed;
+}
+.secondary{
+  background:#edf0f4;
+  color:var(--text);
+}
+.feedback{
+  display:none;
+  margin-top:14px;
+}
+.feedback.show{display:block}
+.fb{
+  border-radius:11px;
+  padding:11px 12px;
+  margin-top:8px;
+  font-size:13.5px;
+}
+.fb strong{
+  display:block;
+  margin-bottom:3px;
+}
+.fb.good{background:var(--good-bg);border:1px solid #cfe5d8;color:#214f3b}
+.fb.warn{background:var(--warn-bg);border:1px solid #f1dbb0;color:#6f480c}
+.fb.bad{background:var(--bad-bg);border:1px solid #efc9cd;color:#73343b}
+.summary-grid{
+  display:grid;
+  gap:8px;
+  margin-top:12px;
+}
+.summary-card{
+  border:1px solid var(--line);
+  border-radius:11px;
+  padding:10px 11px;
+  font-size:13px;
+}
+.summary-card b{
+  display:block;
+  margin-bottom:3px;
+}
+.pill{
+  display:inline-block;
+  margin:3px 4px 0 0;
+  padding:3px 7px;
+  border-radius:999px;
+  font-size:11.5px;
+  background:#f1f3f6;
+  color:#495260;
+}
+.scenario{
+  border:1px solid #d8e1ef;
+  border-radius:12px;
+  padding:12px;
+  background:#f6f8fc;
+  margin-bottom:10px;
+}
+.scenario b{
+  display:block;
+  margin-bottom:4px;
+}
+.final{
+  display:none;
+  margin-top:14px;
+  border:1px solid #cfe5d8;
+  background:var(--good-bg);
+  color:#214f3b;
+  border-radius:12px;
+  padding:12px;
+  font-size:13.5px;
+}
+.final.show{display:block}
+.small{
+  font-size:12px;
+  color:var(--muted);
+  margin-top:6px;
+}
+.hidden{display:none!important}
+@media(max-width:420px){
+  .person-tab{font-size:11px;padding:7px 2px}
+  .body{padding:13px}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="shell">
+    <div class="head">
+      <h1>Кому и как передать задачу</h1>
+      <p class="lead">Определите готовность сотрудников к конкретной задаче и выберите подходящий режим поддержки.</p>
+      <div class="task"><b>Задача:</b> передать ведение еженедельной проектной сверки.</div>
+      <div class="progress">
+        <span id="pr1" class="active"></span>
+        <span id="pr2"></span>
+        <span id="pr3"></span>
+      </div>
+    </div>
+
+    <div class="body">
+
+      <!-- STAGE 1 -->
+      <section id="stage1">
+        <h3 class="stage-title">Этап 1. Определите профиль готовности</h3>
+        <p class="stage-note">Оценивайте человека относительно этой задачи, а не по стажу и общей репутации.</p>
+
+        <div class="people" id="tabs1"></div>
+
+        <div class="employee">
+          <h2 id="name1"></h2>
+          <p id="desc1"></p>
+
+          <div class="question">
+            <p class="q-label">Какой профиль лучше всего описывает ситуацию?</p>
+            <div class="options" id="profileOptions"></div>
+          </div>
+        </div>
+
+        <div class="actions">
+          <button class="secondary" id="prev1">Назад</button>
+          <button class="primary" id="next1" disabled>Дальше</button>
+        </div>
+
+        <div class="feedback" id="feedback1"></div>
+      </section>
+
+      <!-- STAGE 2 -->
+      <section id="stage2" class="hidden">
+        <h3 class="stage-title">Этап 2. Подберите поддержку</h3>
+        <p class="stage-note">Поддержка должна соответствовать причине: больше инструкций не всегда означает лучшее управление.</p>
+
+        <div class="people" id="tabs2"></div>
+
+        <div class="employee">
+          <h2 id="name2"></h2>
+          <p id="desc2"></p>
+
+          <div class="question">
+            <p class="q-label">Какой режим поддержки выбрать на старте?</p>
+            <div class="options" id="supportOptions"></div>
+          </div>
+        </div>
+
+        <div class="actions">
+          <button class="secondary" id="prev2">Назад</button>
+          <button class="primary" id="next2" disabled>Дальше</button>
+        </div>
+
+        <div class="feedback" id="feedback2"></div>
+      </section>
+
+      <!-- STAGE 3 -->
+      <section id="stage3" class="hidden">
+        <h3 class="stage-title">Этап 3. Примите решение о передаче</h3>
+        <p class="stage-note">Теперь используйте диагностику как основание для управленческого решения.</p>
+
+        <div class="scenario">
+          <b>Ситуация</b>
+          Проектная сверка должна перейти сотруднику уже со следующей недели. Руководитель может дать поддержку на старте, но не хочет оставаться постоянным ведущим встречи.
+        </div>
+
+        <div class="question">
+          <p class="q-label">Кому задачу можно передать с минимальным объемом поддержки уже сейчас?</p>
+          <div class="options" id="candidateOptions"></div>
+        </div>
+
+        <div class="question">
+          <p class="q-label">Кому можно передать задачу, но сначала стоит восстановить уверенность в самостоятельных решениях?</p>
+          <div class="options" id="confidenceOptions"></div>
+        </div>
+
+        <div class="question">
+          <p class="q-label">По кому данных пока недостаточно для решения о передаче?</p>
+          <div class="options" id="diagnosticOptions"></div>
+        </div>
+
+        <div class="actions">
+          <button class="secondary" id="backTo2">Назад</button>
+          <button class="primary" id="checkFinal" disabled>Проверить решение</button>
+        </div>
+
+        <div class="feedback" id="feedback3"></div>
+        <div class="final" id="finalBox"></div>
+      </section>
+
+    </div>
+  </div>
+</div>
+
+<script>
+const employees = [
+  {
+    id:"olga",
+    name:"Ольга",
+    desc:"Пять лет в компании. Хорошо знает процессы, несколько раз замещала руководителя. После ошибки в прошлом квартале стала чаще просить подтверждение своих решений.",
+    profile:"high_reduced",
+    support:"restore",
+    rationale:"Опыт в похожей работе подтвержден, но после ошибки снизилась уверенность. Дополнительные подробные инструкции проблему не решат."
+  },
+  {
+    id:"pavel",
+    name:"Павел",
+    desc:"Один год в компании. Хочет развиваться. Хорошо ведет собственный проект, но еще не координировал работу других сотрудников.",
+    profile:"limited_high",
+    support:"structure",
+    rationale:"Вовлеченность высокая, но опыт именно в координации коллег пока ограничен. На старте нужна структура и несколько контрольных точек."
+  },
+  {
+    id:"andrey",
+    name:"Андрей",
+    desc:"Четыре года в компании. Профессионально силен. При общих задачах регулярно говорит: «Это не моя зона ответственности».",
+    profile:"diagnose",
+    support:"diagnose_first",
+    rationale:"Профессионализм сам по себе не доказывает готовность вести проект. Фраза про «не мою зону» может означать неясность роли, низкую мотивацию или избегание ответственности — сначала нужна диагностика."
+  },
+  {
+    id:"natalia",
+    name:"Наталья",
+    desc:"Два года в компании. Уже несколько месяцев самостоятельно ведет небольшой проект, сообщает о рисках заранее и обычно приходит к руководителю с несколькими вариантами решения.",
+    profile:"high_high",
+    support:"minimal",
+    rationale:"Есть похожий опыт, самостоятельное управление рисками и привычка приходить с вариантами. Это наиболее полная готовность к передаче."
+  }
+];
+
+const profiles = [
+  ["high_high","Компетентность высокая, вовлеченность высокая"],
+  ["high_reduced","Компетентность высокая, вовлеченность снижена"],
+  ["limited_high","Компетентность пока ограничена, вовлеченность высокая"],
+  ["diagnose","Нужна дополнительная диагностика перед выводом"]
+];
+
+const supports = [
+  ["minimal","Передать результат и границы, контроль минимальный"],
+  ["structure","Дать структуру и чаще сверяться на старте"],
+  ["restore","Прояснить причины снижения уверенности и восстановить самостоятельность"],
+  ["diagnose_first","Сначала обсудить отношение к ответственности и роль, затем говорить о делегировании"]
+];
+
+const state = {
+  stage1Index:0,
+  stage2Index:0,
+  profiles:{},
+  supports:{},
+  final:{candidate:null,confidence:null,diagnostic:null}
+};
+
+const $ = sel => document.querySelector(sel);
+
+function makeTabs(containerId, activeIndex, doneMap, onClick){
+  const box = document.getElementById(containerId);
+  box.innerHTML="";
+  employees.forEach((e,i)=>{
+    const b=document.createElement("button");
+    b.type="button";
+    b.className="person-tab"+(i===activeIndex?" active":"")+(doneMap[e.id]?" done":"");
+    b.textContent=e.name;
+    b.addEventListener("click",()=>onClick(i));
+    box.appendChild(b);
+  });
+}
+
+function makeOptions(containerId, items, selectedValue, onSelect){
+  const box=document.getElementById(containerId);
+  box.innerHTML="";
+  items.forEach(([value,label])=>{
+    const b=document.createElement("button");
+    b.type="button";
+    b.className="option"+(selectedValue===value?" selected":"");
+    b.textContent=label;
+    b.addEventListener("click",()=>{
+      onSelect(value);
+      makeOptions(containerId,items,value,onSelect);
+    });
+    box.appendChild(b);
+  });
+}
+
+function renderStage1(){
+  const e=employees[state.stage1Index];
+  makeTabs("tabs1",state.stage1Index,state.profiles,i=>{state.stage1Index=i;renderStage1()});
+  $("#name1").textContent=e.name;
+  $("#desc1").textContent=e.desc;
+  makeOptions("profileOptions",profiles,state.profiles[e.id],value=>{
+    state.profiles[e.id]=value;
+    $("#next1").disabled=false;
+    makeTabs("tabs1",state.stage1Index,state.profiles,i=>{state.stage1Index=i;renderStage1()});
+  });
+  $("#prev1").disabled=state.stage1Index===0;
+  $("#next1").disabled=!state.profiles[e.id];
+  $("#next1").textContent=state.stage1Index===employees.length-1?"Проверить этап":"Следующий сотрудник";
+  $("#feedback1").className="feedback";
+  $("#feedback1").innerHTML="";
+}
+
+function addFb(container,type,title,text){
+  const d=document.createElement("div");
+  d.className=`fb ${type}`;
+  d.innerHTML=`<strong>${title}</strong>${text}`;
+  container.appendChild(d);
+}
+
+function checkProfiles(){
+  const fb=$("#feedback1");
+  fb.innerHTML="";
+  let errors=[];
+  employees.forEach(e=>{
+    if(state.profiles[e.id]!==e.profile) errors.push(e);
+  });
+
+  if(!errors.length){
+    addFb(fb,"good","Диагностика собрана последовательно.",
+      "Вы не приняли стаж, энтузиазм или общую профессиональную силу за готовность к конкретной задаче.");
+  } else {
+    const tenureErrors = ["olga","pavel"].filter(id=>{
+      const e=employees.find(x=>x.id===id);
+      return state.profiles[id]!==e.profile;
+    });
+    if(tenureErrors.length){
+      addFb(fb,"warn","Проверьте, не смешали ли вы опыт и вовлеченность.",
+        "Стаж и желание развиваться отвечают на разные вопросы. Опыт показывает способность выполнить задачу, а вовлеченность — готовность брать и удерживать ответственность.");
+    }
+    if(state.profiles.andrey!=="diagnose"){
+      addFb(fb,"warn","По Андрею пока рано делать окончательные выводы.",
+        "Фраза «это не моя зона» может означать разные причины. Дополнительная диагностика лучше, чем поспешный вывод о мотивации или компетентности.");
+    }
+    errors.forEach(e=>{
+      addFb(fb,"bad",`${e.name}: решение стоит пересмотреть.`,e.rationale);
+    });
+  }
+  fb.classList.add("show");
+
+  const allCorrect = !errors.length;
+  const btn=document.createElement("button");
+  btn.type="button";
+  btn.className="primary";
+  btn.style.marginTop="10px";
+  btn.textContent=allCorrect?"Перейти к поддержке":"Показать логику и перейти";
+  btn.addEventListener("click",()=>{
+    if(!allCorrect){
+      employees.forEach(e=>state.profiles[e.id]=e.profile);
+    }
+    $("#stage1").classList.add("hidden");
+    $("#stage2").classList.remove("hidden");
+    $("#pr2").classList.add("active");
+    state.stage2Index=0;
+    renderStage2();
+    window.scrollTo({top:0,behavior:"smooth"});
+  });
+  fb.appendChild(btn);
+}
+
+function renderStage2(){
+  const e=employees[state.stage2Index];
+  makeTabs("tabs2",state.stage2Index,state.supports,i=>{state.stage2Index=i;renderStage2()});
+  $("#name2").textContent=e.name;
+  $("#desc2").textContent=e.desc;
+  makeOptions("supportOptions",supports,state.supports[e.id],value=>{
+    state.supports[e.id]=value;
+    $("#next2").disabled=false;
+    makeTabs("tabs2",state.stage2Index,state.supports,i=>{state.stage2Index=i;renderStage2()});
+  });
+  $("#prev2").disabled=state.stage2Index===0;
+  $("#next2").disabled=!state.supports[e.id];
+  $("#next2").textContent=state.stage2Index===employees.length-1?"Проверить этап":"Следующий сотрудник";
+  $("#feedback2").className="feedback";
+  $("#feedback2").innerHTML="";
+}
+
+function checkSupports(){
+  const fb=$("#feedback2");
+  fb.innerHTML="";
+  const errors=employees.filter(e=>state.supports[e.id]!==e.support);
+  if(!errors.length){
+    addFb(fb,"good","Поддержка соответствует диагнозу.",
+      "Вы усиливаете структуру там, где не хватает опыта, и не пытаетесь лечить снижение уверенности дополнительными инструкциями.");
+  } else {
+    const overInstruction = employees.filter(e=>["olga","natalia"].includes(e.id) && state.supports[e.id]==="structure");
+    if(overInstruction.length){
+      addFb(fb,"warn","Вы добавили инструкции там, где проблема не в знании процесса.",
+        "Сильному сотруднику подробная структура может только вернуть зависимость от руководителя.");
+    }
+    errors.forEach(e=>{
+      addFb(fb,"bad",`${e.name}: режим поддержки не совпадает с причиной.`,e.rationale);
+    });
+  }
+  fb.classList.add("show");
+
+  const allCorrect=!errors.length;
+  const btn=document.createElement("button");
+  btn.type="button";
+  btn.className="primary";
+  btn.style.marginTop="10px";
+  btn.textContent=allCorrect?"Перейти к решению":"Показать логику и перейти";
+  btn.addEventListener("click",()=>{
+    if(!allCorrect){
+      employees.forEach(e=>state.supports[e.id]=e.support);
+    }
+    $("#stage2").classList.add("hidden");
+    $("#stage3").classList.remove("hidden");
+    $("#pr3").classList.add("active");
+    renderStage3();
+    window.scrollTo({top:0,behavior:"smooth"});
+  });
+  fb.appendChild(btn);
+}
+
+function peopleOptions(){
+  return employees.map(e=>[e.id,e.name]);
+}
+
+function renderStage3(){
+  makeOptions("candidateOptions",peopleOptions(),state.final.candidate,v=>{state.final.candidate=v;updateFinalButton()});
+  makeOptions("confidenceOptions",peopleOptions(),state.final.confidence,v=>{state.final.confidence=v;updateFinalButton()});
+  makeOptions("diagnosticOptions",peopleOptions(),state.final.diagnostic,v=>{state.final.diagnostic=v;updateFinalButton()});
+  updateFinalButton();
+  $("#feedback3").className="feedback";
+  $("#feedback3").innerHTML="";
+  $("#finalBox").className="final";
+}
+
+function updateFinalButton(){
+  $("#checkFinal").disabled=!(state.final.candidate&&state.final.confidence&&state.final.diagnostic);
+}
+
+function checkFinal(){
+  const fb=$("#feedback3");
+  fb.innerHTML="";
+  const correct={
+    candidate:state.final.candidate==="natalia",
+    confidence:state.final.confidence==="olga",
+    diagnostic:state.final.diagnostic==="andrey"
+  };
+  if(correct.candidate&&correct.confidence&&correct.diagnostic){
+    addFb(fb,"good","Решение опирается на факты о готовности к задаче.",
+      "Наталья требует минимальной поддержки, Ольге нужна работа с уверенностью, по Андрею сначала нужно уточнить причины отношения к общей ответственности.");
+    $("#finalBox").innerHTML="<strong>Ключевой вывод.</strong> Делегировать нужно не «сильному сотруднику вообще», а человеку, чья готовность подтверждена именно для этой задачи. Объем поддержки зависит от причины: нехватка опыта, снижение уверенности и неясная вовлеченность требуют разных действий.";
+    $("#finalBox").classList.add("show");
+  }else{
+    if(!correct.candidate){
+      addFb(fb,"warn","Кандидат с минимальной потребностью в поддержке — Наталья.",
+        "У нее есть близкий опыт самостоятельной координации, она заранее сообщает о рисках и приходит с вариантами решения.");
+    }
+    if(!correct.confidence){
+      addFb(fb,"warn","Восстанавливать уверенность прежде всего нужно у Ольги.",
+        "Опыт у нее уже есть, поэтому подробные инструкции не решают основную проблему после прошлой ошибки.");
+    }
+    if(!correct.diagnostic){
+      addFb(fb,"warn","Дополнительная диагностика нужна по Андрею.",
+        "Одной фразы про «не мою зону» недостаточно, чтобы точно определить причину и выбрать режим делегирования.");
+    }
+  }
+  fb.classList.add("show");
+}
+
+$("#next1").addEventListener("click",()=>{
+  if(state.stage1Index<employees.length-1){
+    state.stage1Index++; renderStage1();
+  }else{
+    checkProfiles();
+  }
+});
+$("#prev1").addEventListener("click",()=>{if(state.stage1Index>0){state.stage1Index--;renderStage1()}});
+
+$("#next2").addEventListener("click",()=>{
+  if(state.stage2Index<employees.length-1){
+    state.stage2Index++; renderStage2();
+  }else{
+    checkSupports();
+  }
+});
+$("#prev2").addEventListener("click",()=>{if(state.stage2Index>0){state.stage2Index--;renderStage2()}});
+
+$("#backTo2").addEventListener("click",()=>{
+  $("#stage3").classList.add("hidden");
+  $("#stage2").classList.remove("hidden");
+  $("#pr3").classList.remove("active");
+  renderStage2();
+  window.scrollTo({top:0,behavior:"smooth"});
+});
+$("#checkFinal").addEventListener("click",checkFinal);
+
+renderStage1();
+</script>
+</body>
+</html>

@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Кого действительно нужно корректировать?</title>
+<style>
+:root{
+  --bg:#f5f6f8; --card:#fff; --text:#20242d; --muted:#6d7583; --line:#dfe3ea;
+  --accent:#315d9b; --accent-soft:#eef3fb; --ok:#2e6b4f; --ok-bg:#eef7f2;
+  --warn:#8a5a10; --warn-bg:#fff7e8; --bad:#8b3d45; --bad-bg:#fff0f1;
+  --shadow:0 6px 18px rgba(31,36,48,.07);
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--bg); color:var(--text);
+  font-family:Arial,Helvetica,sans-serif; line-height:1.42;
+}
+.app{width:min(560px,calc(100% - 24px)); margin:18px auto}
+.shell{
+  background:var(--card); border:1px solid var(--line); border-radius:16px;
+  box-shadow:var(--shadow); overflow:hidden
+}
+.head{padding:18px 18px 14px; border-bottom:1px solid var(--line)}
+h1{margin:0 0 8px; font-size:21px; line-height:1.2}
+.lead{margin:0; color:var(--muted); font-size:14px}
+.progress{display:flex; gap:7px; margin-top:14px}
+.progress span{flex:1; height:5px; border-radius:999px; background:#e8ebf0}
+.progress span.active{background:var(--accent)}
+.body{padding:16px}
+.stage-label{
+  font-size:12px; color:var(--accent); font-weight:700; text-transform:uppercase;
+  letter-spacing:.03em; margin-bottom:5px
+}
+.stage-title{margin:0 0 5px; font-size:17px}
+.stage-note{margin:0 0 12px; color:var(--muted); font-size:13px}
+.rules{
+  padding:11px 12px; border:1px solid #d8e1ef; background:#f5f7fb;
+  border-radius:12px; font-size:13px; margin-bottom:13px
+}
+.rules b{display:block; margin-bottom:5px}
+.rules ol{margin:0; padding-left:19px}
+.rules li{margin:4px 0}
+.norm{
+  display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:12px
+}
+.norm-item{
+  border:1px solid var(--line); border-radius:10px; padding:9px; background:#fff
+}
+.norm-item b{display:block; font-size:12px; margin-bottom:2px}
+.norm-item span{font-size:18px; font-weight:700; color:var(--accent)}
+.employee-list{display:grid; gap:10px}
+.employee{
+  border:1px solid var(--line); border-radius:12px; overflow:hidden; background:#fff
+}
+.employee-head{
+  display:grid; grid-template-columns:1fr auto auto; gap:8px; align-items:center;
+  padding:10px 11px; background:#fafbfc; border-bottom:1px solid var(--line)
+}
+.employee-name{font-size:14px; font-weight:700}
+.metric-chip{
+  border:1px solid var(--line); border-radius:8px; padding:5px 7px; text-align:center;
+  min-width:64px
+}
+.metric-chip b{display:block; font-size:13px}
+.metric-chip span{display:block; color:var(--muted); font-size:9.5px}
+.employee-body{padding:10px}
+.select-row{margin-top:8px}
+.select-row:first-child{margin-top:0}
+.select-row label{
+  display:block; font-size:11px; color:var(--muted); font-weight:700; margin-bottom:4px
+}
+select{
+  width:100%; border:1px solid var(--line); border-radius:9px; background:#fff;
+  color:var(--text); padding:8px 9px; font-size:12px
+}
+.details{
+  margin-top:8px; padding:8px 9px; border-radius:9px; background:#f6f7f9;
+  font-size:11.5px; color:var(--muted)
+}
+.actions{display:flex; gap:8px; margin-top:13px}
+button{
+  appearance:none; border:0; border-radius:10px; padding:10px 13px;
+  font-size:14px; font-weight:700; cursor:pointer
+}
+.primary{background:var(--accent); color:#fff; flex:1}
+.primary:disabled{opacity:.45; cursor:not-allowed}
+.secondary{background:#edf0f4; color:var(--text)}
+.feedback{display:none; margin-top:12px}
+.feedback.show{display:block}
+.fb{border-radius:10px; padding:10px 11px; margin-top:7px; font-size:13px}
+.fb strong{display:block; margin-bottom:3px}
+.fb.ok{background:var(--ok-bg); border:1px solid #cfe5d8; color:#214f3b}
+.fb.warn{background:var(--warn-bg); border:1px solid #f1dbb0; color:#6f480c}
+.fb.bad{background:var(--bad-bg); border:1px solid #efc9cd; color:#73343b}
+.hidden{display:none!important}
+.table-wrap{
+  border:1px solid var(--line); border-radius:11px; overflow:hidden; margin-bottom:12px
+}
+.time-head,.time-row{
+  display:grid; grid-template-columns:1.65fr .7fr .7fr; align-items:center
+}
+.time-head{background:#f4f6f9; font-size:11px; font-weight:700}
+.time-head div,.time-row div{padding:8px 9px}
+.time-head div+div,.time-row div+div{border-left:1px solid #edf0f4; text-align:center}
+.time-row{border-top:1px solid #edf0f4; font-size:12px}
+.time-row.problem{background:var(--warn-bg)}
+.ratio{
+  font-size:10.5px; color:var(--warn); margin-top:2px
+}
+.option-list{display:grid; gap:7px}
+.option{
+  width:100%; border:1px solid var(--line); border-radius:10px; background:#fff;
+  color:var(--text); padding:10px 11px; text-align:left; font-size:12.5px; cursor:pointer
+}
+.option.selected{
+  border-color:var(--accent); background:var(--accent-soft);
+  box-shadow:0 0 0 1px var(--accent) inset
+}
+.summary{
+  margin-top:14px; border-top:1px solid var(--line); padding-top:14px
+}
+.summary h3{margin:0 0 7px; font-size:17px}
+.summary p{margin:0 0 9px; font-size:13px}
+.metrics{display:grid; grid-template-columns:1fr 1fr 1fr; gap:7px}
+.metric{
+  border:1px solid var(--line); border-radius:10px; padding:9px 6px; text-align:center
+}
+.metric .score{font-size:19px; font-weight:700; color:var(--accent)}
+.metric .label{font-size:10.5px; color:var(--muted); margin-top:2px}
+.reference{
+  margin-top:11px; border:1px solid var(--line); border-radius:11px; overflow:hidden
+}
+.reference-head{
+  padding:8px 10px; background:#f4f6f9; font-size:12.5px; font-weight:700
+}
+.reference-row{padding:8px 10px; border-top:1px solid #edf0f4; font-size:12px}
+.reference-row b{display:block; margin-bottom:2px}
+@media(max-width:420px){
+  .employee-head{grid-template-columns:1fr 1fr}
+  .employee-name{grid-column:1/-1}
+  .metrics{grid-template-columns:1fr}
+  .body{padding:13px}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="shell">
+    <div class="head">
+      <h1>Кого действительно нужно корректировать</h1>
+      <p class="lead">Сравните скорость и качество четырех сотрудников, выберите вмешательство по типу отклонения, а затем разберите причину низкой скорости по хронометражу.</p>
+      <div class="progress">
+        <span id="p1" class="active"></span>
+        <span id="p2"></span>
+      </div>
+    </div>
+
+    <div class="body">
+      <section id="stage1">
+        <div class="stage-label">Этап 1 из 2</div>
+        <h2 class="stage-title">Определите тип отклонения и следующий шаг</h2>
+
+        <div class="rules">
+          <b>Что нужно сделать</b>
+          <ol>
+            <li>Сначала сравните показатели каждого сотрудника с рабочим диапазоном.</li>
+            <li>Для каждого сотрудника выберите одну зону: <strong>оба показателя в норме, проблема скорости, проблема качества, проблема по обоим показателям</strong>.</li>
+            <li>После этого выберите <strong>один следующий управленческий шаг</strong>.</li>
+            <li>Не усиливайте требования автоматически. Вмешательство должно соответствовать типу отклонения.</li>
+            <li>Если скорость ниже нормы, сначала ищите место потери времени. Если качество ниже нормы, ищите точку возникновения ошибок.</li>
+            <li>Если оба показателя в норме, не создавайте дополнительный контроль без новой причины.</li>
+            <li>Когда заполните все восемь полей, нажмите «Проверить решения».</li>
+          </ol>
+        </div>
+
+        <div class="norm">
+          <div class="norm-item"><b>Скорость</b><span>≥ 25</span><div class="stage-note" style="margin:2px 0 0">задач в день</div></div>
+          <div class="norm-item"><b>Качество</b><span>≤ 4%</span><div class="stage-note" style="margin:2px 0 0">возвратов</div></div>
+        </div>
+
+        <div class="employee-list" id="employeeList"></div>
+
+        <div class="actions">
+          <button class="secondary" id="reset1">Сбросить</button>
+          <button class="primary" id="check1" disabled>Проверить решения</button>
+        </div>
+
+        <div class="feedback" id="fb1"></div>
+        <div class="actions hidden" id="go2Wrap">
+          <button class="primary" id="go2">Перейти к хронометражу</button>
+        </div>
+      </section>
+
+      <section id="stage2" class="hidden">
+        <div class="stage-label">Этап 2 из 2</div>
+        <h2 class="stage-title">Найдите причину низкой скорости</h2>
+
+        <div class="rules">
+          <b>Что нужно сделать</b>
+          <ol>
+            <li>Ниже показан хронометраж сотрудника Б, у которого качество в норме, а скорость ниже рабочего диапазона.</li>
+            <li>Сравните время пяти операций с типичным временем стабильных сотрудников.</li>
+            <li>Найдите операцию, которая дает основной вклад в отклонение.</li>
+            <li>Выберите <strong>одно изменение</strong>, которое стоит проверить первым.</li>
+            <li>Не меняйте сразу несколько элементов процесса: иначе будет непонятно, что именно повлияло на скорость.</li>
+            <li>После выбора нажмите «Проверить изменение».</li>
+          </ol>
+        </div>
+
+        <div class="table-wrap">
+          <div class="time-head">
+            <div>Операция</div>
+            <div>Б, мин</div>
+            <div>Обычно, мин</div>
+          </div>
+          <div class="time-row">
+            <div>Принять и классифицировать задачу</div><div>8</div><div>7</div>
+          </div>
+          <div class="time-row problem">
+            <div>Найти исходные данные<div class="ratio">примерно в 2,7 раза дольше</div></div><div>24</div><div>9</div>
+          </div>
+          <div class="time-row">
+            <div>Подготовить решение</div><div>12</div><div>11</div>
+          </div>
+          <div class="time-row">
+            <div>Проверить качество</div><div>7</div><div>6</div>
+          </div>
+          <div class="time-row">
+            <div>Зафиксировать результат</div><div>5</div><div>5</div>
+          </div>
+        </div>
+
+        <div class="option-list" id="stage2Options"></div>
+
+        <div class="actions">
+          <button class="secondary" id="back1">Назад</button>
+          <button class="primary" id="check2" disabled>Проверить изменение</button>
+        </div>
+
+        <div class="feedback" id="fb2"></div>
+        <div class="summary hidden" id="summary"></div>
+      </section>
+    </div>
+  </div>
+</div>
+
+<script>
+const employees = [
+  {
+    id:"A", speed:31, returns:9,
+    zone:"quality",
+    intervention:"checklist",
+    fact:"Разбор возвратов показывает: 7 из 9 ошибок связаны с пропуском обязательной финальной проверки полей перед отправкой."
+  },
+  {
+    id:"B", speed:24, returns:2,
+    zone:"speed",
+    intervention:"timing",
+    fact:"Ошибок почти нет, но цикл выполнения задачи стабильно длиннее нормы. Пока неизвестно, на какой операции теряется время."
+  },
+  {
+    id:"V", speed:27, returns:3,
+    zone:"normal",
+    intervention:"none",
+    fact:"Показатели держатся в рабочем диапазоне четыре недели подряд, новых рисков или изменений процесса нет."
+  },
+  {
+    id:"G", speed:19, returns:11,
+    zone:"both",
+    intervention:"training",
+    fact:"В наблюдении видно: сотрудник путает порядок двух обязательных операций, из-за чего переделывает часть задач и одновременно теряет время."
+  }
+];
+
+const zones = [
+  ["","Выберите зону"],
+  ["normal","Скорость и качество в норме"],
+  ["speed","Проблема скорости"],
+  ["quality","Проблема качества"],
+  ["both","Проблема по обоим показателям"]
+];
+
+const interventions = [
+  ["","Выберите следующий шаг"],
+  ["raise","Увеличить норму задач в день"],
+  ["timing","Провести хронометраж операций"],
+  ["checklist","Ввести короткий чек-лист финальной проверки"],
+  ["training","Отработать процесс и порядок операций на нескольких задачах"],
+  ["none","Оставить без изменений и продолжать обычный мониторинг"],
+  ["daily","Ввести ежедневный отчет руководителю"]
+];
+
+const answers = {};
+let stage1ZoneScore=0;
+let stage1ActionScore=0;
+let stage2Sel=null;
+let stage2Score=0;
+
+const stage2Options = [
+  {
+    id:"source-map",
+    text:"Собрать для сотрудника быстрый маршрут поиска: закрепить ссылки на основные источники и правила, где искать данные по каждому типу задачи. Затем повторить замер.",
+    correct:true,
+    feedback:"Изменение направлено в конкретное узкое место. После нового замера можно проверить, сократилось ли время поиска без ухудшения качества."
+  },
+  {
+    id:"quota",
+    text:"Повысить норму сотрудника Б до 28 задач в день: более жесткое требование заставит работать быстрее.",
+    correct:false,
+    feedback:"Требование меняет целевой показатель, но не причину отклонения. Сотрудник уже теряет 15 лишних минут на поиске исходных данных."
+  },
+  {
+    id:"skip-check",
+    text:"Сократить финальную проверку качества с семи минут до двух, чтобы компенсировать медленный поиск.",
+    correct:false,
+    feedback:"Качество сотрудника сейчас в норме. Сокращение стабильного этапа не устраняет узкое место и может создать новую проблему с возвратами."
+  },
+  {
+    id:"daily-control",
+    text:"Ввести ежедневный разбор всех выполненных задач с руководителем.",
+    correct:false,
+    feedback:"Дополнительный контроль увеличит управленческие затраты, но не объясняет, почему поиск данных занимает почти втрое больше времени."
+  },
+  {
+    id:"change-all",
+    text:"Одновременно изменить шаблон, порядок операций, источники данных и норму, а через неделю сравнить результат.",
+    correct:false,
+    feedback:"Если изменить сразу несколько элементов, невозможно понять, какое вмешательство сработало. Сначала проверьте одну гипотезу по главному узкому месту."
+  }
+];
+
+const $ = s => document.querySelector(s);
+
+function addFb(container,type,title,text){
+  const d=document.createElement("div");
+  d.className=`fb ${type}`;
+  d.innerHTML=`<strong>${title}</strong>${text}`;
+  container.appendChild(d);
+}
+
+function makeSelect(options,value,onchange){
+  const s=document.createElement("select");
+  options.forEach(([v,label])=>{
+    const o=document.createElement("option");
+    o.value=v; o.textContent=label;
+    if(v===value)o.selected=true;
+    s.appendChild(o);
+  });
+  s.addEventListener("change",()=>onchange(s.value));
+  return s;
+}
+
+function renderEmployees(){
+  const box=$("#employeeList");
+  box.innerHTML="";
+
+  employees.forEach(e=>{
+    const st=answers[e.id] || {zone:"",intervention:""};
+    answers[e.id]=st;
+
+    const wrap=document.createElement("div");
+    wrap.className="employee";
+
+    const head=document.createElement("div");
+    head.className="employee-head";
+    head.innerHTML=`
+      <div class="employee-name">Сотрудник ${e.id}</div>
+      <div class="metric-chip"><b>${e.speed}</b><span>задач/день</span></div>
+      <div class="metric-chip"><b>${e.returns}%</b><span>возвраты</span></div>
+    `;
+    wrap.appendChild(head);
+
+    const body=document.createElement("div");
+    body.className="employee-body";
+
+    const z=document.createElement("div");
+    z.className="select-row";
+    const zl=document.createElement("label");
+    zl.textContent="1. К какой зоне относится сотрудник?";
+    z.appendChild(zl);
+    z.appendChild(makeSelect(zones,st.zone,v=>{
+      st.zone=v;
+      clearStage1Feedback();
+      renderEmployees();
+    }));
+    body.appendChild(z);
+
+    const fact=document.createElement("div");
+    fact.className="details";
+    fact.innerHTML=`<b>Дополнительная фактура для выбора вмешательства:</b> ${e.fact}`;
+    body.appendChild(fact);
+
+    const a=document.createElement("div");
+    a.className="select-row";
+    const al=document.createElement("label");
+    al.textContent="2. Какой следующий управленческий шаг выбрать?";
+    a.appendChild(al);
+    a.appendChild(makeSelect(interventions,st.intervention,v=>{
+      st.intervention=v;
+      clearStage1Feedback();
+      renderEmployees();
+    }));
+    body.appendChild(a);
+
+    wrap.appendChild(body);
+    box.appendChild(wrap);
+  });
+
+  const ready=employees.every(e=>answers[e.id].zone && answers[e.id].intervention);
+  $("#check1").disabled=!ready;
+}
+
+function clearStage1Feedback(){
+  $("#fb1").className="feedback";
+  $("#fb1").innerHTML="";
+  $("#go2Wrap").classList.add("hidden");
+}
+
+function checkStage1(){
+  stage1ZoneScore=employees.filter(e=>answers[e.id].zone===e.zone).length;
+  stage1ActionScore=employees.filter(e=>answers[e.id].intervention===e.intervention).length;
+
+  const fb=$("#fb1");
+  fb.innerHTML="";
+
+  employees.forEach(e=>{
+    const zOk=answers[e.id].zone===e.zone;
+    const aOk=answers[e.id].intervention===e.intervention;
+
+    if(!zOk){
+      const zoneText={
+        A:"31 задач в день — скорость выше нормы, но 9% возвратов превышают допустимые 4%. Это проблема качества.",
+        B:"24 задачи в день — ниже нормы 25, при этом 2% возвратов находятся в рабочем диапазоне. Это проблема скорости.",
+        V:"27 задач и 3% возвратов — оба показателя находятся в норме.",
+        G:"19 задач и 11% возвратов — отклонение есть одновременно по скорости и качеству."
+      };
+      addFb(fb,"warn",`Сотрудник ${e.id}: сначала уточните тип отклонения.`,zoneText[e.id]);
+    }
+
+    if(zOk && !aOk){
+      const actionText={
+        A:"Ошибки концентрируются в пропуске обязательной финальной проверки. Здесь стоит проверить короткий чек-лист, а не увеличивать норму или вводить ежедневный контроль.",
+        B:"Качество в норме, а причина медленного цикла пока неизвестна. Сначала нужен хронометраж, чтобы найти место потери времени.",
+        V:"Оба показателя стабильны и находятся в диапазоне. Без нового риска дополнительное вмешательство не нужно.",
+        G:"Сотрудник ошибается в самом порядке операций, поэтому проблема затрагивает и качество, и скорость. Нужна отработка процесса, а не только чек-лист."
+      };
+      addFb(fb,"warn",`Сотрудник ${e.id}: вмешательство не связано с причиной.`,actionText[e.id]);
+    }
+  });
+
+  if(stage1ZoneScore===4 && stage1ActionScore===4){
+    addFb(fb,"ok","Вы разделили разные типы отклонений и не применили одну меру ко всем.",
+      "Скорость и качество рассматриваются вместе: это позволяет отличить узкое место процесса, ошибку качества, общий дефицит навыка и ситуацию, где вмешательство вообще не требуется.");
+  }
+
+  fb.classList.add("show");
+  $("#go2Wrap").classList.remove("hidden");
+}
+
+function reset1(){
+  employees.forEach(e=>answers[e.id]={zone:"",intervention:""});
+  stage1ZoneScore=0; stage1ActionScore=0;
+  clearStage1Feedback();
+  renderEmployees();
+}
+
+function renderStage2(){
+  const box=$("#stage2Options");
+  box.innerHTML="";
+  stage2Options.forEach(o=>{
+    const b=document.createElement("button");
+    b.type="button";
+    b.className="option"+(stage2Sel===o.id?" selected":"");
+    b.textContent=o.text;
+    b.addEventListener("click",()=>{
+      stage2Sel=o.id;
+      renderStage2();
+    });
+    box.appendChild(b);
+  });
+  $("#check2").disabled=!stage2Sel;
+  $("#fb2").className="feedback";
+  $("#fb2").innerHTML="";
+  $("#summary").classList.add("hidden");
+}
+
+function checkStage2(){
+  const chosen=stage2Options.find(o=>o.id===stage2Sel);
+  stage2Score=chosen.correct?1:0;
+
+  const fb=$("#fb2");
+  fb.innerHTML="";
+  addFb(fb,chosen.correct?"ok":"warn",
+    chosen.correct?"Вы вмешиваетесь в найденную причину отклонения.":"Вы усилили требование или изменили не то место процесса.",
+    chosen.feedback
+  );
+  fb.classList.add("show");
+
+  showSummary();
+}
+
+function showSummary(){
+  const causeScore=(stage1ActionScore===4?1:0)+stage2Score;
+  let title,text;
+
+  if(stage1ZoneScore===4 && stage1ActionScore===4 && stage2Score===1){
+    title="Вы корректируете причину отклонения, а не человека целиком.";
+    text="Вы используете пару «скорость × качество» для диагноза, выбираете вмешательство по типу проблемы и меняете один элемент процесса там, где данные показывают узкое место.";
+  }else if(stage1ZoneScore<4){
+    title="Сначала нужно точнее различать тип отклонения.";
+    text="Один показатель не дает полной картины. Высокая скорость может сопровождаться плохим качеством, а медленная работа — быть качественной и требовать совсем другого вмешательства.";
+  }else if(stage1ActionScore<4){
+    title="Диагноз по показателям верный, но часть вмешательств слишком общая.";
+    text="После определения зоны ищите конкретную причину: точку ошибки, потерю времени или дефицит навыка. Не заменяйте диагностику повышением нормы или дополнительной отчетностью.";
+  }else{
+    title="Первые решения точные, но на этапе хронометража вмешательство ушло от причины.";
+    text="Если одна операция занимает почти втрое больше времени, сначала меняйте именно ее и повторяйте замер. Так можно проверить эффект одного изменения.";
+  }
+
+  const s=$("#summary");
+  s.innerHTML=`
+    <h3>${title}</h3>
+    <p>${text}</p>
+    <div class="metrics">
+      <div class="metric"><div class="score">${stage1ZoneScore}/4</div><div class="label">диагноз по двум показателям</div></div>
+      <div class="metric"><div class="score">${stage1ActionScore}/4</div><div class="label">выбор вмешательства</div></div>
+      <div class="metric"><div class="score">${causeScore}/2</div><div class="label">работа с причиной</div></div>
+    </div>
+    <div class="reference">
+      <div class="reference-head">Рабочая логика</div>
+      <div class="reference-row"><b>Скорость низкая, качество в норме</b>Сначала хронометраж и поиск одного узкого места.</div>
+      <div class="reference-row"><b>Скорость в норме, качество низкое</b>Найти точку возникновения ошибки. Если пропускается обязательный шаг — проверить чек-лист.</div>
+      <div class="reference-row"><b>Оба показателя ниже нормы</b>Диагностировать процесс и навык; при непонимании принципа — отработать способ выполнения.</div>
+      <div class="reference-row"><b>Оба показателя в норме</b>Не добавлять контроль без нового риска или изменения условий.</div>
+      <div class="reference-row"><b>После изменения</b>Повторно измерить оба показателя, чтобы ускорение не было куплено ухудшением качества.</div>
+    </div>
+  `;
+  s.classList.remove("hidden");
+}
+
+$("#reset1").addEventListener("click",reset1);
+$("#check1").addEventListener("click",checkStage1);
+$("#go2").addEventListener("click",()=>{
+  $("#stage1").classList.add("hidden");
+  $("#stage2").classList.remove("hidden");
+  $("#p2").classList.add("active");
+  renderStage2();
+  window.scrollTo({top:0,behavior:"smooth"});
+});
+$("#back1").addEventListener("click",()=>{
+  $("#stage2").classList.add("hidden");
+  $("#stage1").classList.remove("hidden");
+  $("#p2").classList.remove("active");
+  renderEmployees();
+  window.scrollTo({top:0,behavior:"smooth"});
+});
+$("#check2").addEventListener("click",checkStage2);
+
+renderEmployees();
+</script>
+</body>
+</html>

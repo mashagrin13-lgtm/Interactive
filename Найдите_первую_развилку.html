@@ -1,0 +1,888 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Найдите первую развилку</title>
+<style>
+:root{
+  --bg:#f5f6f8;
+  --card:#ffffff;
+  --text:#20242d;
+  --muted:#6d7583;
+  --line:#dfe3ea;
+  --accent:#315d9b;
+  --accent-soft:#eef3fb;
+  --ok:#2e6b4f;
+  --ok-bg:#eef7f2;
+  --warn:#8a5a10;
+  --warn-bg:#fff7e8;
+  --bad:#8b3d45;
+  --bad-bg:#fff0f1;
+  --shadow:0 6px 18px rgba(31,36,48,.07);
+}
+*{box-sizing:border-box}
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--text);
+  font-family:Arial,Helvetica,sans-serif;
+  line-height:1.42;
+}
+.app{
+  width:min(560px,calc(100% - 24px));
+  margin:18px auto;
+}
+.shell{
+  background:var(--card);
+  border:1px solid var(--line);
+  border-radius:16px;
+  box-shadow:var(--shadow);
+  overflow:hidden;
+}
+.head{
+  padding:18px 18px 14px;
+  border-bottom:1px solid var(--line);
+}
+h1{
+  margin:0 0 8px;
+  font-size:21px;
+  line-height:1.2;
+}
+.lead{
+  margin:0;
+  color:var(--muted);
+  font-size:14px;
+}
+.progress{
+  display:flex;
+  gap:7px;
+  margin-top:14px;
+}
+.progress span{
+  flex:1;
+  height:5px;
+  border-radius:999px;
+  background:#e8ebf0;
+}
+.progress span.active{background:var(--accent)}
+.body{padding:16px}
+.stage-label{
+  font-size:12px;
+  color:var(--accent);
+  font-weight:700;
+  text-transform:uppercase;
+  letter-spacing:.03em;
+  margin-bottom:5px;
+}
+.stage-title{
+  margin:0 0 5px;
+  font-size:17px;
+}
+.stage-note{
+  margin:0 0 12px;
+  color:var(--muted);
+  font-size:13px;
+}
+.rules{
+  padding:11px 12px;
+  border:1px solid #d8e1ef;
+  background:#f5f7fb;
+  border-radius:12px;
+  font-size:13px;
+  margin-bottom:13px;
+}
+.rules b{display:block;margin-bottom:5px}
+.rules ol{margin:0;padding-left:19px}
+.rules li{margin:4px 0}
+.case{
+  padding:11px 12px;
+  border:1px solid #d8e1ef;
+  background:#f5f7fb;
+  border-radius:11px;
+  font-size:13px;
+  margin-bottom:12px;
+}
+.case b{display:block;margin-bottom:3px}
+.hidden{display:none!important}
+.actions{
+  display:flex;
+  gap:8px;
+  margin-top:13px;
+}
+button{
+  appearance:none;
+  border:0;
+  border-radius:10px;
+  padding:10px 13px;
+  font-size:14px;
+  font-weight:700;
+  cursor:pointer;
+}
+.primary{
+  background:var(--accent);
+  color:#fff;
+  flex:1;
+}
+.primary:disabled{
+  opacity:.45;
+  cursor:not-allowed;
+}
+.secondary{
+  background:#edf0f4;
+  color:var(--text);
+}
+.feedback{display:none;margin-top:12px}
+.feedback.show{display:block}
+.fb{
+  border-radius:10px;
+  padding:10px 11px;
+  margin-top:7px;
+  font-size:13px;
+}
+.fb strong{display:block;margin-bottom:3px}
+.fb.ok{background:var(--ok-bg);border:1px solid #cfe5d8;color:#214f3b}
+.fb.warn{background:var(--warn-bg);border:1px solid #f1dbb0;color:#6f480c}
+.fb.bad{background:var(--bad-bg);border:1px solid #efc9cd;color:#73343b}
+
+/* Stage 1 */
+.bank{
+  border:1px dashed #bcc5d4;
+  border-radius:12px;
+  padding:9px;
+  background:#fafbfc;
+  min-height:55px;
+  margin-bottom:10px;
+}
+.bank-title{
+  font-size:11px;
+  text-transform:uppercase;
+  font-weight:700;
+  color:var(--muted);
+  letter-spacing:.03em;
+  margin-bottom:5px;
+}
+.card{
+  border:1px solid var(--line);
+  border-radius:10px;
+  background:#fff;
+  padding:9px 10px;
+  font-size:13px;
+  margin:6px 0;
+  cursor:grab;
+  user-select:none;
+}
+.card.dragging{opacity:.45}
+.card.selected{
+  border-color:var(--accent);
+  background:var(--accent-soft);
+  box-shadow:0 0 0 1px var(--accent) inset;
+}
+.card-num{
+  display:inline-block;
+  min-width:21px;
+  color:var(--accent);
+  font-weight:700;
+}
+.timeline{
+  display:grid;
+  gap:7px;
+}
+.slot{
+  border:1px solid var(--line);
+  border-radius:10px;
+  min-height:58px;
+  padding:8px;
+  background:#fff;
+}
+.slot.over{
+  border-color:var(--accent);
+  background:var(--accent-soft);
+}
+.slot-label{
+  font-size:11px;
+  color:var(--muted);
+  font-weight:700;
+  margin-bottom:4px;
+}
+
+/* Stage 2 */
+.classify-list{
+  display:grid;
+  gap:8px;
+}
+.classify-card{
+  border:1px solid var(--line);
+  border-radius:11px;
+  padding:10px;
+}
+.classify-text{
+  font-size:13px;
+  margin-bottom:8px;
+}
+.segmented{
+  display:grid;
+  grid-template-columns:1fr 1fr 1fr;
+  gap:6px;
+}
+.seg{
+  border:1px solid var(--line);
+  background:#fff;
+  color:var(--text);
+  border-radius:9px;
+  padding:8px 5px;
+  font-size:11px;
+  cursor:pointer;
+}
+.seg.selected{
+  border-color:var(--accent);
+  background:var(--accent-soft);
+  color:var(--accent);
+  font-weight:700;
+}
+
+/* Stage 3-4 */
+.option-list{
+  display:grid;
+  gap:8px;
+}
+.option{
+  width:100%;
+  border:1px solid var(--line);
+  border-radius:10px;
+  background:#fff;
+  color:var(--text);
+  padding:10px 11px;
+  text-align:left;
+  font-size:13px;
+  cursor:pointer;
+}
+.option:hover{border-color:#b5bfcd}
+.option.selected{
+  border-color:var(--accent);
+  background:var(--accent-soft);
+  box-shadow:0 0 0 1px var(--accent) inset;
+}
+.analysis-box{
+  margin-top:12px;
+  border:1px solid var(--line);
+  border-radius:11px;
+  overflow:hidden;
+}
+.analysis-head{
+  padding:8px 10px;
+  background:#f4f6f9;
+  font-size:12.5px;
+  font-weight:700;
+}
+.analysis-row{
+  padding:8px 10px;
+  border-top:1px solid #edf0f4;
+  font-size:12.5px;
+}
+.analysis-row b{display:block;margin-bottom:2px}
+.summary{
+  margin-top:14px;
+  border-top:1px solid var(--line);
+  padding-top:14px;
+}
+.summary h3{
+  margin:0 0 7px;
+  font-size:17px;
+}
+.summary p{
+  margin:0 0 9px;
+  font-size:13px;
+}
+.metrics{
+  display:grid;
+  grid-template-columns:1fr 1fr 1fr 1fr;
+  gap:7px;
+  margin-top:10px;
+}
+.metric{
+  border:1px solid var(--line);
+  border-radius:10px;
+  padding:9px 6px;
+  text-align:center;
+}
+.metric .score{
+  font-size:18px;
+  font-weight:700;
+  color:var(--accent);
+}
+.metric .label{
+  font-size:10px;
+  color:var(--muted);
+  margin-top:2px;
+}
+@media(max-width:420px){
+  .segmented{grid-template-columns:1fr}
+  .metrics{grid-template-columns:1fr 1fr}
+  .body{padding:13px}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="shell">
+    <div class="head">
+      <h1>Найдите первую развилку</h1>
+      <p class="lead">Разберите задержку проекта назад по цепочке: восстановите события и решения, найдите первый момент, когда команда еще могла изменить результат, и сформулируйте новое правило.</p>
+      <div class="progress">
+        <span id="p1" class="active"></span>
+        <span id="p2"></span>
+        <span id="p3"></span>
+        <span id="p4"></span>
+      </div>
+    </div>
+
+    <div class="body">
+      <div class="case">
+        <b>Ситуация</b>
+        Проект должен был стартовать 15 сентября, но фактически стартовал 20 сентября. Ваша задача — не найти виноватого, а восстановить цепочку решений и определить момент, когда результат еще можно было изменить.
+      </div>
+
+      <!-- STAGE 1 -->
+      <section id="stage1">
+        <div class="stage-label">Этап 1 из 4</div>
+        <h2 class="stage-title">Постройте цепочку от результата назад</h2>
+        <div class="rules">
+          <b>Что нужно сделать</b>
+          <ol>
+            <li>Внизу семь фрагментов проекта.</li>
+            <li>Расставьте их в обратном порядке: <strong>сначала итог 20 сентября, затем шаг за шагом двигайтесь назад к самому раннему событию 10 сентября</strong>.</li>
+            <li>В каждый слот поместите одну карточку.</li>
+            <li>Можно перетаскивать карточки или нажать на карточку, а затем на нужный слот.</li>
+            <li>После заполнения всех семи слотов нажмите «Проверить цепочку».</li>
+          </ol>
+        </div>
+
+        <div class="bank" id="bank" data-zone="bank">
+          <div class="bank-title">Фрагменты</div>
+        </div>
+
+        <div class="timeline">
+          <div class="slot" data-slot="0"><div class="slot-label">1. Итог — от него начинаем разбор</div></div>
+          <div class="slot" data-slot="1"><div class="slot-label">2. Что произошло перед этим</div></div>
+          <div class="slot" data-slot="2"><div class="slot-label">3. Еще один шаг назад</div></div>
+          <div class="slot" data-slot="3"><div class="slot-label">4. Еще один шаг назад</div></div>
+          <div class="slot" data-slot="4"><div class="slot-label">5. Еще один шаг назад</div></div>
+          <div class="slot" data-slot="5"><div class="slot-label">6. Еще один шаг назад</div></div>
+          <div class="slot" data-slot="6"><div class="slot-label">7. Самый ранний фрагмент</div></div>
+        </div>
+
+        <div class="actions">
+          <button class="secondary" id="reset1">Сбросить</button>
+          <button class="primary" id="check1" disabled>Проверить цепочку</button>
+        </div>
+
+        <div class="feedback" id="fb1"></div>
+        <div class="actions hidden" id="go2Wrap">
+          <button class="primary" id="go2">Перейти к классификации</button>
+        </div>
+      </section>
+
+      <!-- STAGE 2 -->
+      <section id="stage2" class="hidden">
+        <div class="stage-label">Этап 2 из 4</div>
+        <h2 class="stage-title">Отделите события от решений</h2>
+        <div class="rules">
+          <b>Что нужно сделать</b>
+          <ol>
+            <li>Для каждого фрагмента выберите одну категорию.</li>
+            <li><strong>Внешнее событие</strong> — то, что произошло вне решения команды.</li>
+            <li><strong>Решение команды</strong> — выбор, который сделал сотрудник или руководитель и который можно было изменить.</li>
+            <li><strong>Итоговое последствие</strong> — конечный результат цепочки.</li>
+            <li>Когда классифицируете все семь фрагментов, нажмите «Проверить».</li>
+          </ol>
+        </div>
+
+        <div class="classify-list" id="classifyList"></div>
+
+        <div class="actions">
+          <button class="secondary" id="back1">Назад</button>
+          <button class="primary" id="check2" disabled>Проверить</button>
+        </div>
+
+        <div class="feedback" id="fb2"></div>
+        <div class="actions hidden" id="go3Wrap">
+          <button class="primary" id="go3">Найти первую развилку</button>
+        </div>
+      </section>
+
+      <!-- STAGE 3 -->
+      <section id="stage3" class="hidden">
+        <div class="stage-label">Этап 3 из 4</div>
+        <h2 class="stage-title">Найдите первую управляемую развилку</h2>
+        <div class="rules">
+          <b>Как выбрать</b>
+          <ol>
+            <li>Ищите не первую неприятную новость и не последнюю ошибку перед срывом.</li>
+            <li>Выберите самый ранний момент, когда одновременно выполняются три условия:</li>
+            <li><strong>1)</strong> появилась значимая новая информация;</li>
+            <li><strong>2)</strong> у команды был реалистичный альтернативный вариант;</li>
+            <li><strong>3)</strong> другое решение еще могло изменить дальнейшую цепочку.</li>
+            <li>Выберите одну дату и нажмите «Проверить развилку».</li>
+          </ol>
+        </div>
+
+        <div class="option-list" id="forkOptions"></div>
+
+        <div class="actions">
+          <button class="secondary" id="back2">Назад</button>
+          <button class="primary" id="check3" disabled>Проверить развилку</button>
+        </div>
+
+        <div class="feedback" id="fb3"></div>
+        <div class="analysis-box hidden" id="forkAnalysis"></div>
+        <div class="actions hidden" id="go4Wrap">
+          <button class="primary" id="go4">Сформулировать новое правило</button>
+        </div>
+      </section>
+
+      <!-- STAGE 4 -->
+      <section id="stage4" class="hidden">
+        <div class="stage-label">Этап 4 из 4</div>
+        <h2 class="stage-title">Выберите правило для следующего проекта</h2>
+        <div class="rules">
+          <b>Что нужно сделать</b>
+          <ol>
+            <li>Выберите правило, которое связано именно с найденной развилкой.</li>
+            <li>Хорошее правило должно срабатывать по наблюдаемому сигналу и менять поведение команды в похожей ситуации.</li>
+            <li>Не делайте правило шире проблемы: оно не должно превращать любой риск в обязательное согласование или запрещать рабочий способ целиком.</li>
+            <li>После выбора нажмите «Проверить правило».</li>
+          </ol>
+        </div>
+
+        <div class="option-list" id="ruleOptions"></div>
+
+        <div class="actions">
+          <button class="secondary" id="back3">Назад</button>
+          <button class="primary" id="check4" disabled>Проверить правило</button>
+        </div>
+
+        <div class="feedback" id="fb4"></div>
+        <div class="summary hidden" id="summary"></div>
+      </section>
+    </div>
+  </div>
+</div>
+
+<script>
+const fragments = [
+  {id:1,text:"20 сентября команда запустила проект.",date:"20 сентября",type:"result"},
+  {id:2,text:"18 сентября получили финальный файл подрядчика.",date:"18 сентября",type:"event"},
+  {id:3,text:"14 сентября подрядчик подтвердил задержку минимум на четыре дня.",date:"14 сентября",type:"event"},
+  {id:4,text:"10 сентября подрядчик сообщил о риске задержки на два-три дня.",date:"10 сентября",type:"event"},
+  {id:5,text:"10 сентября сотрудник решил ничего не менять: в предыдущем проекте подрядчик смог наверстать отставание.",date:"10 сентября",type:"decision"},
+  {id:6,text:"14 сентября сотрудник снова оставил план без изменений и решил подождать до следующего дня.",date:"14 сентября",type:"decision"},
+  {id:7,text:"16 сентября руководитель узнал о задержке и начал перестраивать график.",date:"16 сентября",type:"decision"}
+];
+
+// Обратный порядок от результата к самому раннему фрагменту.
+// На одной дате сначала более поздний по логике шаг, затем более ранний.
+const correctOrder = [1,2,7,6,3,5,4];
+
+const forkOptions = [
+  {
+    id:"f10",
+    text:"10 сентября — подрядчик впервые сообщил о риске задержки на два-три дня.",
+    correct:false,
+    feedback:"Это первый сигнал, но он еще не подтверждал срыв. С учетом прошлого опыта сотрудник мог обоснованно считать, что подрядчик наверстает отставание. Важнее проверить следующий момент, когда неопределенность исчезла."
+  },
+  {
+    id:"f14",
+    text:"14 сентября — подрядчик подтвердил задержку минимум на четыре дня, но сотрудник оставил план без изменений.",
+    correct:true,
+    feedback:"Здесь совпали три условия управляемой развилки: появилась подтвержденная новая информация, задержка уже превышала доступный резерв, а команда еще могла пересобрать план до окончательного срыва."
+  },
+  {
+    id:"f16",
+    text:"16 сентября — руководитель узнал о задержке и начал перестраивать график.",
+    correct:false,
+    feedback:"Это последняя заметная точка вмешательства, но не первая управляемая развилка. К 16 сентября часть времени уже была потеряна. Вернитесь к моменту, когда подтвержденная новая информация появилась у сотрудника."
+  },
+  {
+    id:"f20",
+    text:"20 сентября — проект запустился с опозданием.",
+    correct:false,
+    feedback:"Это итоговое последствие, а не развилка. К этому моменту изменить уже произошедшую цепочку невозможно."
+  }
+];
+
+const ruleOptions = [
+  {
+    id:"r1",
+    text:"Любой риск подрядчика сразу передавать руководителю.",
+    correct:false,
+    issue:"overcontrol",
+    feedback:"Правило слишком широкое. Оно превращает даже неопределенный ранний сигнал в обязательную эскалацию и снова делает руководителя точкой принятия типовых решений."
+  },
+  {
+    id:"r2",
+    text:"Если подтвержденная задержка превышает оставшийся резерв графика, в тот же день пересмотреть план и проверить необходимость эскалации.",
+    correct:true,
+    issue:null,
+    feedback:"Правило связано с найденной развилкой: оно срабатывает по наблюдаемому условию и требует изменить план именно тогда, когда риск стал подтвержденным и превысил доступный резерв."
+  },
+  {
+    id:"r3",
+    text:"Никогда больше не работать с внешними подрядчиками.",
+    correct:false,
+    issue:"ban",
+    feedback:"Правило устраняет целый способ работы вместо причины сбоя. Проблема была не в самом подрядчике, а в том, что подтвержденная задержка не привела к пересмотру плана."
+  },
+  {
+    id:"r4",
+    text:"Добавлять пять резервных дней к каждому проекту.",
+    correct:false,
+    issue:"buffer",
+    feedback:"Дополнительный резерв может быть полезен в отдельных проектах, но здесь он не исправляет ключевую ошибку: команда не изменила план после получения подтвержденной новой информации."
+  }
+];
+
+let selectedCard=null;
+const classifyAnswers={};
+let forkSel=null;
+let ruleSel=null;
+let stage1Score=0,stage2Score=0,stage3Score=0,stage4Score=0;
+
+const $=s=>document.querySelector(s);
+
+function addFb(container,type,title,text){
+  const d=document.createElement("div");
+  d.className=`fb ${type}`;
+  d.innerHTML=`<strong>${title}</strong>${text}`;
+  container.appendChild(d);
+}
+
+function makeCard(f){
+  const el=document.createElement("div");
+  el.className="card";
+  el.draggable=true;
+  el.dataset.id=f.id;
+  el.innerHTML=`<span class="card-num">${f.id}.</span>${f.text}`;
+
+  el.addEventListener("dragstart",e=>{
+    el.classList.add("dragging");
+    e.dataTransfer.setData("text/plain",f.id);
+  });
+  el.addEventListener("dragend",()=>el.classList.remove("dragging"));
+  el.addEventListener("click",e=>{
+    e.stopPropagation();
+    document.querySelectorAll(".card.selected").forEach(x=>x.classList.remove("selected"));
+    if(selectedCard===el){selectedCard=null;return}
+    selectedCard=el;
+    el.classList.add("selected");
+  });
+  return el;
+}
+
+function initStage1(){
+  fragments.forEach(f=>$("#bank").appendChild(makeCard(f)));
+
+  document.querySelectorAll(".slot").forEach(slot=>{
+    slot.addEventListener("dragover",e=>{
+      e.preventDefault();slot.classList.add("over");
+    });
+    slot.addEventListener("dragleave",()=>slot.classList.remove("over"));
+    slot.addEventListener("drop",e=>{
+      e.preventDefault();slot.classList.remove("over");
+      const id=e.dataTransfer.getData("text/plain");
+      const card=document.querySelector(`.card[data-id="${id}"]`);
+      if(card){
+        const existing=slot.querySelector(".card");
+        if(existing)$("#bank").appendChild(existing);
+        slot.appendChild(card);
+      }
+      clearSelection();updateStage1();
+    });
+    slot.addEventListener("click",()=>{
+      if(selectedCard){
+        const existing=slot.querySelector(".card");
+        if(existing)$("#bank").appendChild(existing);
+        slot.appendChild(selectedCard);
+        clearSelection();updateStage1();
+      }
+    });
+  });
+
+  $("#bank").addEventListener("click",()=>{
+    if(selectedCard){
+      $("#bank").appendChild(selectedCard);
+      clearSelection();updateStage1();
+    }
+  });
+
+  updateStage1();
+}
+
+function clearSelection(){
+  document.querySelectorAll(".card.selected").forEach(x=>x.classList.remove("selected"));
+  selectedCard=null;
+}
+
+function currentOrder(){
+  return [...document.querySelectorAll(".slot")].map(s=>Number(s.querySelector(".card")?.dataset.id)||null);
+}
+
+function updateStage1(){
+  $("#check1").disabled=currentOrder().some(x=>!x);
+  $("#fb1").className="feedback";$("#fb1").innerHTML="";
+  $("#go2Wrap").classList.add("hidden");
+}
+
+function checkStage1(){
+  const order=currentOrder();
+  let correctPositions=0;
+  order.forEach((id,i)=>{if(id===correctOrder[i])correctPositions++});
+  stage1Score=correctPositions;
+
+  const fb=$("#fb1");fb.innerHTML="";
+  if(correctPositions===7){
+    addFb(fb,"ok","Цепочка восстановлена.",
+      "Вы начали с результата и последовательно двигались назад через позднее вмешательство руководителя, решения сотрудника и внешние сигналы подрядчика.");
+  }else{
+    addFb(fb,"warn","В цепочке есть перестановки.",
+      "Двигайтесь строго от итогового результата назад. На одной дате отделяйте внешний сигнал от решения команды: сначала в обратной цепочке стоит более позднее решение, затем событие, которое к нему привело.");
+  }
+  fb.classList.add("show");
+  $("#go2Wrap").classList.remove("hidden");
+}
+
+function resetStage1(){
+  document.querySelectorAll(".card").forEach(c=>$("#bank").appendChild(c));
+  clearSelection();updateStage1();
+}
+
+function renderStage2(){
+  const box=$("#classifyList");box.innerHTML="";
+  const order=correctOrder.map(id=>fragments.find(f=>f.id===id));
+
+  order.forEach(f=>{
+    const card=document.createElement("div");
+    card.className="classify-card";
+
+    const text=document.createElement("div");
+    text.className="classify-text";
+    text.innerHTML=`<b>${f.date}</b> — ${f.text.replace(/^\d+\s+сентября\s+/,"")}`;
+    card.appendChild(text);
+
+    const seg=document.createElement("div");
+    seg.className="segmented";
+
+    [
+      ["event","Внешнее событие"],
+      ["decision","Решение команды"],
+      ["result","Итоговое последствие"]
+    ].forEach(([value,label])=>{
+      const b=document.createElement("button");
+      b.type="button";
+      b.className="seg"+(classifyAnswers[f.id]===value?" selected":"");
+      b.textContent=label;
+      b.addEventListener("click",()=>{
+        classifyAnswers[f.id]=value;
+        renderStage2();
+      });
+      seg.appendChild(b);
+    });
+
+    card.appendChild(seg);
+    box.appendChild(card);
+  });
+
+  $("#check2").disabled=Object.keys(classifyAnswers).length!==fragments.length;
+  $("#fb2").className="feedback";$("#fb2").innerHTML="";
+  $("#go3Wrap").classList.add("hidden");
+}
+
+function checkStage2(){
+  const wrong=fragments.filter(f=>classifyAnswers[f.id]!==f.type);
+  stage2Score=fragments.length-wrong.length;
+
+  const fb=$("#fb2");fb.innerHTML="";
+  if(!wrong.length){
+    addFb(fb,"ok","Вы отделили внешние события от управляемых решений.",
+      "Это важно для обратной цепочки: событие само по себе не является ошибкой команды. Анализ начинается там, где после новой информации команда сделала или не сделала выбор.");
+  }else{
+    const decisionAsEvent=wrong.filter(f=>f.type==="decision"&&classifyAnswers[f.id]==="event");
+    const eventAsDecision=wrong.filter(f=>f.type==="event"&&classifyAnswers[f.id]==="decision");
+    if(decisionAsEvent.length){
+      addFb(fb,"warn","Часть решений вы приняли за внешние обстоятельства.",
+        "Фразы «решил ничего не менять», «оставил план без изменений», «начал перестраивать график» описывают выбор команды.");
+    }
+    if(eventAsDecision.length){
+      addFb(fb,"warn","Часть внешних сигналов вы приняли за решения.",
+        "Сообщение подрядчика или получение файла — событие. Управляемая часть начинается с реакции команды на это событие.");
+    }
+    if(wrong.some(f=>f.type==="result")){
+      addFb(fb,"warn","Финальный запуск 20 сентября — итоговое последствие.",
+        "Это результат всей цепочки, а не отдельное решение команды.");
+    }
+  }
+  fb.classList.add("show");
+  $("#go3Wrap").classList.remove("hidden");
+}
+
+function renderOptions(containerId,items,selected,handler){
+  const box=$(containerId);box.innerHTML="";
+  items.forEach(item=>{
+    const b=document.createElement("button");
+    b.type="button";
+    b.className="option"+(selected===item.id?" selected":"");
+    b.textContent=item.text;
+    b.addEventListener("click",()=>handler(item.id));
+    box.appendChild(b);
+  });
+}
+
+function renderStage3(){
+  renderOptions("#forkOptions",forkOptions,forkSel,id=>{forkSel=id;renderStage3()});
+  $("#check3").disabled=!forkSel;
+  $("#fb3").className="feedback";$("#fb3").innerHTML="";
+  $("#forkAnalysis").classList.add("hidden");
+  $("#go4Wrap").classList.add("hidden");
+}
+
+function checkStage3(){
+  const chosen=forkOptions.find(x=>x.id===forkSel);
+  stage3Score=chosen.correct?1:0;
+
+  const fb=$("#fb3");fb.innerHTML="";
+  addFb(fb,chosen.correct?"ok":"warn",
+    chosen.correct?"Первая управляемая развилка найдена.":"Вы нашли важную точку, но не первую управляемую развилку.",
+    chosen.feedback
+  );
+  fb.classList.add("show");
+
+  const box=$("#forkAnalysis");
+  box.innerHTML=`
+    <div class="analysis-head">Почему 14 сентября — сильная развилка</div>
+    <div class="analysis-row"><b>Новая информация</b>Риск превратился в подтвержденную задержку минимум на четыре дня.</div>
+    <div class="analysis-row"><b>Альтернатива существовала</b>Можно было пересобрать график, изменить последовательность работ, сократить объем или вовремя эскалировать риск.</div>
+    <div class="analysis-row"><b>Влияние еще было возможно</b>До планового запуска оставался день, а часть последствий еще можно было уменьшить ранней перестройкой.</div>
+    <div class="analysis-row"><b>Что произошло фактически</b>План оставили без изменений и решили ждать, поэтому следующий управляемый шаг появился уже позже и с меньшим запасом времени.</div>
+  `;
+  box.classList.remove("hidden");
+  $("#go4Wrap").classList.remove("hidden");
+}
+
+function renderStage4(){
+  renderOptions("#ruleOptions",ruleOptions,ruleSel,id=>{ruleSel=id;renderStage4()});
+  $("#check4").disabled=!ruleSel;
+  $("#fb4").className="feedback";$("#fb4").innerHTML="";
+  $("#summary").classList.add("hidden");
+}
+
+function checkStage4(){
+  const chosen=ruleOptions.find(x=>x.id===ruleSel);
+  stage4Score=chosen.correct?1:0;
+
+  const fb=$("#fb4");fb.innerHTML="";
+  addFb(fb,chosen.correct?"ok":"warn",
+    chosen.correct?"Новое правило связано с найденной развилкой.":"Правило стоит сузить до причины сбоя.",
+    chosen.feedback
+  );
+  fb.classList.add("show");
+
+  showSummary();
+}
+
+function showSummary(){
+  const total=stage1Score+stage2Score+stage3Score+stage4Score;
+  const max=16;
+  let title,text;
+
+  if(total===16){
+    title="Вы разобрали решение, а не только итоговую ошибку.";
+    text="Вы восстановили цепочку назад, отделили внешние события от решений команды, нашли первый момент с новой информацией и реальной альтернативой и превратили вывод в конкретное правило.";
+  }else if(stage1Score<6){
+    title="Главная зона роста — восстановление последовательности.";
+    text="Обратный разбор работает только тогда, когда цепочка строится от результата назад без перескоков. Сначала восстановите хронологию, затем ищите управляемый выбор.";
+  }else if(stage2Score<6){
+    title="Вы хорошо видите хронологию, но смешиваете событие и решение.";
+    text="Подрядчик может создать новый риск, но управляемая развилка появляется в реакции команды на этот риск.";
+  }else if(stage3Score===0){
+    title="Вы нашли заметную точку, но не первую управляемую развилку.";
+    text="Ищите момент, когда новая информация уже стала достаточно сильной для пересмотра решения, а время для альтернатив еще оставалось.";
+  }else{
+    title="Развилка найдена, но новое правило пока не связано с ней напрямую.";
+    text="Правило должно срабатывать по тому же наблюдаемому сигналу, который команда пропустила в исходной цепочке.";
+  }
+
+  const s=$("#summary");
+  s.innerHTML=`
+    <h3>${title}</h3>
+    <p>${text}</p>
+    <div class="metrics">
+      <div class="metric"><div class="score">${stage1Score}/7</div><div class="label">цепочка</div></div>
+      <div class="metric"><div class="score">${stage2Score}/7</div><div class="label">событие / решение</div></div>
+      <div class="metric"><div class="score">${stage3Score}/1</div><div class="label">развилка</div></div>
+      <div class="metric"><div class="score">${stage4Score}/1</div><div class="label">новое правило</div></div>
+    </div>
+    <div class="analysis-box">
+      <div class="analysis-head">Рабочий вывод из кейса</div>
+      <div class="analysis-row"><b>Первая управляемая развилка</b>14 сентября: подтвержденная задержка превысила доступный резерв, но план не пересмотрели.</div>
+      <div class="analysis-row"><b>Новое правило</b>Если подтвержденная задержка превышает оставшийся резерв графика, в тот же день пересмотреть план и проверить необходимость эскалации.</div>
+    </div>
+  `;
+  s.classList.remove("hidden");
+}
+
+$("#check1").addEventListener("click",checkStage1);
+$("#reset1").addEventListener("click",resetStage1);
+$("#go2").addEventListener("click",()=>{
+  // Показываем корректную цепочку на следующем этапе независимо от результата.
+  correctOrder.forEach((id,i)=>{
+    const card=document.querySelector(`.card[data-id="${id}"]`);
+    document.querySelector(`.slot[data-slot="${i}"]`).appendChild(card);
+  });
+  $("#stage1").classList.add("hidden");
+  $("#stage2").classList.remove("hidden");
+  $("#p2").classList.add("active");
+  renderStage2();
+  window.scrollTo({top:0,behavior:"smooth"});
+});
+$("#back1").addEventListener("click",()=>{
+  $("#stage2").classList.add("hidden");
+  $("#stage1").classList.remove("hidden");
+  $("#p2").classList.remove("active");
+  window.scrollTo({top:0,behavior:"smooth"});
+});
+$("#check2").addEventListener("click",checkStage2);
+$("#go3").addEventListener("click",()=>{
+  $("#stage2").classList.add("hidden");
+  $("#stage3").classList.remove("hidden");
+  $("#p3").classList.add("active");
+  renderStage3();
+  window.scrollTo({top:0,behavior:"smooth"});
+});
+$("#back2").addEventListener("click",()=>{
+  $("#stage3").classList.add("hidden");
+  $("#stage2").classList.remove("hidden");
+  $("#p3").classList.remove("active");
+  renderStage2();
+  window.scrollTo({top:0,behavior:"smooth"});
+});
+$("#check3").addEventListener("click",checkStage3);
+$("#go4").addEventListener("click",()=>{
+  $("#stage3").classList.add("hidden");
+  $("#stage4").classList.remove("hidden");
+  $("#p4").classList.add("active");
+  renderStage4();
+  window.scrollTo({top:0,behavior:"smooth"});
+});
+$("#back3").addEventListener("click",()=>{
+  $("#stage4").classList.add("hidden");
+  $("#stage3").classList.remove("hidden");
+  $("#p4").classList.remove("active");
+  renderStage3();
+  window.scrollTo({top:0,behavior:"smooth"});
+});
+$("#check4").addEventListener("click",checkStage4);
+
+initStage1();
+</script>
+</body>
+</html>

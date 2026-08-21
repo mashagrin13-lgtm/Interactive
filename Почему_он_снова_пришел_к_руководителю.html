@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Почему сотрудник снова пришел к руководителю</title>
+<style>
+:root{
+  --bg:#f5f6f8;
+  --card:#fff;
+  --text:#20242d;
+  --muted:#6f7785;
+  --line:#dfe3ea;
+  --accent:#315d9b;
+  --accent-soft:#eef3fb;
+  --ok:#2e6b4f;
+  --ok-bg:#eef7f2;
+  --warn:#8a5a10;
+  --warn-bg:#fff7e8;
+  --bad:#8b3d45;
+  --bad-bg:#fff0f1;
+  --shadow:0 6px 18px rgba(31,36,48,.07);
+}
+*{box-sizing:border-box}
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--text);
+  font-family:Arial,Helvetica,sans-serif;
+  line-height:1.42;
+}
+.app{
+  width:min(560px,calc(100% - 24px));
+  margin:18px auto;
+}
+.shell{
+  background:var(--card);
+  border:1px solid var(--line);
+  border-radius:16px;
+  box-shadow:var(--shadow);
+  overflow:hidden;
+}
+.head{
+  padding:18px 18px 14px;
+  border-bottom:1px solid var(--line);
+}
+h1{
+  margin:0 0 8px;
+  font-size:21px;
+  line-height:1.2;
+}
+.lead{
+  margin:0;
+  color:var(--muted);
+  font-size:14px;
+}
+.progress{
+  display:flex;
+  gap:6px;
+  margin-top:14px;
+}
+.progress span{
+  height:5px;
+  flex:1;
+  border-radius:999px;
+  background:#e8ebf0;
+}
+.progress span.active{background:var(--accent)}
+.body{padding:16px}
+.case-counter{
+  font-size:12px;
+  font-weight:700;
+  color:var(--accent);
+  text-transform:uppercase;
+  letter-spacing:.03em;
+  margin-bottom:7px;
+}
+.case-title{
+  font-size:17px;
+  margin:0 0 7px;
+}
+.case-text{
+  margin:0;
+  font-size:13.5px;
+  color:#3e4551;
+}
+.quote{
+  margin-top:10px;
+  padding:11px 12px;
+  border-left:3px solid var(--accent);
+  background:#f6f8fb;
+  border-radius:8px;
+  font-size:13.5px;
+}
+.step-title{
+  margin:16px 0 7px;
+  font-size:13.5px;
+  font-weight:700;
+}
+.options{
+  display:grid;
+  gap:7px;
+}
+.option{
+  width:100%;
+  border:1px solid var(--line);
+  background:#fff;
+  border-radius:10px;
+  padding:10px 11px;
+  text-align:left;
+  font-size:13px;
+  color:var(--text);
+  cursor:pointer;
+  transition:.12s ease;
+}
+.option:hover{border-color:#b5bfcd}
+.option.selected{
+  border-color:var(--accent);
+  background:var(--accent-soft);
+  box-shadow:0 0 0 1px var(--accent) inset;
+}
+.option.correct{
+  border-color:#a9d2bb;
+  background:var(--ok-bg);
+}
+.option.wrong{
+  border-color:#e1b0b5;
+  background:var(--bad-bg);
+}
+.feedback{
+  display:none;
+  margin-top:10px;
+  padding:10px 11px;
+  border-radius:10px;
+  font-size:13px;
+}
+.feedback.show{display:block}
+.feedback.good{
+  background:var(--ok-bg);
+  border:1px solid #cfe5d8;
+  color:#214f3b;
+}
+.feedback.warn{
+  background:var(--warn-bg);
+  border:1px solid #f1dbb0;
+  color:#6f480c;
+}
+.actions{
+  display:flex;
+  gap:8px;
+  margin-top:14px;
+}
+button{
+  appearance:none;
+  border:0;
+  border-radius:10px;
+  padding:10px 13px;
+  font-size:14px;
+  font-weight:700;
+  cursor:pointer;
+}
+.primary{
+  flex:1;
+  background:var(--accent);
+  color:#fff;
+}
+.primary:disabled{
+  opacity:.45;
+  cursor:not-allowed;
+}
+.secondary{
+  background:#edf0f4;
+  color:var(--text);
+}
+.hidden{display:none!important}
+.divider{
+  height:1px;
+  background:var(--line);
+  margin:16px 0;
+}
+.summary{
+  display:none;
+}
+.summary.show{display:block}
+.summary h2{
+  margin:0 0 6px;
+  font-size:18px;
+}
+.summary p{
+  margin:0;
+  font-size:13.5px;
+  color:#414854;
+}
+.profile{
+  margin-top:13px;
+}
+.profile-card{
+  border:1px solid var(--line);
+  border-radius:11px;
+  padding:11px 12px;
+  margin-top:8px;
+  font-size:13px;
+}
+.profile-card strong{
+  display:block;
+  margin-bottom:3px;
+}
+.profile-card.main{
+  border-color:#cdd8ea;
+  background:#f3f6fb;
+}
+.profile-card.ok{
+  border-color:#cfe5d8;
+  background:var(--ok-bg);
+  color:#214f3b;
+}
+.matrix{
+  margin-top:14px;
+  border:1px solid var(--line);
+  border-radius:12px;
+  overflow:hidden;
+}
+.matrix-head{
+  padding:9px 11px;
+  background:#f4f6f9;
+  border-bottom:1px solid var(--line);
+  font-size:13px;
+  font-weight:700;
+}
+.matrix-row{
+  display:grid;
+  grid-template-columns:28px 1fr;
+  gap:8px;
+  padding:9px 11px;
+  border-bottom:1px solid #edf0f4;
+  font-size:12.5px;
+}
+.matrix-row:last-child{border-bottom:0}
+.badge{
+  width:24px;
+  height:24px;
+  border-radius:999px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-weight:700;
+  background:#edf0f4;
+}
+.badge.good{background:#dfeee6;color:#23583f}
+.badge.warn{background:#f8e9c7;color:#7a500e}
+.small{
+  color:var(--muted);
+  font-size:12px;
+  margin-top:6px;
+}
+@media(max-width:420px){
+  .body{padding:13px}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="shell">
+    <div class="head">
+      <h1>Почему сотрудник снова пришел к руководителю</h1>
+      <p class="lead">Определите настоящий барьер самостоятельности и выберите действие, которое работает с причиной.</p>
+      <div class="progress">
+        <span id="p1" class="active"></span>
+        <span id="p2"></span>
+        <span id="p3"></span>
+        <span id="p4"></span>
+      </div>
+    </div>
+
+    <div class="body">
+      <section id="caseScreen">
+        <div class="case-counter" id="caseCounter"></div>
+        <h2 class="case-title" id="caseTitle"></h2>
+        <p class="case-text" id="caseContext"></p>
+        <div class="quote" id="caseQuote"></div>
+
+        <div id="diagnosisBlock">
+          <div class="step-title">1. Какой барьер основной?</div>
+          <div class="options" id="diagnosisOptions"></div>
+          <div class="feedback" id="diagnosisFeedback"></div>
+        </div>
+
+        <div id="actionBlock" class="hidden">
+          <div class="divider"></div>
+          <div class="step-title">2. Как лучше поступить руководителю?</div>
+          <div class="options" id="actionOptions"></div>
+          <div class="feedback" id="actionFeedback"></div>
+        </div>
+
+        <div class="actions">
+          <button class="secondary" id="backBtn">Назад</button>
+          <button class="primary" id="nextBtn" disabled>Дальше</button>
+        </div>
+      </section>
+
+      <section id="summary" class="summary">
+        <h2>Ваш профиль диагностики</h2>
+        <p>Система учитывает не только итоговый выбор, но и то, какие причины вы чаще всего приписывали сотрудникам и какие действия выбирали после диагноза.</p>
+
+        <div class="profile" id="profile"></div>
+
+        <div class="matrix">
+          <div class="matrix-head">Разбор четырех кейсов</div>
+          <div id="matrixRows"></div>
+        </div>
+
+        <div class="actions">
+          <button class="secondary" id="restartBtn">Начать заново</button>
+        </div>
+      </section>
+    </div>
+  </div>
+</div>
+
+<script>
+const diagnosisOptions = [
+  {id:"competence", label:"Не хватает компетенции или информации"},
+  {id:"fear", label:"Боится последствий самостоятельного решения"},
+  {id:"responsibility", label:"Не готов брать ответственность"},
+  {id:"manager", label:"Руководитель сам забирает решения"}
+];
+
+const cases = [
+  {
+    title:"Марина впервые готовит бюджет",
+    context:"Марина впервые отвечает за бюджет проекта и раньше не работала с перераспределением статей.",
+    quote:"«Я вижу три статьи затрат, но не понимаю, какие из них можно перераспределять без согласования. Раньше бюджетом не занималась».",
+    diagnosis:"competence",
+    diagnosisExplain:"Марина прямо называет дефицит знаний: не понимает правила перераспределения и раньше не работала с бюджетом. Здесь рано требовать полной самостоятельности.",
+    actions:[
+      {id:"a1", text:"Дать правила перераспределения, показать границы согласования и затем предложить Марине самой выбрать решение.", correct:true},
+      {id:"a2", text:"Сказать, что пора учиться на практике, и разрешить перераспределять любые статьи самостоятельно.", correct:false, bias:"overdelegate"},
+      {id:"a3", text:"Самому распределить статьи и попросить Марину повторять этот порядок в дальнейшем.", correct:false, bias:"takeover"},
+      {id:"a4", text:"Спросить, почему она боится ответственности, и отдельно обсудить уверенность.", correct:false, bias:"fear"}
+    ],
+    actionExplain:"Сначала нужно закрыть реальный дефицит информации: правила, лимиты и обязательные согласования. После этого решение снова возвращается сотруднику."
+  },
+  {
+    title:"Дмитрий просит подтвердить решение",
+    context:"Дмитрий третий год работает с клиентами и способен сам сформулировать рабочий вариант.",
+    quote:"«Я бы предложил бесплатную замену. По стоимости укладываемся в лимит и сохраним клиента. Но подтвердите, пожалуйста. После прошлого раза не хочу снова получить замечание за самодеятельность».",
+    diagnosis:"fear",
+    diagnosisExplain:"Компетенция видна по самому сообщению: Дмитрий сформулировал решение, оценил стоимость и последствия. Барьер — ожидание негативной реакции за самостоятельность.",
+    actions:[
+      {id:"b1", text:"Еще раз объяснить стандарт работы с клиентом и выдать подробную инструкцию на похожие случаи.", correct:false, bias:"competence"},
+      {id:"b2", text:"Уточнить границы самостоятельного решения, подтвердить право действовать в лимите и договориться, какие случаи нужно эскалировать.", correct:true},
+      {id:"b3", text:"Теперь все замены согласовывать заранее, чтобы больше не возникало спорных ситуаций.", correct:false, bias:"takeover"},
+      {id:"b4", text:"Сказать, что уверенности можно научиться только практикой, и больше не обсуждать такие запросы.", correct:false, bias:"dismiss"}
+    ],
+    actionExplain:"Дополнительная инструкция не решает проблему. Нужно восстановить понятные границы полномочий и убрать противоречие между формальным разрешением и наказанием за инициативу."
+  },
+  {
+    title:"Анна возвращает вопрос наверх",
+    context:"Анна хорошо знает процесс и имеет право принимать решения в пределах бюджета. Оба варианта она считает допустимыми.",
+    quote:"«Оба варианта рабочие. Выберите какой-нибудь, мне без разницы».",
+    diagnosis:"responsibility",
+    diagnosisExplain:"Из кейса не видно дефицита знаний или страха. Анна понимает варианты и полномочия, но отказывается сделать выбор. Здесь нужно обсуждать ответственность в ее роли.",
+    actions:[
+      {id:"c1", text:"Выбрать вариант самому, чтобы не задерживать работу, а потом объяснить Анне логику.", correct:false, bias:"takeover"},
+      {id:"c2", text:"Дать дополнительный чек-лист принятия решения и попросить следовать ему.", correct:false, bias:"competence"},
+      {id:"c3", text:"Вернуть выбор Анне и обсудить ожидание: в этой зоне от нее требуется не только подготовить варианты, но и принять решение.", correct:true},
+      {id:"c4", text:"Снизить ее полномочия до тех пор, пока она сама не попросит больше ответственности.", correct:false, bias:"punish"}
+    ],
+    actionExplain:"Если сотрудник знает процесс, понимает полномочия и не показывает страх, очередное обучение мало поможет. Нужно вернуть разговор к требованиям роли и договоренности о самостоятельном выборе."
+  },
+  {
+    title:"Максим перестал решать сам",
+    context:"Максим предложил допустимое изменение процесса в пределах своих полномочий. Руководитель заменил его вариант своим.",
+    quote:"Руководитель сказал: «Нет, сделаем по-другому. Я уже сталкивался с таким, мой вариант надежнее». Через неделю Максим пришел согласовывать следующий похожий вопрос.",
+    diagnosis:"manager",
+    diagnosisExplain:"Сотрудник уже предложил допустимое решение. Когда руководитель систематически заменяет такие решения своими, команда учится согласовывать все заранее.",
+    actions:[
+      {id:"d1", text:"Попросить Максима заранее приносить два варианта, но финальный выбор всегда оставлять за руководителем.", correct:false, bias:"takeover"},
+      {id:"d2", text:"Сказать Максиму быть инициативнее и меньше перестраховываться.", correct:false, bias:"blame"},
+      {id:"d3", text:"Если решение Максима укладывается в согласованные границы, оставить выбор за ним и обсуждать только риски или последствия.", correct:true},
+      {id:"d4", text:"Составить более подробную инструкцию, чтобы Максим выбирал точно так же, как руководитель.", correct:false, bias:"competence"}
+    ],
+    actionExplain:"Менять нужно реакцию руководителя: допустимое решение сотрудника не следует заменять своим только из-за предпочтения другого способа."
+  }
+];
+
+const state = {
+  index:0,
+  answers:cases.map(()=>({diagnosis:null, action:null})),
+  mistakes:{
+    competence:0,
+    fear:0,
+    responsibility:0,
+    manager:0,
+    takeover:0,
+    overdelegate:0,
+    dismiss:0,
+    punish:0,
+    blame:0
+  }
+};
+
+const $ = s => document.querySelector(s);
+
+function renderOptions(container, items, selected, onClick, lock=false, correctId=null){
+  container.innerHTML="";
+  items.forEach(item=>{
+    const b=document.createElement("button");
+    b.type="button";
+    let cls="option";
+    if(selected===item.id) cls+=" selected";
+    if(lock && item.id===correctId) cls+=" correct";
+    if(lock && selected===item.id && item.id!==correctId) cls+=" wrong";
+    b.className=cls;
+    b.textContent=item.label || item.text;
+    b.disabled=lock;
+    b.addEventListener("click",()=>onClick(item));
+    container.appendChild(b);
+  });
+}
+
+function renderCase(){
+  const c=cases[state.index];
+  const a=state.answers[state.index];
+  $("#caseCounter").textContent=`Кейс ${state.index+1} из ${cases.length}`;
+  $("#caseTitle").textContent=c.title;
+  $("#caseContext").textContent=c.context;
+  $("#caseQuote").textContent=c.quote;
+
+  for(let i=1;i<=4;i++) $("#p"+i).classList.toggle("active",i<=state.index+1);
+
+  const diagLocked = !!a.diagnosis;
+  renderOptions($("#diagnosisOptions"), diagnosisOptions, a.diagnosis, item=>selectDiagnosis(item), diagLocked, c.diagnosis);
+
+  $("#diagnosisFeedback").className="feedback";
+  $("#diagnosisFeedback").textContent="";
+  if(diagLocked){
+    const ok=a.diagnosis===c.diagnosis;
+    $("#diagnosisFeedback").className="feedback show "+(ok?"good":"warn");
+    $("#diagnosisFeedback").textContent=(ok?"Верно. ":"Стоит пересмотреть диагноз. ")+c.diagnosisExplain;
+  }
+
+  if(diagLocked){
+    $("#actionBlock").classList.remove("hidden");
+    const actionLocked=!!a.action;
+    const correctAction=c.actions.find(x=>x.correct).id;
+    renderOptions($("#actionOptions"),c.actions,a.action,item=>selectAction(item),actionLocked,correctAction);
+
+    $("#actionFeedback").className="feedback";
+    $("#actionFeedback").textContent="";
+    if(actionLocked){
+      const chosen=c.actions.find(x=>x.id===a.action);
+      $("#actionFeedback").className="feedback show "+(chosen.correct?"good":"warn");
+      $("#actionFeedback").textContent=(chosen.correct?"Действие соответствует причине. ":"Действие не работает с основной причиной. ")+c.actionExplain;
+    }
+  }else{
+    $("#actionBlock").classList.add("hidden");
+  }
+
+  $("#backBtn").disabled=state.index===0;
+  $("#nextBtn").disabled=!(a.diagnosis && a.action);
+  $("#nextBtn").textContent=state.index===cases.length-1?"Показать профиль":"Следующий кейс";
+}
+
+function selectDiagnosis(item){
+  const c=cases[state.index];
+  const a=state.answers[state.index];
+  if(a.diagnosis) return;
+  a.diagnosis=item.id;
+  if(item.id!==c.diagnosis) state.mistakes[item.id]++;
+  renderCase();
+}
+
+function selectAction(item){
+  const c=cases[state.index];
+  const a=state.answers[state.index];
+  if(a.action) return;
+  a.action=item.id;
+  if(!item.correct && item.bias) state.mistakes[item.bias]++;
+  renderCase();
+}
+
+function renderSummary(){
+  $("#caseScreen").classList.add("hidden");
+  $("#summary").classList.add("show");
+
+  const profile=$("#profile");
+  profile.innerHTML="";
+
+  const correctDiag=state.answers.filter((a,i)=>a.diagnosis===cases[i].diagnosis).length;
+  const correctAct=state.answers.filter((a,i)=>cases[i].actions.find(x=>x.id===a.action)?.correct).length;
+
+  const main=document.createElement("div");
+  main.className="profile-card main";
+  main.innerHTML=`<strong>Диагностика: ${correctDiag} из 4 · Действия: ${correctAct} из 4</strong>${overallText(correctDiag,correctAct)}`;
+  profile.appendChild(main);
+
+  const biases = [];
+  const competenceScore = state.mistakes.competence;
+  const takeoverScore = state.mistakes.takeover + state.mistakes.manager;
+  const fearScore = state.mistakes.fear;
+  const responsibilityScore = state.mistakes.responsibility;
+
+  if(competenceScore>=2){
+    biases.push(["Вы часто объясняете несамостоятельность нехваткой навыков.",
+      "В нескольких ситуациях сотрудник уже мог сформировать решение. Дополнительные инструкции там не закрывают страх, отказ от ответственности или перехват управления руководителем."]);
+  }
+  if(takeoverScore>=2){
+    biases.push(["Вы склонны возвращать решение руководителю.",
+      "Так можно быстро закрыть текущий вопрос, но команда учится приносить следующие похожие решения наверх."]);
+  }
+  if(fearScore>=2){
+    biases.push(["Вы часто видите страх ошибки.",
+      "Страх действительно бывает барьером, но его нужно подтверждать фактами: человек знает, что делать, и избегает решения из-за ожидаемых последствий."]);
+  }
+  if(responsibilityScore>=2){
+    biases.push(["Вы быстро объясняете проблему нежеланием брать ответственность.",
+      "Перед таким выводом стоит исключить дефицит информации, неясные полномочия и прошлую реакцию руководителя."]);
+  }
+  if(!biases.length && correctDiag>=3 && correctAct>=3){
+    const ok=document.createElement("div");
+    ok.className="profile-card ok";
+    ok.innerHTML="<strong>Вы различаете причины и не лечите их одним способом.</strong>В ответах нет выраженного перекоса к обучению, усилению контроля или быстрому возврату решения руководителю.";
+    profile.appendChild(ok);
+  }else{
+    biases.forEach(([title,text])=>{
+      const d=document.createElement("div");
+      d.className="profile-card";
+      d.innerHTML=`<strong>${title}</strong>${text}`;
+      profile.appendChild(d);
+    });
+  }
+
+  const rows=$("#matrixRows");
+  rows.innerHTML="";
+  cases.forEach((c,i)=>{
+    const a=state.answers[i];
+    const diagOk=a.diagnosis===c.diagnosis;
+    const actOk=!!c.actions.find(x=>x.id===a.action)?.correct;
+    const row=document.createElement("div");
+    row.className="matrix-row";
+    row.innerHTML=`<div class="badge ${(diagOk&&actOk)?"good":"warn"}">${i+1}</div>
+      <div><b>${c.title}</b><br>
+      Диагноз: ${diagOk?"точный":"требует корректировки"} · Действие: ${actOk?"соответствует причине":"не соответствует причине"}</div>`;
+    rows.appendChild(row);
+  });
+}
+
+function overallText(d,a){
+  if(d===4 && a===4) return " Вы точно различили четыре разных механизма зависимости и подобрали действие под каждый.";
+  if(d>=3 && a>=3) return " Основная логика усвоена. Ошибки возникают скорее в отдельных типах ситуаций.";
+  if(d>=3 && a<3) return " Причины вы видите неплохо, но после диагноза иногда выбираете действие, которое снова увеличивает зависимость от руководителя.";
+  if(d<3 && a>=3) return " Управленческие действия в целом сильные, но исходную причину несамостоятельности вы несколько раз определили неточно.";
+  return " Стоит еще раз пройти четыре барьера: дефицит компетенции, страх, отказ от ответственности и перехват решений руководителем.";
+}
+
+$("#nextBtn").addEventListener("click",()=>{
+  if(state.index<cases.length-1){
+    state.index++;
+    renderCase();
+    window.scrollTo({top:0,behavior:"smooth"});
+  }else{
+    renderSummary();
+    window.scrollTo({top:0,behavior:"smooth"});
+  }
+});
+
+$("#backBtn").addEventListener("click",()=>{
+  if(state.index>0){
+    state.index--;
+    renderCase();
+    window.scrollTo({top:0,behavior:"smooth"});
+  }
+});
+
+$("#restartBtn").addEventListener("click",()=>location.reload());
+
+renderCase();
+</script>
+</body>
+</html>

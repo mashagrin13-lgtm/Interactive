@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Где заканчивается самостоятельность?</title>
+<style>
+:root{
+  --bg:#f5f6f8; --card:#fff; --text:#20242d; --muted:#6d7583; --line:#dfe3ea;
+  --accent:#315d9b; --accent-soft:#eef3fb; --ok:#2e6b4f; --ok-bg:#eef7f2;
+  --warn:#8a5a10; --warn-bg:#fff7e8; --bad:#8b3d45; --bad-bg:#fff0f1;
+  --shadow:0 6px 18px rgba(31,36,48,.07);
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--bg); color:var(--text);
+  font-family:Arial,Helvetica,sans-serif; line-height:1.42;
+}
+.app{width:min(560px,calc(100% - 24px)); margin:18px auto}
+.shell{
+  background:var(--card); border:1px solid var(--line); border-radius:16px;
+  box-shadow:var(--shadow); overflow:hidden
+}
+.head{padding:18px 18px 14px; border-bottom:1px solid var(--line)}
+h1{margin:0 0 8px; font-size:21px; line-height:1.2}
+.lead{margin:0; color:var(--muted); font-size:14px}
+.progress{display:flex; gap:7px; margin-top:14px}
+.progress span{flex:1; height:5px; border-radius:999px; background:#e8ebf0}
+.progress span.active{background:var(--accent)}
+.body{padding:16px}
+.stage-label{
+  font-size:12px; color:var(--accent); font-weight:700; text-transform:uppercase;
+  letter-spacing:.03em; margin-bottom:5px
+}
+.stage-title{margin:0 0 5px; font-size:17px}
+.stage-note{margin:0 0 12px; color:var(--muted); font-size:13px}
+.rules{
+  padding:11px 12px; border:1px solid #d8e1ef; background:#f5f7fb;
+  border-radius:12px; font-size:13px; margin-bottom:13px
+}
+.rules b{display:block; margin-bottom:5px}
+.rules ol{margin:0; padding-left:19px}
+.rules li{margin:4px 0}
+.boundaries{
+  border:1px solid var(--line); border-radius:11px; overflow:hidden; margin-bottom:12px
+}
+.boundaries-head{
+  padding:8px 10px; background:#f4f6f9; font-size:12.5px; font-weight:700
+}
+.boundary-row{
+  padding:8px 10px; border-top:1px solid #edf0f4; font-size:12px
+}
+.boundary-row b{display:block; margin-bottom:2px}
+.bank{
+  border:1px dashed #bcc5d4; border-radius:12px; padding:9px;
+  background:#fafbfc; min-height:55px; margin-bottom:10px
+}
+.bank-title{
+  font-size:11px; text-transform:uppercase; color:var(--muted);
+  font-weight:700; letter-spacing:.03em; margin-bottom:5px
+}
+.card{
+  border:1px solid var(--line); border-radius:10px; background:#fff;
+  padding:9px 10px; font-size:12.5px; margin:6px 0; cursor:grab; user-select:none
+}
+.card.dragging{opacity:.45}
+.card.selected{
+  border-color:var(--accent); background:var(--accent-soft);
+  box-shadow:0 0 0 1px var(--accent) inset
+}
+.card-num{display:inline-block; min-width:21px; color:var(--accent); font-weight:700}
+.zones{display:grid; grid-template-columns:1fr 1fr; gap:8px}
+.zone{
+  border:1px solid var(--line); border-radius:11px; padding:9px;
+  min-height:130px; background:#fff
+}
+.zone.over{border-color:var(--accent); background:var(--accent-soft)}
+.zone-title{font-size:12.5px; font-weight:700}
+.zone-note{font-size:10.5px; color:var(--muted); margin:3px 0 5px}
+.count{font-weight:400; color:var(--muted)}
+.actions{display:flex; gap:8px; margin-top:13px}
+button{
+  appearance:none; border:0; border-radius:10px; padding:10px 13px;
+  font-size:14px; font-weight:700; cursor:pointer
+}
+.primary{background:var(--accent); color:#fff; flex:1}
+.primary:disabled{opacity:.45; cursor:not-allowed}
+.secondary{background:#edf0f4; color:var(--text)}
+.feedback{display:none; margin-top:12px}
+.feedback.show{display:block}
+.fb{border-radius:10px; padding:10px 11px; margin-top:7px; font-size:13px}
+.fb strong{display:block; margin-bottom:3px}
+.fb.ok{background:var(--ok-bg); border:1px solid #cfe5d8; color:#214f3b}
+.fb.warn{background:var(--warn-bg); border:1px solid #f1dbb0; color:#6f480c}
+.fb.bad{background:var(--bad-bg); border:1px solid #efc9cd; color:#73343b}
+.hidden{display:none!important}
+.branch{
+  border:1px solid var(--line); border-radius:12px; padding:10px; margin-bottom:11px
+}
+.branch h3{margin:0 0 4px; font-size:14px}
+.branch p{margin:0 0 9px; font-size:12.5px}
+.branch .signal{
+  padding:8px 9px; background:#f6f7f9; border-radius:9px;
+  font-size:11.5px; color:var(--muted); margin-bottom:8px
+}
+.option-list{display:grid; gap:7px}
+.option{
+  width:100%; border:1px solid var(--line); border-radius:10px; background:#fff;
+  color:var(--text); padding:10px 11px; text-align:left; font-size:12.5px; cursor:pointer
+}
+.option.selected{
+  border-color:var(--accent); background:var(--accent-soft);
+  box-shadow:0 0 0 1px var(--accent) inset
+}
+.summary{
+  margin-top:14px; border-top:1px solid var(--line); padding-top:14px
+}
+.summary h3{margin:0 0 7px; font-size:17px}
+.summary p{margin:0 0 9px; font-size:13px}
+.metrics{display:grid; grid-template-columns:1fr 1fr 1fr; gap:7px}
+.metric{
+  border:1px solid var(--line); border-radius:10px; padding:9px 6px; text-align:center
+}
+.metric .score{font-size:19px; font-weight:700; color:var(--accent)}
+.metric .label{font-size:10.5px; color:var(--muted); margin-top:2px}
+.reference{
+  margin-top:11px; border:1px solid var(--line); border-radius:11px; overflow:hidden
+}
+.reference-head{
+  padding:8px 10px; background:#f4f6f9; font-size:12.5px; font-weight:700
+}
+.reference-row{padding:8px 10px; border-top:1px solid #edf0f4; font-size:12px}
+.reference-row b{display:block; margin-bottom:2px}
+@media(max-width:420px){
+  .zones{grid-template-columns:1fr}
+  .metrics{grid-template-columns:1fr}
+  .body{padding:13px}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="shell">
+    <div class="head">
+      <h1>Где заканчивается самостоятельность</h1>
+      <p class="lead">Распределите решения по четырем режимам, а затем измените только те границы полномочий, для которых появились новые факты.</p>
+      <div class="progress">
+        <span id="p1" class="active"></span>
+        <span id="p2"></span>
+      </div>
+    </div>
+
+    <div class="body">
+      <section id="stage1">
+        <div class="stage-label">Раунд 1 из 2</div>
+        <h2 class="stage-title">Разложите рабочие ситуации по четырем режимам</h2>
+
+        <div class="rules">
+          <b>Что нужно сделать</b>
+          <ol>
+            <li>Сначала прочитайте установленные границы полномочий.</li>
+            <li>Распределите все 12 карточек по четырем зонам: <strong>решить самостоятельно, решить и уведомить, сначала согласовать, стоп</strong>.</li>
+            <li>Оценивайте не только сумму денег. Учитывайте обратимость решения, влияние на другие обязательства, наличие формального полномочия и обязательные требования.</li>
+            <li>«Решить и уведомить» используйте там, где сотрудник вправе действовать сам, но решение должно быть зафиксировано или влияет на других участников.</li>
+            <li>«Стоп» означает, что действие нельзя выполнять даже после обычного согласования: оно нарушает обязательное требование или запрет.</li>
+            <li>Можно перетаскивать карточки или нажать на карточку, а затем на нужную зону.</li>
+            <li>После распределения всех карточек нажмите «Проверить».</li>
+          </ol>
+        </div>
+
+        <div class="boundaries">
+          <div class="boundaries-head">Текущий коридор полномочий</div>
+          <div class="boundary-row"><b>Компенсации клиентам</b>До 10 000 ₽ сотрудник решает сам, но обязан зафиксировать решение в CRM и уведомить руководителя в конце дня.</div>
+          <div class="boundary-row"><b>Сроки</b>Внутренние сроки можно менять до 2 рабочих дней, если это не влияет на финальный запуск и обязательства других подразделений. Финальный срок проекта меняет только руководитель.</div>
+          <div class="boundary-row"><b>Бюджет</b>Внутри утвержденной статьи можно покупать сервисы до 25 000 ₽. Увеличение общего бюджета требует согласования.</div>
+          <div class="boundary-row"><b>Договор и обязательные требования</b>Условия договора меняются только после согласования. Нарушать обязательные требования качества, безопасности и защиты данных нельзя.</div>
+          <div class="boundary-row"><b>Способы работы</b>Из протестированных и разрешенных способов сотрудник выбирает самостоятельно.</div>
+          <div class="boundary-row"><b>Поставщики</b>Можно переключиться на заранее одобренного резервного поставщика при той же цене и условиях, но об этом нужно уведомить закупки.</div>
+        </div>
+
+        <div class="bank" id="bank" data-zone="bank">
+          <div class="bank-title">Рабочие ситуации</div>
+        </div>
+
+        <div class="zones">
+          <div class="zone" data-zone="self">
+            <div class="zone-title">Решить самостоятельно <span class="count" id="cSelf">0</span></div>
+            <div class="zone-note">В пределах роли, обратимо, без нового внешнего обязательства.</div>
+          </div>
+
+          <div class="zone" data-zone="notify">
+            <div class="zone-title">Решить и уведомить <span class="count" id="cNotify">0</span></div>
+            <div class="zone-note">Полномочие есть, но решение нужно зафиксировать или оно влияет на других.</div>
+          </div>
+
+          <div class="zone" data-zone="agree">
+            <div class="zone-title">Сначала согласовать <span class="count" id="cAgree">0</span></div>
+            <div class="zone-note">Решение допустимо, но пересекает границу полномочий.</div>
+          </div>
+
+          <div class="zone" data-zone="stop">
+            <div class="zone-title">Стоп <span class="count" id="cStop">0</span></div>
+            <div class="zone-note">Нарушает обязательное требование или установленный запрет.</div>
+          </div>
+        </div>
+
+        <div class="actions">
+          <button class="secondary" id="reset1">Сбросить</button>
+          <button class="primary" id="check1" disabled>Проверить</button>
+        </div>
+
+        <div class="feedback" id="fb1"></div>
+        <div class="actions hidden" id="go2Wrap">
+          <button class="primary" id="go2">Перейти к изменению границ</button>
+        </div>
+      </section>
+
+      <section id="stage2" class="hidden">
+        <div class="stage-label">Раунд 2 из 2</div>
+        <h2 class="stage-title">Измените границы по новым результатам</h2>
+
+        <div class="rules">
+          <b>Что нужно сделать</b>
+          <ol>
+            <li>Перед вами две новые ситуации с тем же сотрудником.</li>
+            <li>В первой решите, есть ли основания <strong>расширить</strong> один конкретный коридор полномочий.</li>
+            <li>Во второй решите, нужно ли <strong>временно сузить</strong> один конкретный коридор после повторной ошибки.</li>
+            <li>Не меняйте полномочия сотрудника целиком. Меняйте только ту границу, по которой появились новые данные.</li>
+            <li>При расширении сохраняйте обязательные ограничения и фиксацию решений.</li>
+            <li>При сужении задавайте условие возврата самостоятельности: несколько стабильных решений без повторения ошибки.</li>
+            <li>Выберите по одному решению в каждом блоке и нажмите «Проверить изменения».</li>
+          </ol>
+        </div>
+
+        <div class="branch">
+          <h3>Ситуация А. Устойчивая работа</h3>
+          <p>Сотрудник десять раз подряд самостоятельно принимал решения по компенсациям до 10 000 ₽. Все решения укладывались в правила, были вовремя зафиксированы в CRM, повторных жалоб не возникло.</p>
+          <div class="signal">Новая фактура относится только к коридору компенсаций. Данных о бюджете, договорах и сроках она не меняет.</div>
+          <div class="option-list" id="expandOptions"></div>
+        </div>
+
+        <div class="branch">
+          <h3>Ситуация Б. Повторная ошибка</h3>
+          <p>Сотрудник дважды переносил внутренний срок на один день и каждый раз считал, что это не влияет на других. После первого случая правило уточнили: до переноса нужно проверить зависимые этапы двух подразделений. Во втором случае сотрудник снова не сделал эту проверку, и коллегам пришлось переделывать график.</p>
+          <div class="signal">Ошибка повторилась в одной конкретной зоне — изменении внутренних сроков и проверке зависимостей.</div>
+          <div class="option-list" id="narrowOptions"></div>
+        </div>
+
+        <div class="actions">
+          <button class="secondary" id="back1">Назад</button>
+          <button class="primary" id="check2" disabled>Проверить изменения</button>
+        </div>
+
+        <div class="feedback" id="fb2"></div>
+        <div class="summary hidden" id="summary"></div>
+      </section>
+    </div>
+  </div>
+</div>
+
+<script>
+const cards = [
+  {id:1,text:"Компенсация клиенту 6 000 ₽. Причина подтверждена, решение будет зафиксировано в CRM.",zone:"notify",why:"Сумма внутри лимита 10 000 ₽, но правило требует фиксации и уведомления."},
+  {id:2,text:"Перенос внутреннего срока на один день. Финальный запуск и обязательства других подразделений не меняются.",zone:"self",why:"Изменение укладывается в коридор до двух дней и не затрагивает другие обязательства."},
+  {id:3,text:"Перенос финального срока проекта на три дня.",zone:"agree",why:"Финальный срок находится за границей полномочий сотрудника."},
+  {id:4,text:"Покупка дополнительного сервиса за 18 000 ₽ в пределах уже утвержденной статьи бюджета.",zone:"self",why:"Сумма ниже лимита 25 000 ₽ и не увеличивает общий бюджет."},
+  {id:5,text:"Увеличение общего бюджета проекта на 8%.",zone:"agree",why:"Даже небольшое процентное увеличение меняет общий бюджет и требует решения руководителя."},
+  {id:6,text:"Изменение условия договора с клиентом о сроке оплаты.",zone:"agree",why:"Договорное условие нельзя менять самостоятельно, даже если финансовый эффект кажется небольшим."},
+  {id:7,text:"Выбрать один из двух ранее протестированных и разрешенных способов работы.",zone:"self",why:"Оба способа уже разрешены, поэтому выбор остается в зоне сотрудника."},
+  {id:8,text:"Пропустить обязательную проверку качества, чтобы успеть к сроку.",zone:"stop",why:"Обязательное требование нельзя отменить ради скорости даже после обычного согласования."},
+  {id:9,text:"Поменять смены двух сотрудников внутри команды без сверхурочных и без влияния на сроки.",zone:"self",why:"Изменение обратимо и не создает нового обязательства или перерасхода."},
+  {id:10,text:"Передать внешнему подрядчику производственные данные, для которых запрещен внешний доступ.",zone:"stop",why:"Это нарушение обязательного требования защиты данных."},
+  {id:11,text:"Переключиться на заранее одобренного резервного поставщика при той же цене и условиях.",zone:"notify",why:"Замена разрешена заранее, но закупки должны знать, какой поставщик фактически используется."},
+  {id:12,text:"Отказаться от обязательного этапа проверки безопасности, потому что предыдущие проекты проходили без инцидентов.",zone:"stop",why:"Прошлый опыт не отменяет обязательное требование безопасности."}
+];
+
+const expandOptions = [
+  {
+    id:"e1",
+    text:"Ничего не менять: если сотрудник справляется, это еще не повод расширять полномочия.",
+    correct:false,
+    feedback:"Десять стабильных решений дают фактическое основание проверить следующий уровень самостоятельности. Коридор можно расширить адресно."
+  },
+  {
+    id:"e2",
+    text:"Повысить лимит самостоятельной компенсации с 10 000 до 15 000 ₽, сохранив фиксацию в CRM и уведомление руководителя.",
+    correct:true,
+    feedback:"Меняется только доказавшая устойчивость граница. Контрольная фиксация и остальные ограничения сохраняются."
+  },
+  {
+    id:"e3",
+    text:"Разрешить компенсации без лимита и без фиксации: сотрудник уже доказал надежность.",
+    correct:false,
+    feedback:"Устойчивость внутри одного диапазона не обосновывает снятие всех финансовых и учетных ограничений."
+  },
+  {
+    id:"e4",
+    text:"Одновременно повысить лимит компенсаций, разрешить менять договор и переносить финальные сроки.",
+    correct:false,
+    feedback:"Новые данные относятся только к компенсациям. Другие полномочия нельзя расширять без подтвержденного опыта в этих решениях."
+  }
+];
+
+const narrowOptions = [
+  {
+    id:"n1",
+    text:"Забрать у сотрудника все самостоятельные решения до конца квартала.",
+    correct:false,
+    feedback:"Ошибка относится к одному типу решения. Полное изъятие полномочий не связано с фактической проблемой."
+  },
+  {
+    id:"n2",
+    text:"Временно перевести изменения внутренних сроков из «решить самостоятельно» в «сначала согласовать». Вернуть самостоятельность после трех случаев подряд с корректной проверкой зависимостей.",
+    correct:true,
+    feedback:"Сужается только проблемная граница и сразу задано условие возврата полномочия."
+  },
+  {
+    id:"n3",
+    text:"Оставить все как есть: правило уже объясняли, значит сотрудник должен просто внимательнее работать.",
+    correct:false,
+    feedback:"После повторения той же ошибки простого уточнения правила уже недостаточно. Нужна временная дополнительная защита именно в этой зоне."
+  },
+  {
+    id:"n4",
+    text:"Оставить право менять внутренние сроки, но добавить ежедневный отчет по всем решениям сотрудника.",
+    correct:false,
+    feedback:"Общий отчет увеличивает контроль, но не защищает конкретную развилку, в которой сотрудник дважды пропустил проверку зависимостей."
+  }
+];
+
+let selectedCard=null;
+let expandSel=null;
+let narrowSel=null;
+let stage1Score=0;
+let stage2Score=0;
+
+const $=s=>document.querySelector(s);
+
+function addFb(container,type,title,text){
+  const d=document.createElement("div");
+  d.className=`fb ${type}`;
+  d.innerHTML=`<strong>${title}</strong>${text}`;
+  container.appendChild(d);
+}
+
+function makeCard(c){
+  const d=document.createElement("div");
+  d.className="card";
+  d.draggable=true;
+  d.dataset.id=c.id;
+  d.innerHTML=`<span class="card-num">${c.id}.</span>${c.text}`;
+
+  d.addEventListener("dragstart",e=>{
+    d.classList.add("dragging");
+    e.dataTransfer.setData("text/plain",c.id);
+  });
+  d.addEventListener("dragend",()=>d.classList.remove("dragging"));
+  d.addEventListener("click",e=>{
+    e.stopPropagation();
+    document.querySelectorAll(".card.selected").forEach(x=>x.classList.remove("selected"));
+    if(selectedCard===d){selectedCard=null;return}
+    selectedCard=d;
+    d.classList.add("selected");
+  });
+  return d;
+}
+
+function initStage1(){
+  $("#bank").querySelectorAll(".card").forEach(c=>c.remove());
+  cards.forEach(c=>$("#bank").appendChild(makeCard(c)));
+
+  document.querySelectorAll("[data-zone]").forEach(zone=>{
+    if(zone.dataset.bound==="1")return;
+    zone.dataset.bound="1";
+
+    zone.addEventListener("dragover",e=>{
+      e.preventDefault();
+      if(zone.dataset.zone!=="bank")zone.classList.add("over");
+    });
+    zone.addEventListener("dragleave",()=>zone.classList.remove("over"));
+    zone.addEventListener("drop",e=>{
+      e.preventDefault();
+      zone.classList.remove("over");
+      const id=e.dataTransfer.getData("text/plain");
+      const card=document.querySelector(`.card[data-id="${id}"]`);
+      if(card)zone.appendChild(card);
+      clearSelection();
+      updateStage1();
+    });
+    zone.addEventListener("click",()=>{
+      if(selectedCard){
+        zone.appendChild(selectedCard);
+        clearSelection();
+        updateStage1();
+      }
+    });
+  });
+
+  updateStage1();
+}
+
+function clearSelection(){
+  document.querySelectorAll(".card.selected").forEach(x=>x.classList.remove("selected"));
+  selectedCard=null;
+}
+
+function placements(){
+  const p={};
+  document.querySelectorAll(".card").forEach(c=>p[c.dataset.id]=c.parentElement.dataset.zone);
+  return p;
+}
+
+function updateStage1(){
+  $("#cSelf").textContent=document.querySelectorAll('.zone[data-zone="self"] .card').length;
+  $("#cNotify").textContent=document.querySelectorAll('.zone[data-zone="notify"] .card').length;
+  $("#cAgree").textContent=document.querySelectorAll('.zone[data-zone="agree"] .card').length;
+  $("#cStop").textContent=document.querySelectorAll('.zone[data-zone="stop"] .card').length;
+
+  const all=[...document.querySelectorAll(".card")].every(c=>c.parentElement.dataset.zone!=="bank");
+  $("#check1").disabled=!all;
+  $("#fb1").className="feedback";
+  $("#fb1").innerHTML="";
+  $("#go2Wrap").classList.add("hidden");
+}
+
+function checkStage1(){
+  const p=placements();
+  const wrong=cards.filter(c=>p[c.id]!==c.zone);
+  stage1Score=cards.length-wrong.length;
+
+  const fb=$("#fb1");
+  fb.innerHTML="";
+
+  if(!wrong.length){
+    addFb(fb,"ok","Вы разделили разрешение, уведомление, согласование и запрет.",
+      "Решения распределены по реальным границам: обратимость и сумма важны, но они не отменяют договорные полномочия и обязательные требования.");
+  }else{
+    wrong.forEach(c=>{
+      addFb(fb,"warn",`Карточка ${c.id}: проверьте границу еще раз.`,c.why);
+    });
+  }
+
+  fb.classList.add("show");
+  $("#go2Wrap").classList.remove("hidden");
+}
+
+function renderOptions(containerId,items,selected,handler){
+  const box=$(containerId);
+  box.innerHTML="";
+  items.forEach(o=>{
+    const b=document.createElement("button");
+    b.type="button";
+    b.className="option"+(selected===o.id?" selected":"");
+    b.textContent=o.text;
+    b.addEventListener("click",()=>handler(o.id));
+    box.appendChild(b);
+  });
+}
+
+function renderStage2(){
+  renderOptions("#expandOptions",expandOptions,expandSel,id=>{
+    expandSel=id;
+    renderStage2();
+  });
+
+  renderOptions("#narrowOptions",narrowOptions,narrowSel,id=>{
+    narrowSel=id;
+    renderStage2();
+  });
+
+  $("#check2").disabled=!(expandSel && narrowSel);
+  $("#fb2").className="feedback";
+  $("#fb2").innerHTML="";
+  $("#summary").classList.add("hidden");
+}
+
+function checkStage2(){
+  const expand=expandOptions.find(o=>o.id===expandSel);
+  const narrow=narrowOptions.find(o=>o.id===narrowSel);
+  stage2Score=(expand.correct?1:0)+(narrow.correct?1:0);
+
+  const fb=$("#fb2");
+  fb.innerHTML="";
+
+  addFb(
+    fb,
+    expand.correct?"ok":"warn",
+    expand.correct?"Расширение связано с подтвержденной устойчивостью.":"Расширение стоит сделать точнее.",
+    expand.feedback
+  );
+
+  addFb(
+    fb,
+    narrow.correct?"ok":"warn",
+    narrow.correct?"Сужение временное и адресное.":"Сужение полномочий стоит привязать к конкретной ошибке.",
+    narrow.feedback
+  );
+
+  fb.classList.add("show");
+  showSummary();
+}
+
+function showSummary(){
+  let title,text;
+
+  if(stage1Score===12 && stage2Score===2){
+    title="Вы управляете границами как изменяемой системой.";
+    text="Вы различаете разрешенные решения, обязательное уведомление, реальные точки согласования и запреты, а затем расширяете или сужаете только ту часть полномочий, по которой появились новые результаты.";
+  }else if(stage1Score<10){
+    title="Сначала стоит точнее различать типы границ.";
+    text="Не сводите решение к сумме или уровню риска. Договор, финальный срок и обязательное требование подчиняются разным правилам, даже если финансовый эффект похож.";
+  }else if(stage2Score===0){
+    title="Базовые границы понятны, но изменения получаются слишком широкими.";
+    text="Новые факты по одному типу решений не дают основания расширять или забирать самостоятельность целиком.";
+  }else{
+    title="Основная логика работает, но одну из границ стоит менять точнее.";
+    text="Расширяйте конкретный коридор после устойчивого результата. При повторной ошибке временно сужайте только проблемную зону и заранее определяйте условие возврата полномочия.";
+  }
+
+  const s=$("#summary");
+  s.innerHTML=`
+    <h3>${title}</h3>
+    <p>${text}</p>
+
+    <div class="metrics">
+      <div class="metric"><div class="score">${stage1Score}/12</div><div class="label">распознавание границ</div></div>
+      <div class="metric"><div class="score">${expandOptions.find(o=>o.id===expandSel)?.correct?1:0}/1</div><div class="label">расширение коридора</div></div>
+      <div class="metric"><div class="score">${narrowOptions.find(o=>o.id===narrowSel)?.correct?1:0}/1</div><div class="label">временное сужение</div></div>
+    </div>
+
+    <div class="reference">
+      <div class="reference-head">Рабочая логика управления границами</div>
+      <div class="reference-row"><b>Решить самостоятельно</b>Полномочие уже есть, действие обратимо и не меняет внешние обязательства.</div>
+      <div class="reference-row"><b>Решить и уведомить</b>Сотрудник действует сам, но решение должно быть зафиксировано или влияет на другие рабочие контуры.</div>
+      <div class="reference-row"><b>Сначала согласовать</b>Решение может быть разумным, но пересекает формальную границу: бюджет, договор, финальный срок или другое чужое полномочие.</div>
+      <div class="reference-row"><b>Стоп</b>Действие нарушает обязательное требование или установленный запрет.</div>
+      <div class="reference-row"><b>Изменение коридора</b>Расширять после устойчивого результата; сужать адресно после повторной ошибки; заранее задавать условие возврата самостоятельности.</div>
+    </div>
+  `;
+  s.classList.remove("hidden");
+}
+
+$("#reset1").addEventListener("click",initStage1);
+$("#check1").addEventListener("click",checkStage1);
+$("#go2").addEventListener("click",()=>{
+  $("#stage1").classList.add("hidden");
+  $("#stage2").classList.remove("hidden");
+  $("#p2").classList.add("active");
+  renderStage2();
+  window.scrollTo({top:0,behavior:"smooth"});
+});
+$("#back1").addEventListener("click",()=>{
+  $("#stage2").classList.add("hidden");
+  $("#stage1").classList.remove("hidden");
+  $("#p2").classList.remove("active");
+  updateStage1();
+  window.scrollTo({top:0,behavior:"smooth"});
+});
+$("#check2").addEventListener("click",checkStage2);
+
+initStage1();
+</script>
+</body>
+</html>

@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Разработайте три управленческих сценария</title>
+<style>
+
+:root{
+  --bg:#f5f6f8;
+  --card:#ffffff;
+  --text:#20242d;
+  --muted:#6d7583;
+  --line:#dfe3ea;
+  --accent:#315d9b;
+  --accent-soft:#eef3fb;
+  --ok:#2e6b4f;
+  --ok-bg:#eef7f2;
+  --warn:#8a5a10;
+  --warn-bg:#fff7e8;
+  --bad:#8b3d45;
+  --bad-bg:#fff0f1;
+  --shadow:0 6px 18px rgba(31,36,48,.07);
+}
+*{box-sizing:border-box}
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--text);
+  font-family:Arial,Helvetica,sans-serif;
+  line-height:1.42;
+}
+.app{
+  width:min(560px,calc(100% - 24px));
+  margin:18px auto;
+}
+.shell{
+  background:var(--card);
+  border:1px solid var(--line);
+  border-radius:16px;
+  box-shadow:var(--shadow);
+  overflow:hidden;
+}
+.head{
+  padding:18px 18px 14px;
+  border-bottom:1px solid var(--line);
+}
+h1{margin:0 0 8px;font-size:21px;line-height:1.2}
+.lead{margin:0;font-size:14px;color:var(--muted)}
+.progress{display:flex;gap:7px;margin-top:14px}
+.progress span{height:5px;flex:1;background:#e8ebf0;border-radius:999px}
+.progress span.active{background:var(--accent)}
+.body{padding:16px}
+.stage-label{
+  font-size:12px;
+  color:var(--accent);
+  font-weight:700;
+  text-transform:uppercase;
+  letter-spacing:.03em;
+  margin-bottom:5px;
+}
+.stage-title{margin:0 0 5px;font-size:17px}
+.stage-note{margin:0 0 12px;color:var(--muted);font-size:13px}
+.rules{
+  padding:11px 12px;
+  border:1px solid #d8e1ef;
+  background:#f5f7fb;
+  border-radius:12px;
+  font-size:13px;
+  margin-bottom:13px;
+}
+.rules b{display:block;margin-bottom:5px}
+.rules ol{margin:0;padding-left:19px}
+.rules li{margin:4px 0}
+.case{
+  padding:11px 12px;
+  border:1px solid #d8e1ef;
+  background:#f5f7fb;
+  border-radius:11px;
+  font-size:13px;
+  margin-bottom:12px;
+}
+.case b{display:block;margin-bottom:3px}
+.actions{display:flex;gap:8px;margin-top:13px}
+button{
+  appearance:none;
+  border:0;
+  border-radius:10px;
+  padding:10px 13px;
+  font-size:14px;
+  font-weight:700;
+  cursor:pointer;
+}
+.primary{background:var(--accent);color:#fff;flex:1}
+.primary:disabled{opacity:.45;cursor:not-allowed}
+.secondary{background:#edf0f4;color:var(--text)}
+.hidden{display:none!important}
+.option-list{display:grid;gap:8px}
+.option{
+  width:100%;
+  border:1px solid var(--line);
+  border-radius:10px;
+  background:#fff;
+  color:var(--text);
+  padding:10px 11px;
+  text-align:left;
+  font-size:13px;
+  cursor:pointer;
+}
+.option:hover{border-color:#b5bfcd}
+.option.selected{
+  border-color:var(--accent);
+  background:var(--accent-soft);
+  box-shadow:0 0 0 1px var(--accent) inset;
+}
+.option.correct{
+  border-color:#a9d2bb;
+  background:var(--ok-bg);
+}
+.option.wrong{
+  border-color:#e1b0b5;
+  background:var(--bad-bg);
+}
+.feedback{display:none;margin-top:12px}
+.feedback.show{display:block}
+.fb{border-radius:10px;padding:10px 11px;margin-top:7px;font-size:13px}
+.fb strong{display:block;margin-bottom:3px}
+.fb.ok{background:var(--ok-bg);border:1px solid #cfe5d8;color:#214f3b}
+.fb.warn{background:var(--warn-bg);border:1px solid #f1dbb0;color:#6f480c}
+.fb.bad{background:var(--bad-bg);border:1px solid #efc9cd;color:#73343b}
+.summary{
+  margin-top:14px;
+  padding-top:14px;
+  border-top:1px solid var(--line);
+}
+.summary h3{margin:0 0 7px;font-size:17px}
+.summary p{margin:0 0 9px;font-size:13px}
+.summary-grid{display:grid;gap:7px}
+.summary-item{
+  border:1px solid var(--line);
+  border-radius:10px;
+  padding:9px 10px;
+  font-size:12.5px;
+}
+.summary-item b{display:block;margin-bottom:2px}
+.small{font-size:12px;color:var(--muted)}
+
+.scenario-tabs{display:flex;gap:7px;margin-bottom:11px}
+.scenario-tab{
+  flex:1;border:1px solid var(--line);background:#fff;color:var(--muted);
+  padding:8px 6px;border-radius:9px;font-size:12px;cursor:pointer
+}
+.scenario-tab.active{border-color:var(--accent);background:var(--accent-soft);color:var(--accent);font-weight:700}
+.scenario-tab.done::after{content:" ✓";color:var(--ok)}
+.check-option{
+  display:grid;grid-template-columns:24px 1fr;gap:8px;align-items:start;
+  border:1px solid var(--line);border-radius:10px;padding:10px 11px;background:#fff;cursor:pointer
+}
+.check-option.selected{border-color:var(--accent);background:var(--accent-soft)}
+.check-option input{margin-top:2px}
+.trigger-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;margin:10px 0 12px}
+.trigger{
+  border:1px solid var(--line);border-radius:10px;padding:9px;background:#fff;font-size:12px
+}
+.trigger b{display:block;margin-bottom:2px}
+.metric-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;margin-top:12px}
+.metric{
+  border:1px solid var(--line);border-radius:10px;padding:9px;text-align:center
+}
+.metric .n{font-size:20px;font-weight:700;color:var(--accent)}
+.metric .t{font-size:11px;color:var(--muted);margin-top:2px}
+.round-card{border:1px solid var(--line);border-radius:12px;padding:11px;margin-bottom:11px}
+.round-card h3{margin:0 0 5px;font-size:16px}
+.round-state{font-size:12px;color:var(--muted);margin-bottom:8px}
+.multi-title{font-size:13px;font-weight:700;margin:13px 0 7px}
+.check-result{margin-top:9px}
+.badge{display:inline-block;padding:3px 7px;border-radius:999px;background:var(--accent-soft);color:var(--accent);font-size:11px;font-weight:700}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="shell">
+    <div class="head">
+      <h1>Смена режима</h1>
+      <p class="lead">Настройте три сценария работы, а затем управляйте нагрузкой в четырех раундах. Важно вовремя переключать режим и не выходить за согласованные полномочия.</p>
+      <div class="progress">
+        <span id="p1" class="active"></span>
+        <span id="p2"></span>
+        <span id="p3"></span>
+        <span id="p4"></span>
+        <span id="p5"></span>
+      </div>
+    </div>
+    <div class="body">
+
+      <section id="setup">
+        <div class="stage-label">Подготовка</div>
+        <h2 class="stage-title">Соберите действия для трех сценариев</h2>
+        <div class="rules">
+          <b>Что нужно сделать</b>
+          <ol>
+            <li>По очереди откройте сценарии А, Б и В.</li>
+            <li>В каждом сценарии отметьте <strong>все действия</strong>, которые сотрудник может начать без отдельного согласования руководителя.</li>
+            <li>Не выбирайте действия, которые останавливают работу без необходимости или требуют полномочий, которых у команды нет.</li>
+            <li>После заполнения каждого сценария нажмите «Проверить сценарий».</li>
+            <li>Когда три сценария собраны, переходите к симуляции.</li>
+          </ol>
+        </div>
+
+        <div class="trigger-grid">
+          <div class="trigger"><b>А — штатный</b>до 40 новых заявок в день.</div>
+          <div class="trigger"><b>Б — повышенный</b>41–60 новых заявок в день.</div>
+          <div class="trigger"><b>В — критический</b>более 60 заявок <u>или</u> риск нарушения обязательного срока по ключевым обращениям.</div>
+        </div>
+
+        <div class="scenario-tabs" id="setupTabs"></div>
+        <div class="case" id="setupCase"></div>
+        <div class="option-list" id="setupOptions"></div>
+
+        <div class="actions">
+          <button class="primary" id="checkSetup" disabled>Проверить сценарий</button>
+        </div>
+        <div class="feedback" id="setupFeedback"></div>
+
+        <div class="actions hidden" id="startWrap">
+          <button class="primary" id="startSim">Начать симуляцию</button>
+        </div>
+      </section>
+
+      <section id="simulation" class="hidden">
+        <div class="stage-label" id="roundLabel"></div>
+        <h2 class="stage-title" id="roundTitle"></h2>
+        <div class="rules" id="roundRules"></div>
+        <div class="round-card">
+          <div class="round-state" id="roundState"></div>
+          <div id="roundSituation"></div>
+        </div>
+
+        <div class="multi-title" id="roundQuestion"></div>
+        <div class="option-list" id="roundOptions"></div>
+
+        <div id="extraQuestion" class="hidden">
+          <div class="multi-title" id="extraTitle"></div>
+          <div class="option-list" id="extraOptions"></div>
+        </div>
+
+        <div class="actions">
+          <button class="primary" id="checkRound" disabled>Проверить решение</button>
+        </div>
+
+        <div class="feedback" id="roundFeedback"></div>
+        <div class="actions hidden" id="nextRoundWrap">
+          <button class="primary" id="nextRound">Следующий раунд</button>
+        </div>
+
+        <div class="summary hidden" id="finalSummary"></div>
+      </section>
+
+    </div>
+  </div>
+</div>
+
+<script>
+const setupScenarios = [
+  {
+    id:"A",
+    title:"А — штатная нагрузка",
+    context:"До 40 новых заявок. Очередь стабильна, обязательные сроки не под угрозой.",
+    actions:[
+      {id:"a1",text:"Работать по обычному распределению заявок.",correct:true},
+      {id:"a2",text:"Сохранять стандартный приоритет ключевых обращений.",correct:true},
+      {id:"a3",text:"Каждые два часа запрашивать разрешение руководителя продолжать работу.",correct:false},
+      {id:"a4",text:"Сразу использовать весь резерв сотрудников.",correct:false}
+    ]
+  },
+  {
+    id:"B",
+    title:"Б — повышенная нагрузка",
+    context:"41–60 новых заявок. Нагрузка выше обычной, но обязательные сроки пока можно сохранить.",
+    actions:[
+      {id:"b1",text:"Временно отложить внутренние некритичные задачи.",correct:true},
+      {id:"b2",text:"Перераспределить доступных специалистов на клиентскую очередь.",correct:true},
+      {id:"b3",text:"Использовать заранее согласованный резерв.",correct:true},
+      {id:"b4",text:"Уведомить смежную команду о повышенной нагрузке, если это влияет на совместную работу.",correct:true},
+      {id:"b5",text:"Полностью закрыть прием новых обращений.",correct:false},
+      {id:"b6",text:"Каждое перераспределение отдельно согласовывать с руководителем.",correct:false}
+    ]
+  },
+  {
+    id:"V",
+    title:"В — критическая ситуация",
+    context:"Более 60 новых заявок или появился риск нарушения обязательного срока по ключевым обращениям.",
+    actions:[
+      {id:"v1",text:"Сразу защитить ключевые обращения: поднять их приоритет и перераспределить доступный ресурс.",correct:true},
+      {id:"v2",text:"Приостановить внутренние некритичные задачи в пределах согласованных правил.",correct:true},
+      {id:"v3",text:"Использовать заранее согласованный резерв.",correct:true},
+      {id:"v4",text:"Подготовить данные о риске, уже принятых мерах и недостающем ресурсе для эскалации.",correct:true},
+      {id:"v5",text:"Ничего не менять до ответа руководителя.",correct:false},
+      {id:"v6",text:"Самостоятельно привлечь подрядчика сверх утвержденного бюджета.",correct:false}
+    ]
+  }
+];
+
+const rounds = [
+  {
+    title:"Нагрузка выросла",
+    situation:"За первые часы дня поступило 48 новых заявок. Очередь растет, но обязательные сроки по ключевым обращениям пока не под угрозой.",
+    current:"Текущий режим: А",
+    question:"Какой сценарий нужно включить?",
+    options:[
+      {id:"A",text:"Остаться в А — штатный режим",correct:false,kind:"trigger"},
+      {id:"B",text:"Перейти в Б — повышенная нагрузка",correct:true,kind:"trigger"},
+      {id:"V",text:"Сразу перейти в В — критический режим",correct:false,kind:"trigger"},
+      {id:"wait",text:"Остановить изменения до указания руководителя",correct:false,kind:"boundary"}
+    ],
+    extra:{
+      title:"Какие действия запустить сразу? Отметьте все подходящие.",
+      multi:true,
+      options:[
+        {id:"r1a",text:"Отложить внутренние некритичные задачи.",correct:true},
+        {id:"r1b",text:"Перераспределить доступных специалистов.",correct:true},
+        {id:"r1c",text:"Использовать согласованный резерв, если текущего ресурса не хватает.",correct:true},
+        {id:"r1d",text:"Закрыть прием новых заявок.",correct:false},
+        {id:"r1e",text:"Согласовывать каждое перераспределение.",correct:false}
+      ]
+    }
+  },
+  {
+    title:"Очередь стабилизировалась",
+    situation:"Через два часа очередь перестала расти. Прогноз на конец дня — 54 заявки. Обязательные сроки по ключевым обращениям сохраняются.",
+    current:"Текущий режим: Б",
+    question:"Что делать с режимом сейчас?",
+    options:[
+      {id:"B",text:"Остаться в Б",correct:true,kind:"trigger"},
+      {id:"A",text:"Вернуться в А, потому что очередь уже не растет",correct:false,kind:"speed"},
+      {id:"V",text:"Перейти в В на всякий случай",correct:false,kind:"trigger"},
+      {id:"wait",text:"Остановить работу до нового решения",correct:false,kind:"boundary"}
+    ]
+  },
+  {
+    title:"Появился риск обязательного срока",
+    situation:"Один ключевой специалист неожиданно выбыл до конца недели. Прогноз остается 54 заявки, но по критическим обращениям теперь есть риск нарушить обязательный срок.",
+    current:"Текущий режим: Б",
+    question:"Какой сценарий включается?",
+    options:[
+      {id:"B",text:"Остаться в Б: заявок меньше 60",correct:false,kind:"trigger"},
+      {id:"V",text:"Перейти в В: сработал критический триггер по сроку",correct:true,kind:"trigger"},
+      {id:"A",text:"Вернуться в А и перераспределить нагрузку вручную",correct:false,kind:"trigger"},
+      {id:"wait",text:"Дождаться руководителя, потому что числовой порог не превышен",correct:false,kind:"speed"}
+    ]
+  },
+  {
+    title:"Руководитель временно недоступен",
+    situation:"Вы уже в сценарии В. Руководитель будет недоступен еще около 40 минут. Риск по обязательным срокам сохраняется.",
+    current:"Текущий режим: В",
+    question:"Какие действия можно начать до связи с руководителем? Отметьте все подходящие.",
+    multi:true,
+    options:[
+      {id:"r4a",text:"Выполнить защитные действия сценария В в пределах согласованных полномочий.",correct:true,kind:"boundary"},
+      {id:"r4b",text:"Перераспределить доступный ресурс и подготовить данные для эскалации.",correct:true,kind:"boundary"},
+      {id:"r4c",text:"Ничего не делать до связи с руководителем.",correct:false,kind:"speed"},
+      {id:"r4d",text:"Самостоятельно нанять дополнительного подрядчика вне бюджета.",correct:false,kind:"boundary"}
+    ]
+  }
+];
+
+let setupIndex=0;
+const setupAnswers={};
+const setupDone={};
+let roundIndex=0;
+const roundAnswers={};
+const metrics={trigger:0,speed:0,boundary:0};
+let roundChecked=false;
+
+const $=s=>document.querySelector(s);
+
+function addFb(container,type,title,text){
+  const d=document.createElement("div");
+  d.className=`fb ${type}`;
+  d.innerHTML=`<strong>${title}</strong>${text}`;
+  container.appendChild(d);
+}
+
+function renderSetupTabs(){
+  const box=$("#setupTabs");box.innerHTML="";
+  setupScenarios.forEach((s,i)=>{
+    const b=document.createElement("button");
+    b.type="button";
+    b.className="scenario-tab"+(i===setupIndex?" active":"")+(setupDone[s.id]?" done":"");
+    b.textContent=s.id==="V"?"В":s.id;
+    b.addEventListener("click",()=>{setupIndex=i;renderSetup()});
+    box.appendChild(b);
+  });
+}
+
+function renderSetup(){
+  const s=setupScenarios[setupIndex];
+  renderSetupTabs();
+  $("#setupCase").innerHTML=`<b>${s.title}</b>${s.context}`;
+  const box=$("#setupOptions");box.innerHTML="";
+  const chosen=setupAnswers[s.id]||new Set();
+
+  s.actions.forEach(a=>{
+    const label=document.createElement("label");
+    label.className="check-option"+(chosen.has(a.id)?" selected":"");
+    const input=document.createElement("input");
+    input.type="checkbox";input.checked=chosen.has(a.id);
+    input.addEventListener("change",()=>{
+      const set=setupAnswers[s.id]||new Set();
+      if(input.checked)set.add(a.id);else set.delete(a.id);
+      setupAnswers[s.id]=set;renderSetup();
+    });
+    const span=document.createElement("span");span.textContent=a.text;
+    label.append(input,span);box.appendChild(label);
+  });
+
+  $("#checkSetup").disabled=!setupAnswers[s.id]||setupAnswers[s.id].size===0;
+  $("#setupFeedback").className="feedback";$("#setupFeedback").innerHTML="";
+  $("#startWrap").classList.toggle("hidden",Object.keys(setupDone).length!==3);
+}
+
+function checkSetupScenario(){
+  const s=setupScenarios[setupIndex];
+  const chosen=setupAnswers[s.id]||new Set();
+  const correct=new Set(s.actions.filter(a=>a.correct).map(a=>a.id));
+  const missed=[...correct].filter(id=>!chosen.has(id));
+  const wrong=[...chosen].filter(id=>!correct.has(id));
+  const fb=$("#setupFeedback");fb.innerHTML="";
+
+  if(!missed.length&&!wrong.length){
+    addFb(fb,"ok","Набор действий подходит для этого режима.",
+      "Сотрудник может начать эти действия без отдельного согласования и при этом не выходит за установленные полномочия.");
+  }else{
+    if(missed.length){
+      addFb(fb,"warn","Не все разрешенные действия включены.",
+        "Сценарий должен давать сотруднику готовый набор первых шагов, чтобы он не ждал руководителя при каждом отклонении.");
+    }
+    if(wrong.length){
+      const hasApproval=wrong.some(id=>["a3","b6","v5"].includes(id));
+      const hasExcess=wrong.some(id=>["v6"].includes(id));
+      const hasStop=wrong.some(id=>["b5"].includes(id));
+      if(hasApproval) addFb(fb,"bad","В сценарии осталось обязательное ожидание руководителя.",
+        "Если типовые действия требуют отдельного разрешения, сценарий не снижает зависимость.");
+      if(hasExcess) addFb(fb,"bad","Сценарий не создает новых полномочий.",
+        "Даже критическая ситуация не дает права выходить за бюджет или другие согласованные ограничения.");
+      if(hasStop) addFb(fb,"warn","Полная остановка приема — слишком сильное действие для повышенной нагрузки.",
+        "Сначала используйте перераспределение, резерв и приоритизацию.");
+    }
+  }
+  fb.classList.add("show");
+
+  setupDone[s.id]=true;
+  s.actions.forEach(a=>{
+    const set=setupAnswers[s.id]||new Set();
+    if(a.correct)set.add(a.id);else set.delete(a.id);
+    setupAnswers[s.id]=set;
+  });
+  renderSetupTabs();
+
+  if(Object.keys(setupDone).length<3){
+    const wrap=document.createElement("div");wrap.className="actions";
+    const b=document.createElement("button");b.type="button";b.className="primary";
+    b.textContent="Перейти к следующему сценарию";
+    b.addEventListener("click",()=>{
+      setupIndex=(setupIndex+1)%3;
+      renderSetup();
+    });
+    wrap.appendChild(b);fb.appendChild(wrap);
+  }else{
+    $("#startWrap").classList.remove("hidden");
+  }
+}
+
+function startSimulation(){
+  $("#setup").classList.add("hidden");
+  $("#simulation").classList.remove("hidden");
+  roundIndex=0;
+  renderRound();
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+
+function renderRound(){
+  const r=rounds[roundIndex];
+  for(let i=1;i<=5;i++)$("#p"+i).classList.toggle("active",i<=roundIndex+2);
+
+  $("#roundLabel").textContent=`Раунд ${roundIndex+1} из 4`;
+  $("#roundTitle").textContent=r.title;
+  $("#roundState").textContent=r.current;
+  $("#roundSituation").textContent=r.situation;
+  $("#roundQuestion").textContent=r.question;
+
+  $("#roundRules").innerHTML=`<b>Что нужно сделать</b><ol>
+    <li>Сначала определите, какой триггер сработал в новой ситуации.</li>
+    <li>${r.multi?"Отметьте все действия, которые можно начать в пределах текущих полномочий.":"Выберите один режим или решение."}</li>
+    <li>Не останавливайте работу только потому, что руководитель недоступен.</li>
+    <li>Не используйте действия, которые требуют новых полномочий или выхода за бюджет.</li>
+  </ol>`;
+
+  const box=$("#roundOptions");box.innerHTML="";
+  const saved=roundAnswers[roundIndex]||new Set();
+  r.options.forEach(o=>{
+    if(r.multi){
+      const label=document.createElement("label");
+      label.className="check-option"+(saved.has(o.id)?" selected":"");
+      const inp=document.createElement("input");inp.type="checkbox";inp.checked=saved.has(o.id);
+      inp.addEventListener("change",()=>{
+        const set=roundAnswers[roundIndex]||new Set();
+        if(inp.checked)set.add(o.id);else set.delete(o.id);
+        roundAnswers[roundIndex]=set;renderRound();
+      });
+      const span=document.createElement("span");span.textContent=o.text;
+      label.append(inp,span);box.appendChild(label);
+    }else{
+      const b=document.createElement("button");b.type="button";
+      b.className="option"+(saved.has(o.id)?" selected":"");
+      b.textContent=o.text;
+      b.addEventListener("click",()=>{
+        roundAnswers[roundIndex]=new Set([o.id]);renderRound();
+      });
+      box.appendChild(b);
+    }
+  });
+
+  $("#extraQuestion").classList.add("hidden");
+  if(r.extra){
+    $("#extraQuestion").classList.remove("hidden");
+    $("#extraTitle").textContent=r.extra.title;
+    const eb=$("#extraOptions");eb.innerHTML="";
+    const extraSaved=roundAnswers["extra"+roundIndex]||new Set();
+    r.extra.options.forEach(o=>{
+      const label=document.createElement("label");
+      label.className="check-option"+(extraSaved.has(o.id)?" selected":"");
+      const inp=document.createElement("input");inp.type="checkbox";inp.checked=extraSaved.has(o.id);
+      inp.addEventListener("change",()=>{
+        const set=roundAnswers["extra"+roundIndex]||new Set();
+        if(inp.checked)set.add(o.id);else set.delete(o.id);
+        roundAnswers["extra"+roundIndex]=set;renderRound();
+      });
+      const span=document.createElement("span");span.textContent=o.text;
+      label.append(inp,span);eb.appendChild(label);
+    });
+  }
+
+  const ready = roundAnswers[roundIndex] && roundAnswers[roundIndex].size>0 &&
+                (!r.extra || (roundAnswers["extra"+roundIndex]&&roundAnswers["extra"+roundIndex].size>0));
+  $("#checkRound").disabled=!ready;
+  $("#roundFeedback").className="feedback";$("#roundFeedback").innerHTML="";
+  $("#nextRoundWrap").classList.add("hidden");
+  $("#finalSummary").classList.add("hidden");
+}
+
+function scoreSingle(r, chosenId){
+  const chosen=r.options.find(o=>o.id===chosenId);
+  if(!chosen) return;
+  if(chosen.correct){
+    if(chosen.kind==="trigger") metrics.trigger++;
+    if(chosen.kind==="speed") metrics.speed++;
+    if(chosen.kind==="boundary") metrics.boundary++;
+  }else{
+    if(chosen.kind==="trigger") metrics.trigger+=0;
+    if(chosen.kind==="speed") metrics.speed+=0;
+    if(chosen.kind==="boundary") metrics.boundary+=0;
+  }
+}
+
+function checkRound(){
+  const r=rounds[roundIndex];
+  const chosen=roundAnswers[roundIndex]||new Set();
+  const fb=$("#roundFeedback");fb.innerHTML="";
+  let ok=true;
+
+  if(r.multi){
+    const correct=new Set(r.options.filter(o=>o.correct).map(o=>o.id));
+    const missed=[...correct].filter(id=>!chosen.has(id));
+    const wrong=[...chosen].filter(id=>!correct.has(id));
+    ok=!missed.length&&!wrong.length;
+
+    if(ok){
+      metrics.boundary+=2; metrics.speed+=1;
+      addFb(fb,"ok","Вы начали безопасные действия, не выходя за полномочия.",
+        "Критический сценарий должен позволять команде защищать результат до ответа руководителя.");
+    }else{
+      if(chosen.has("r4c")) addFb(fb,"warn","Ожидание руководителя замедляет защиту результата.",
+        "Если первые действия заранее разрешены сценарием, их нужно начинать сразу.");
+      if(chosen.has("r4d")) addFb(fb,"bad","Критический режим не расширяет бюджетные полномочия.",
+        "Новый подрядчик вне бюджета требует отдельного решения руководителя.");
+      if(missed.length) addFb(fb,"warn","Вы не использовали все разрешенные защитные действия.",
+        "В сценарии В уже предусмотрены перераспределение доступного ресурса и подготовка данных для эскалации.");
+    }
+  }else{
+    const id=[...chosen][0];
+    const opt=r.options.find(o=>o.id===id);
+    ok=!!opt?.correct;
+
+    if(ok){
+      metrics.trigger+=1;
+      metrics.speed+=1;
+      addFb(fb,"ok","Режим выбран по фактическому триггеру.",
+        roundIndex===2
+          ?"Критический сценарий включается по любому критическому триггеру. Число заявок осталось в диапазоне Б, но риск обязательного срока уже переводит работу в В."
+          :"Вы не меняете режим раньше или позже, чем требуют условия.");
+    }else{
+      if(roundIndex===1 && id==="A") addFb(fb,"warn","Стабилизация очереди еще не означает возврат в штатный режим.",
+        "Прогноз остается 54 заявки, поэтому числовой триггер сценария Б продолжает действовать.");
+      else if(roundIndex===2 && id==="B") addFb(fb,"bad","Вы ориентируетесь только на количество заявок.",
+        "В сценарии В есть второй триггер: риск нарушения обязательного срока по ключевым обращениям.");
+      else if(id==="wait") addFb(fb,"warn","Сценарий должен работать без ожидания отдельного указания.",
+        "Если триггер и разрешенные действия заранее согласованы, сотрудник переключает режим сам.");
+      else addFb(fb,"warn","Проверьте триггер еще раз.",
+        "Сценарий выбирают по заранее заданным условиям, а не по ощущению, что ситуация стала спокойнее или тревожнее.");
+    }
+  }
+
+  if(r.extra){
+    const extra=roundAnswers["extra"+roundIndex]||new Set();
+    const corr=new Set(r.extra.options.filter(o=>o.correct).map(o=>o.id));
+    const missed=[...corr].filter(id=>!extra.has(id));
+    const wrong=[...extra].filter(id=>!corr.has(id));
+    if(!missed.length&&!wrong.length){
+      metrics.boundary+=1;
+      addFb(fb,"ok","Первые действия сценария Б выбраны корректно.",
+        "Команда использует перераспределение и резерв, не закрывая прием и не возвращая каждое решение руководителю.");
+    }else{
+      if(wrong.some(id=>["r1d","r1e"].includes(id))) addFb(fb,"warn","В наборе есть действие, которое либо избыточно, либо возвращает управление наверх.",
+        "Для повышенной нагрузки сначала работают заранее согласованные меры внутри команды.");
+    }
+  }
+
+  fb.classList.add("show");
+  $("#nextRoundWrap").classList.remove("hidden");
+  $("#nextRound").textContent=roundIndex===3?"Показать итог":"Следующий раунд";
+}
+
+function nextRound(){
+  if(roundIndex<3){
+    roundIndex++;renderRound();window.scrollTo({top:0,behavior:"smooth"});
+  }else{
+    showFinal();
+  }
+}
+
+function showFinal(){
+  $("#roundFeedback").className="feedback";
+  $("#nextRoundWrap").classList.add("hidden");
+  $("#checkRound").disabled=true;
+
+  const sum=$("#finalSummary");
+  const triggerMax=3, speedMax=4, boundaryMax=4;
+  const t=Math.min(metrics.trigger,triggerMax);
+  const s=Math.min(metrics.speed,speedMax);
+  const b=Math.min(metrics.boundary,boundaryMax);
+
+  let title,text;
+  if(t>=3&&s>=3&&b>=3){
+    title="Вы управляете сценариями как системой, а не как набором разовых решений.";
+    text="Вы распознаете разные триггеры, переключаете режим без лишней задержки и начинаете разрешенные действия, не выходя за границы полномочий.";
+  }else if(t<3){
+    title="Главная зона роста — распознавание триггера.";
+    text="Особенно важно помнить: сценарий В включается не только при превышении числового порога, но и при появлении риска обязательного срока.";
+  }else if(s<3){
+    title="Вы верно понимаете режимы, но иногда переключаетесь слишком поздно.";
+    text="Сценарий нужен для того, чтобы не ждать дополнительного указания после срабатывания заранее согласованного триггера.";
+  }else{
+    title="Стоит точнее удерживать границы полномочий.";
+    text="Критическая ситуация позволяет начать защитные действия, но не создает нового права выходить за бюджет или другие ограничения.";
+  }
+
+  sum.innerHTML=`
+    <h3>${title}</h3>
+    <p>${text}</p>
+    <div class="metric-row">
+      <div class="metric"><div class="n">${t}/${triggerMax}</div><div class="t">триггеры</div></div>
+      <div class="metric"><div class="n">${s}/${speedMax}</div><div class="t">скорость перехода</div></div>
+      <div class="metric"><div class="n">${b}/${boundaryMax}</div><div class="t">границы полномочий</div></div>
+    </div>
+  `;
+  sum.classList.remove("hidden");
+}
+
+$("#checkSetup").addEventListener("click",checkSetupScenario);
+$("#startSim").addEventListener("click",startSimulation);
+$("#checkRound").addEventListener("click",checkRound);
+$("#nextRound").addEventListener("click",nextRound);
+
+renderSetup();
+</script>
+</body>
+</html>
