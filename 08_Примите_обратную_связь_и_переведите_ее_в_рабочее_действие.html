@@ -1,0 +1,281 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Примите неудобную обратную связь и переведите ее в рабочее действие</title>
+<style>
+:root{
+  --bg:#fff;--panel:#f6f7f9;--line:#d9dee7;--text:#20242b;--muted:#667085;
+  --accent:#315f9d;--good:#2f6d42;--warn:#8a5b14;--bad:#9b3434;
+  --goodbg:#eef7f0;--warnbg:#fff7e8;--badbg:#fbefef;
+}
+*{box-sizing:border-box}
+body{margin:0;padding:18px 12px 28px;background:var(--bg);color:var(--text);font-family:Arial,sans-serif;line-height:1.45}
+.app{max-width:560px;margin:auto}
+h1{font-size:24px;line-height:1.2;margin:0 0 10px}
+h2{font-size:19px;line-height:1.25;margin:0 0 10px}
+p{margin:8px 0}
+.lead{color:var(--muted);font-size:15px;margin-bottom:14px}
+.box,.card{border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:15px}
+.box{background:var(--panel)}
+ol{margin:8px 0 0 20px;padding:0}li{margin:6px 0}
+.rule{margin-top:12px;padding:10px 11px;background:#fff;border:1px solid var(--line);border-radius:9px;font-size:14px}
+.meta{display:flex;justify-content:space-between;gap:10px;color:var(--muted);font-size:13px;margin:12px 0 6px}
+.bar{height:8px;background:#eceff3;border-radius:999px;overflow:hidden;margin-bottom:14px}
+.bar>div{height:100%;background:var(--accent);transition:width .2s ease}
+.tag{font-size:12px;color:var(--muted);margin-bottom:6px}
+.chat{display:flex;flex-direction:column;gap:9px;margin:10px 0 14px}
+.msg{padding:10px 11px;border-radius:10px;font-size:14px}
+.colleague{background:var(--panel);border:1px solid var(--line)}
+.manager{background:#eef3fb;border:1px solid #cbd8ea}
+.msg b{display:block;margin-bottom:3px;font-size:12px;color:var(--muted)}
+.q{font-weight:700;margin:12px 0 8px}
+label.option{display:block;border:1px solid var(--line);border-radius:9px;padding:10px 11px;margin:7px 0;cursor:pointer;font-size:14px}
+label.option:hover{background:var(--panel)}
+label.option input{margin-right:8px;vertical-align:top}
+.actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:14px}
+button{min-height:44px;border:1px solid var(--accent);background:var(--accent);color:#fff;border-radius:9px;padding:10px 14px;font-size:15px;cursor:pointer}
+button.alt{background:#fff;color:var(--accent)}
+button:disabled{opacity:.55;cursor:not-allowed}
+.fb{margin-top:14px;padding:12px;border-radius:9px;font-size:14px}
+.fb.good{background:var(--goodbg);border-left:4px solid var(--good)}
+.fb.warn{background:var(--warnbg);border-left:4px solid var(--warn)}
+.fb.bad{background:var(--badbg);border-left:4px solid var(--bad)}
+.hidden{display:none!important}
+.score{font-size:30px;font-weight:700;margin:6px 0 10px}
+.summary{background:var(--panel);border-radius:10px;padding:12px;margin:12px 0;font-size:14px}
+.summary p{margin:6px 0}
+.note{font-size:13px;color:var(--muted)}
+</style>
+</head>
+<body>
+<main class="app">
+<h1>Примите неудобную обратную связь и переведите ее в рабочее действие</h1>
+<p class="lead">Вы — руководитель среднего звена. Коллега дает вам неприятную обратную связь о том, как вы ведете обсуждения. Ваша задача — не доказать свою правоту, а получить достаточно фактов, проверить понимание и договориться о конкретном изменении поведения.</p>
+
+<section class="box">
+<b>Что нужно сделать</b>
+<ol>
+<li>Прочитайте реплику коллеги и выберите ответ руководителя.</li>
+<li>После выбора посмотрите, как меняется разговор: следующая реплика коллеги зависит от вашей реакции.</li>
+<li>На каждом этапе ищите действие, которое помогает пройти рабочую цепочку: <b>уточнить → проверить понимание → выбрать эксперимент</b>.</li>
+<li>Если выбрали защитную реакцию, разговор не заканчивается: попробуйте восстановить рабочий контакт на следующем шаге.</li>
+<li>В финале оцените не только баллы, но и то, где именно вы теряли полезную информацию.</li>
+</ol>
+<div class="rule"><b>Ориентир для руководителя:</b> цель такого разговора — не согласиться со всем автоматически. Нужно сначала получить наблюдаемый пример, затем своими словами проверить, что вы поняли, и только после этого выбрать небольшое изменение поведения, которое можно проверить в ближайшей работе.</div>
+</section>
+
+<div class="meta"><span id="step"></span><span id="points"></span></div>
+<div class="bar"><div id="bar"></div></div>
+
+<section id="card" class="card"></section>
+<section id="result" class="card hidden" aria-live="polite"></section>
+</main>
+
+<script>
+(function(){
+const card=document.getElementById("card"),result=document.getElementById("result"),
+step=document.getElementById("step"),points=document.getElementById("points"),bar=document.getElementById("bar");
+
+let stage=0, score=0, path=[], locked=false;
+
+const intro={
+ colleague:"Когда мы спорим по срокам, ты быстро переходишь к объяснению, почему наш отдел неправ. Из-за этого я перестал поднимать часть рисков на общих встречах.",
+ options:[
+  {id:"clarify",text:"Мне нужно понять точнее. Можешь вспомнить последний такой разговор?",pts:2,type:"good"},
+  {id:"justify",text:"Но вы действительно часто приносите риски слишком поздно.",pts:0,type:"bad"},
+  {id:"agree",text:"Хорошо, постараюсь быть мягче.",pts:1,type:"warn"},
+  {id:"counter",text:"Почему ты не сказал об этом раньше?",pts:0,type:"bad"}
+ ]
+};
+
+const branches={
+ clarify:{
+  colleague:"На планировании во вторник я сказал, что подрядчик не подтвердил срок. Ты сразу ответил, что наш отдел снова перестраховывается, и перешел к следующему вопросу. После этого я уже не стал поднимать риск по интеграции.",
+  prompt:"Что лучше сделать дальше?",
+  options:[
+   {id:"check",text:"Правильно понимаю: проблема не в том, что я не согласился, а в том, что я оценил ваш риск до того, как мы его разобрали, и после этого ты перестал поднимать остальные?",pts:2,type:"good"},
+   {id:"defend",text:"Но по подрядчику я в итоге оказался прав, срок ведь подтвердили.",pts:0,type:"bad"},
+   {id:"apologize",text:"Понял. Извини, больше так не буду.",pts:1,type:"warn"},
+   {id:"generalize",text:"То есть ты считаешь, что на наших встречах вообще нельзя спорить?",pts:0,type:"bad"}
+  ]
+ },
+ justify:{
+  colleague:"Вот об этом я и говорю. Я сейчас объясняю, почему перестал поднимать риски, а ты снова доказываешь, что проблема у нас.",
+  prompt:"Как вернуть разговор в рабочее русло?",
+  options:[
+   {id:"recover",text:"Да, сейчас я снова ушел в объяснение. Давай вернемся к конкретному эпизоду: что я сделал в тот момент и после какой моей реакции ты решил промолчать?",pts:2,type:"good"},
+   {id:"press",text:"Хорошо, но сначала давай разберемся, почему ваши риски приходят поздно.",pts:0,type:"bad"},
+   {id:"formal",text:"Ладно, замечание принято.",pts:1,type:"warn"},
+   {id:"status",text:"Я все равно отвечаю за итоговый срок, поэтому должен оценивать ваши аргументы.",pts:0,type:"bad"}
+  ]
+ },
+ agree:{
+  colleague:"Мне не столько нужна более мягкая формулировка. Проблема в том, что риск закрывается еще до того, как мы успеваем его проверить.",
+  prompt:"Что ответить?",
+  options:[
+   {id:"recover",text:"Тогда хочу понять точнее. Вспомни последний эпизод: в какой момент я закрыл обсуждение слишком рано?",pts:2,type:"good"},
+   {id:"tone",text:"Хорошо, значит мне просто нужно спокойнее говорить.",pts:0,type:"bad"},
+   {id:"ask",text:"А что бы ты хотел, чтобы я говорил вместо этого?",pts:1,type:"warn"},
+   {id:"delegate",text:"Тогда в следующий раз сам останови меня, если я так делаю.",pts:0,type:"bad"}
+  ]
+ },
+ counter:{
+  colleague:"Потому что раньше, когда я пытался это обсуждать, разговор быстро уходил в то, почему наш отдел плохо планирует.",
+  prompt:"Как лучше продолжить?",
+  options:[
+   {id:"recover",text:"Понял. Сейчас мой вопрос тоже прозвучал как перевод ответственности на тебя. Давай разберем один конкретный пример, чтобы я понял, что именно делаю.",pts:2,type:"good"},
+   {id:"why",text:"Но если проблема серьезная, ты все равно должен был поднять ее раньше.",pts:0,type:"bad"},
+   {id:"close",text:"Хорошо, учту.",pts:1,type:"warn"},
+   {id:"escalate",text:"Тогда, возможно, стоит подключить директора, чтобы он рассудил нас.",pts:0,type:"bad"}
+  ]
+ }
+};
+
+const verify={
+ colleague:"Да. Мне важно, чтобы риск сначала можно было нормально разобрать. Ты можешь не согласиться, но если сразу назвать его перестраховкой, остальные тоже перестают спорить.",
+ prompt:"Как проверить понимание перед тем, как переходить к решению?",
+ options:[
+  {id:"verify",text:"Тогда проверю, что понял: мне нужно отделить разбор риска от оценки отдела. Сначала задать вопросы по фактам и только потом спорить с выводом. Верно?",pts:2,type:"good"},
+  {id:"solution",text:"Хорошо. Тогда я введу правило: каждый риск обсуждаем не меньше пяти минут.",pts:0,type:"bad"},
+  {id:"apology",text:"Понял, виноват. Постараюсь больше так не делать.",pts:1,type:"warn"},
+  {id:"qualify",text:"Но ты согласен, что часть ваших рисков все-таки избыточна?",pts:0,type:"bad"}
+ ]
+};
+
+const experiment={
+ colleague:"Да. Мне не нужно, чтобы ты соглашался с риском. Нужно, чтобы мы успевали его разобрать до оценки.",
+ prompt:"Какой рабочий эксперимент выбрать?",
+ options:[
+  {id:"experiment",text:"На двух следующих планированиях, когда кто-то поднимает риск, я сначала задаю минимум два уточняющих вопроса и своими словами фиксирую сам риск. Только после этого даю оценку. После второй встречи сверимся, стало ли проще поднимать спорные вопросы.",pts:2,type:"good"},
+  {id:"promise",text:"Хорошо, буду внимательнее относиться к вашим рискам.",pts:1,type:"warn"},
+  {id:"process",text:"Давайте теперь все риски заранее присылать мне письменно за сутки.",pts:0,type:"bad"},
+  {id:"control",text:"Я попрошу директора присутствовать на следующих встречах и следить, чтобы я не перебивал.",pts:0,type:"bad"}
+ ]
+};
+
+function update(){
+  const totalStages=4;
+  step.textContent=`Шаг ${Math.min(stage+1,totalStages)} из ${totalStages}`;
+  points.textContent=`Баллы: ${score} из 8`;
+  bar.style.width=`${Math.min((stage+1)/totalStages*100,100)}%`;
+}
+function renderIntro(){
+  stage=0;locked=false;update();
+  renderScreen("Начало разговора",intro.colleague,"Что ответить первым?",intro.options,handleFirst);
+}
+function renderScreen(tag,colleague,prompt,options,handler){
+  card.innerHTML=`<div class="tag">${tag}</div>
+  <div class="chat"><div class="msg colleague"><b>Коллега</b>${colleague}</div></div>
+  <div class="q">${prompt}</div>
+  ${options.map(o=>`<label class="option"><input type="radio" name="choice" value="${o.id}">${o.text}</label>`).join("")}
+  <div class="actions"><button id="check" type="button">Продолжить разговор</button><button id="reset" class="alt" type="button">Сбросить</button></div>
+  <div id="fb" class="fb hidden" aria-live="polite"></div>`;
+  card.querySelector("#check").onclick=()=>handler(options);
+  card.querySelector("#reset").onclick=resetAll;
+}
+function selected(options){
+  const el=card.querySelector('input[name="choice"]:checked'),fb=card.querySelector("#fb");
+  if(!el){fb.className="fb bad";fb.innerHTML="<b>Выберите реакцию.</b><p>Смотрите, помогает ли она получить больше фактов или уводит разговор в оправдание, оценку или формальное согласие.</p>";return null}
+  return options.find(o=>o.id===el.value)
+}
+function showFeedback(opt,text,next){
+  if(locked)return;locked=true;
+  score+=opt.pts;path.push(opt.id);points.textContent=`Баллы: ${score} из 8`;
+  card.querySelectorAll('input[name="choice"]').forEach(x=>x.disabled=true);
+  card.querySelector("#check").disabled=true;
+  const fb=card.querySelector("#fb");
+  fb.className=`fb ${opt.type}`;
+  fb.innerHTML=`<b>${opt.type==="good"?"Рабочая реакция.":opt.type==="warn"?"Частично полезно, но информации пока недостаточно.":"Разговор уходит в защиту."}</b><p>${text}</p><div class="actions"><button id="next" type="button">Далее</button></div>`;
+  card.querySelector("#next").onclick=next;
+}
+function handleFirst(options){
+  const opt=selected(options);if(!opt)return;
+  const texts={
+    clarify:"Вы не спорите с оценкой коллеги и не соглашаетесь с ней вслепую. Сначала просите конкретный эпизод — это переводит разговор от общей оценки к наблюдаемому поведению.",
+    justify:"Вы сразу начинаете обсуждать, кто прав по содержанию спора. Коллега еще не успел объяснить обратную связь, а вы уже защищаете прежнее решение.",
+    agree:"Формальное согласие снижает напряжение, но не дает понять, какое именно поведение нужно изменить. «Быть мягче» может вообще не решить проблему.",
+    counter:"Вопрос переносит внимание с вашего поведения на то, почему коллега раньше молчал. Он может звучать как встречное обвинение."
+  };
+  showFeedback(opt,texts[opt.id],()=>renderBranch(opt.id));
+}
+function renderBranch(id){
+  stage=1;locked=false;update();
+  const b=branches[id];
+  renderScreen("Уточнение обратной связи",b.colleague,b.prompt,b.options,(opts)=>handleBranch(opts));
+}
+function handleBranch(options){
+  const opt=selected(options);if(!opt)return;
+  const good = ["check","recover"].includes(opt.id);
+  const texts={
+    check:"Вы своими словами отделяете предмет обратной связи от содержания спора и проверяете, верно ли поняли коллегу.",
+    recover:"Вы признаете, что разговор ушел в защиту, и возвращаете его к конкретному наблюдаемому эпизоду.",
+    defend:"Вы снова спорите с содержанием риска вместо того, чтобы понять влияние собственного поведения.",
+    apologize:"Извинение может быть уместно, но пока вы еще не проверили, что именно коллега предлагает изменить.",
+    generalize:"Вы усиливаете и искажаете тезис коллеги. Это провоцирует новый спор вместо уточнения.",
+    press:"Вы снова ставите свою претензию впереди обратной связи, которую сейчас получаете.",
+    formal:"«Замечание принято» закрывает разговор, но не дает вам новой информации.",
+    status:"Формальная ответственность руководителя не отменяет необходимости услышать обратную связь о способе обсуждения.",
+    tone:"Коллега уже уточнил, что проблема не в мягкости тона. Вы снова меняете смысл его сообщения.",
+    ask:"Вопрос полезен, но вы слишком быстро передаете собеседнику задачу придумать решение вместо проверки собственного понимания.",
+    delegate:"Вы перекладываете контроль за своим поведением на коллегу.",
+    why:"Вы снова объясняете, что коллега должен был сделать иначе, вместо разбора своей реакции.",
+    close:"Вы завершаете разговор до того, как получили конкретный пример.",
+    escalate:"Подключение директора здесь преждевременно: проблема может быть решена на уровне рабочего разговора."
+  };
+  showFeedback(opt,texts[opt.id],()=> good ? renderVerify() : renderVerify());
+}
+function renderVerify(){
+  stage=2;locked=false;update();
+  renderScreen("Проверка понимания",verify.colleague,verify.prompt,verify.options,handleVerify);
+}
+function handleVerify(options){
+  const opt=selected(options);if(!opt)return;
+  const texts={
+    verify:"Вы формулируете конкретное изменение в своем поведении и оставляете коллеге возможность поправить ваше понимание.",
+    solution:"Вы вводите правило до того, как проверили, решает ли оно исходную проблему. Пять минут обсуждения могут стать формальностью.",
+    apology:"Извинение не заменяет проверку понимания. Вы все еще можете по-разному понимать, что именно надо изменить.",
+    qualify:"Вы снова возвращаете разговор к тому, были ли риски объективно хорошими, хотя обратная связь касается способа их обсуждения."
+  };
+  showFeedback(opt,texts[opt.id],renderExperiment);
+}
+function renderExperiment(){
+  stage=3;locked=false;update();
+  renderScreen("Рабочий эксперимент",experiment.colleague,experiment.prompt,experiment.options,handleExperiment);
+}
+function handleExperiment(options){
+  const opt=selected(options);if(!opt)return;
+  const texts={
+    experiment:"Эксперимент ограничен двумя встречами, описывает наблюдаемое поведение руководителя и содержит точку сверки. По итогам можно проверить, изменилось ли качество обсуждения рисков.",
+    promise:"Намерение правильное, но «быть внимательнее» нельзя надежно наблюдать или проверить. Нужен конкретный способ поведения.",
+    process:"Вы меняете весь процесс и добавляете сотрудникам новую обязанность, хотя обратная связь касается вашей реакции на встрече.",
+    control:"Вы передаете контроль за своим поведением вышестоящему руководителю вместо небольшого самостоятельного изменения."
+  };
+  showFeedback(opt,texts[opt.id],finish);
+}
+function finish(){
+  stage=4;card.classList.add("hidden");result.classList.remove("hidden");
+  step.textContent="Задание завершено";points.textContent=`Баллы: ${score} из 8`;bar.style.width="100%";
+  let msg="";
+  if(score>=7)msg="Вы удержали разговор в рабочей логике: получили конкретный пример, проверили свое понимание и перевели обратную связь в небольшой проверяемый эксперимент.";
+  else if(score>=5)msg="Основная логика понятна, но в отдельных шагах вы слишком быстро переходили к объяснению, согласию или решению. Для руководителя особенно важно не закрывать обратную связь до того, как понятен конкретный паттерн поведения.";
+  else msg="В разговоре несколько раз терялась полезная информация из-за оправдания, формального согласия или преждевременного решения. Вернитесь к последовательности: пример → проверка понимания → небольшой эксперимент.";
+  result.innerHTML=`<h2>Итог</h2><div class="score">${score} / 8</div><p>${msg}</p>
+  <div class="summary">
+    <p><b>1. Уточнить:</b> попросить конкретный эпизод, а не спорить с общей оценкой.</p>
+    <p><b>2. Проверить понимание:</b> своими словами назвать поведение и его эффект, затем дать собеседнику поправить вас.</p>
+    <p><b>3. Выбрать эксперимент:</b> договориться о небольшом наблюдаемом изменении на ближайшие 1–2 рабочие ситуации и после этого сверить эффект.</p>
+  </div>
+  <p class="note">Для руководителя это еще и способ сохранить канал информации снизу и сбоку: если на неудобную обратную связь регулярно отвечать защитой, коллеги и сотрудники постепенно перестают поднимать риски.</p>
+  <div class="actions"><button id="again" type="button">Пройти еще раз</button></div>`;
+  result.querySelector("#again").onclick=resetAll;
+}
+function resetAll(){
+  stage=0;score=0;path=[];locked=false;result.classList.add("hidden");card.classList.remove("hidden");renderIntro()
+}
+renderIntro();
+})();
+</script>
+</body>
+</html>

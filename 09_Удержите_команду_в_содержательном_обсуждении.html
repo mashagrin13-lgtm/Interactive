@@ -1,0 +1,248 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Удержите команду в содержательном обсуждении</title>
+<style>
+:root{
+  --bg:#fff;--panel:#f6f7f9;--line:#d9dee7;--text:#20242b;--muted:#667085;
+  --accent:#315f9d;--good:#2f6d42;--warn:#8a5b14;--bad:#9b3434;
+  --goodbg:#eef7f0;--warnbg:#fff7e8;--badbg:#fbefef;
+}
+*{box-sizing:border-box}
+body{margin:0;padding:18px 12px 28px;background:var(--bg);color:var(--text);font-family:Arial,sans-serif;line-height:1.45}
+.app{max-width:560px;margin:auto}
+h1{font-size:24px;line-height:1.2;margin:0 0 10px}
+h2{font-size:19px;line-height:1.25;margin:0 0 10px}
+p{margin:8px 0}
+.lead{color:var(--muted);font-size:15px;margin-bottom:14px}
+.box,.card{border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:15px}
+.box{background:var(--panel)}
+ol{margin:8px 0 0 20px;padding:0}li{margin:6px 0}
+.rule{margin-top:12px;padding:10px 11px;background:#fff;border:1px solid var(--line);border-radius:9px;font-size:14px}
+.meta{display:flex;justify-content:space-between;gap:10px;color:var(--muted);font-size:13px;margin:12px 0 6px}
+.bar{height:8px;background:#eceff3;border-radius:999px;overflow:hidden;margin-bottom:14px}
+.bar>div{height:100%;background:var(--accent);transition:width .2s ease}
+.tag{font-size:12px;color:var(--muted);margin-bottom:6px}
+.context{background:var(--panel);border-radius:10px;padding:12px;margin:8px 0 12px;font-size:14px}
+.chat{display:flex;flex-direction:column;gap:8px;margin:10px 0 14px}
+.msg{padding:10px 11px;border-radius:10px;font-size:14px}
+.team{background:var(--panel);border:1px solid var(--line)}
+.you{background:#eef3fb;border:1px solid #cbd8ea}
+.msg b{display:block;margin-bottom:3px;font-size:12px;color:var(--muted)}
+.q{font-weight:700;margin:12px 0 8px}
+label.option{display:block;border:1px solid var(--line);border-radius:9px;padding:10px 11px;margin:7px 0;cursor:pointer;font-size:14px}
+label.option:hover{background:var(--panel)}
+label.option input{margin-right:8px;vertical-align:top}
+.actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:14px}
+button{min-height:44px;border:1px solid var(--accent);background:var(--accent);color:#fff;border-radius:9px;padding:10px 14px;font-size:15px;cursor:pointer}
+button.alt{background:#fff;color:var(--accent)}
+button:disabled{opacity:.55;cursor:not-allowed}
+.fb{margin-top:14px;padding:12px;border-radius:9px;font-size:14px}
+.fb.good{background:var(--goodbg);border-left:4px solid var(--good)}
+.fb.warn{background:var(--warnbg);border-left:4px solid var(--warn)}
+.fb.bad{background:var(--badbg);border-left:4px solid var(--bad)}
+.hidden{display:none!important}
+.score{font-size:30px;font-weight:700;margin:6px 0 10px}
+.outcome{padding:12px;border-radius:10px;margin:12px 0;background:var(--panel)}
+.outcome strong{display:block;margin-bottom:5px}
+.note{font-size:13px;color:var(--muted)}
+</style>
+</head>
+<body>
+<main class="app">
+<h1>Удержите команду в содержательном обсуждении</h1>
+<p class="lead">Вы — руководитель среднего звена и ведете рабочее обсуждение. Команда спорит о сроке запуска нового сервиса: один блок предлагает запускаться через неделю, второй считает, что без дополнительного тестирования риск слишком высок. Ваша задача — не решить спор за команду, а удержать конкретную развилку в общем обсуждении до ясного решения.</p>
+
+<section class="box">
+<b>Что нужно сделать</b>
+<ol>
+<li>На каждом шаге прочитайте реплику команды и выберите одну реакцию руководителя.</li>
+<li>Проверяйте четыре критерия: реплика не переводит спор на личности, возвращает к конкретной рабочей развилке, проверяет реальную ясность и не забирает решение у команды.</li>
+<li>После выбора прочитайте обратную связь. Следующая реплика команды будет зависеть от вашей реакции.</li>
+<li>Если разговор ушел в формальное согласие, личный конфликт или передачу решения руководителю, попробуйте вернуть его к предмету спора на следующем шаге.</li>
+<li>В финале система покажет, к какому результату привела вся траектория разговора.</li>
+</ol>
+<div class="rule"><b>Рабочая задача «подрывника»:</b> удерживать в обсуждении неудобный вопрос до тех пор, пока команда не назвала альтернативы, критерий выбора, основные последствия и принятое решение. Роль не дает права давить на участников или выбирать вариант вместо них.</div>
+</section>
+
+<div class="meta"><span id="step"></span><span id="points"></span></div>
+<div class="bar"><div id="bar"></div></div>
+
+<section id="card" class="card"></section>
+<section id="result" class="card hidden" aria-live="polite"></section>
+</main>
+
+<script>
+(function(){
+const card=document.getElementById("card"), result=document.getElementById("result"),
+step=document.getElementById("step"), points=document.getElementById("points"), bar=document.getElementById("bar");
+
+const stages=[
+{
+  team:"Руководитель продукта: «Давайте вернемся к этому потом. Сейчас важнее успеть пройти повестку».",
+  prompt:"Как ответить?",
+  options:[
+    {id:"work",text:"Сейчас у нас одна незакрытая развилка: запускаться через неделю или дать две недели на дополнительное тестирование. Давайте сначала поймем, что именно изменит наш выбор.",kind:"productive",pts:2,
+     next:"Команда остается в теме. Руководитель продукта уточняет: «Хорошо. Я за запуск через неделю, потому что клиент уже ждет»."},
+    {id:"formal",text:"Хорошо, зафиксируем, что к вопросу вернемся позже.",kind:"formal",pts:0,
+     next:"Тема снимается с обсуждения. Через минуту один участник говорит: «Тогда считаем, что срок остается прежним?»"},
+    {id:"personal",text:"Мы опять уходим от неудобного вопроса. Так команда никогда не научится спорить нормально.",kind:"personal",pts:0,
+     next:"Руководитель продукта отвечает: «Не надо делать из этого проблему нашей зрелости. Мы просто не успеваем по повестке»."},
+    {id:"takeover",text:"Раз не можем договориться, оставляем запуск через неделю. Двигаемся дальше.",kind:"takeover",pts:0,
+     next:"Спор прекращается, но руководитель тестирования говорит: «Тогда я хочу отдельно зафиксировать, что это решение не мое»."}
+  ]
+},
+{
+  team:null,
+  prompt:"Что сказать дальше?",
+  options:[
+    {id:"work",text:"Давайте назовем критерий выбора. Что для нас сейчас важнее проверить: стоимость задержки на неделю или риск запуска с незакрытыми дефектами?",kind:"productive",pts:2,
+     next:"Участники начинают сравнивать последствия двух вариантов. Руководитель тестирования приводит данные по двум критичным дефектам."},
+    {id:"formal",text:"Похоже, у всех просто разные стили работы. Предлагаю уважать обе позиции.",kind:"formal",pts:0,
+     next:"Участники кивают, но никто не понимает, какой вариант из этого следует выбрать."},
+    {id:"personal",text:"Мне кажется, продукт просто недооценивает риски, а тестирование всегда перестраховывается.",kind:"personal",pts:0,
+     next:"Руководители двух блоков начинают спорить уже о том, кто обычно тормозит запуск и кто «давит сроками»."},
+    {id:"takeover",text:"Я вижу аргументы обеих сторон. Сделаем компромисс: переносим запуск на три дня.",kind:"takeover",pts:0,
+     next:"Команда соглашается, но критерий решения не обсужден. Позже становится непонятно, почему выбраны именно три дня."}
+  ]
+},
+{
+  team:null,
+  prompt:"Команда говорит: «Все и так понятно». Как проверить, действительно ли ясность достигнута?",
+  options:[
+    {id:"work",text:"Тогда сверим понимание. Назовите, пожалуйста, какой вариант каждый считает рабочим и на каком факте основывает выбор. После этого зафиксируем решение.",kind:"productive",pts:2,
+     next:"Позиции становятся явными: продукт готов принять отсрочку при подтверждении двух критичных рисков, тестирование — запуск через неделю, если дефекты не затрагивают оплату и авторизацию."},
+    {id:"formal",text:"Если всем понятно, считаю вопрос закрытым.",kind:"formal",pts:0,
+     next:"После встречи два руководителя по-разному трактуют итог: один готовит перенос, второй продолжает готовить запуск по старой дате."},
+    {id:"personal",text:"Нет, не понятно. Вы просто не хотите говорить прямо.",kind:"personal",pts:0,
+     next:"Участники начинают защищаться: «Мы говорим прямо, просто вы нас не слышите»."},
+    {id:"takeover",text:"Я услышал обе стороны и сам сформулирую итог, чтобы не тратить время.",kind:"takeover",pts:0,
+     next:"Участники перестают спорить и ждут формулировки руководителя."}
+  ]
+},
+{
+  team:null,
+  prompt:"Как завершить обсуждение, не забрав решение у команды?",
+  options:[
+    {id:"work",text:"У нас есть общий критерий: запускаемся через неделю, если до среды тестирование подтверждает, что два критичных дефекта не затрагивают оплату и авторизацию. Если затрагивают — переносим запуск на неделю. Кто отвечает за проверку и когда сверяем результат?",kind:"productive",pts:2,
+     next:"Команда подтверждает критерий, назначает ответственного за проверку и время контрольной сверки."},
+    {id:"formal",text:"Хорошо, главное, что мы все услышали друг друга. Давайте двигаться дальше.",kind:"formal",pts:0,
+     next:"Встреча заканчивается без единого правила, по которому будет выбран срок."},
+    {id:"personal",text:"Надеюсь, в следующий раз вы сможете договориться быстрее и без такой эскалации.",kind:"personal",pts:0,
+     next:"Финал разговора превращается в оценку участников, а принятое решение остается размытым."},
+    {id:"takeover",text:"Я приму окончательное решение в среду после отчета тестирования и сообщу всем.",kind:"takeover",pts:0,
+     next:"Ответственность за выбор срока окончательно переходит к руководителю, команда ждет его решения."}
+  ]
+}
+];
+
+let i=0, score=0, state={productive:0,formal:0,personal:0,takeover:0}, history=[], checked=false, incoming=stages[0].team;
+
+function update(){
+  step.textContent=`Шаг ${i+1} из ${stages.length}`;
+  points.textContent=`Баллы: ${score} из 8`;
+  bar.style.width=`${((i+1)/stages.length)*100}%`;
+}
+function render(){
+  result.classList.add("hidden");card.classList.remove("hidden");checked=false;update();
+  const s=stages[i];
+  card.innerHTML=`<div class="tag">Рабочее обсуждение</div>
+  <div class="chat"><div class="msg team"><b>Команда</b>${incoming}</div></div>
+  <div class="q">${s.prompt}</div>
+  ${s.options.map(o=>`<label class="option"><input type="radio" name="choice" value="${o.id}">${o.text}</label>`).join("")}
+  <div class="actions">
+    <button id="back" class="alt" type="button" ${history.length===0?"disabled":""}>Назад</button>
+    <button id="check" type="button">Проверить реакцию</button>
+    <button id="reset" class="alt" type="button">Сбросить</button>
+  </div>
+  <div id="fb" class="fb hidden" aria-live="polite"></div>`;
+  card.querySelector("#back").onclick=goBack;
+  card.querySelector("#check").onclick=checkChoice;
+  card.querySelector("#reset").onclick=resetAll;
+}
+function checkChoice(){
+  if(checked)return;
+  const sel=card.querySelector('input[name="choice"]:checked'),fb=card.querySelector("#fb");
+  if(!sel){
+    fb.className="fb bad";
+    fb.innerHTML="<b>Выберите реакцию.</b><p>Проверьте, возвращает ли она команду к рабочей развилке и оставляет ли решение у участников.</p>";
+    return;
+  }
+  const opt=stages[i].options.find(o=>o.id===sel.value);
+  checked=true;
+  history.push({i,score,state:{...state},incoming});
+  score+=opt.pts;
+  state[opt.kind]++;
+  card.querySelectorAll('input[name="choice"]').forEach(x=>x.disabled=true);
+  card.querySelector("#check").disabled=true;
+  points.textContent=`Баллы: ${score} из 8`;
+
+  let title="",text="",cls="";
+  if(opt.kind==="productive"){
+    title="Реплика удерживает рабочую развилку.";
+    text="Вы возвращаете разговор к предмету спора, требуете ясности по фактам и не выбираете вариант вместо команды.";
+    cls="good";
+  }else if(opt.kind==="formal"){
+    title="Обсуждение движется к формальному согласию.";
+    text="Напряжение снижается, но сама развилка остается неразобранной. Участники могут выйти со встречи с разными решениями.";
+    cls="warn";
+  }else if(opt.kind==="personal"){
+    title="Спор смещается с работы на участников.";
+    text="В реплике появляется оценка команды или подразделений. Это усиливает защиту и делает исходную рабочую проблему менее обсуждаемой.";
+    cls="bad";
+  }else{
+    title="Руководитель забирает решение себе.";
+    text="Встреча может закончиться быстрее, но команда перестает разбирать критерии выбора и привыкает передавать сложные развилки наверх.";
+    cls="warn";
+  }
+
+  fb.className=`fb ${cls}`;
+  fb.innerHTML=`<b>${title}</b><p>${text}</p>
+    <div class="chat"><div class="msg team"><b>Что происходит дальше</b>${opt.next}</div></div>
+    <div class="actions"><button id="next" type="button">${i===stages.length-1?"Показать итог":"Продолжить"}</button></div>`;
+  card.querySelector("#next").onclick=()=>{
+    incoming=opt.next;
+    if(i===stages.length-1)finish();
+    else{i++;render()}
+  };
+}
+function goBack(){
+  if(!history.length)return;
+  const prev=history.pop();
+  i=prev.i;score=prev.score;state={...prev.state};incoming=prev.incoming;
+  render();
+}
+function outcome(){
+  if(state.productive>=3 && score>=6) return {
+    type:"Реальное решение",
+    text:"Команда дошла до конкретной развилки, назвала критерий выбора и завершила встречу общей договоренностью с ответственным и точкой сверки. Руководитель удержал обсуждение, но не подменил команду."
+  };
+  const bad=[
+    ["formal","Формальное согласие","Встреча закончилась без открытого конфликта, но ключевая развилка осталась неразобранной. Внешне участники согласились, однако после встречи возможны разные трактовки решения."],
+    ["personal","Конфликт личностей","Обсуждение постепенно перешло от фактов и вариантов к оценкам подразделений и участников. В такой траектории предметный спор становится труднее завершить."],
+    ["takeover","Решение снова забрал руководитель","Команда несколько раз передала сложную развилку вверх, а руководитель принял решение вместо нее. Срок может быть определен, но способность команды разбирать подобные вопросы не усилилась."]
+  ].sort((a,b)=>state[b[0]]-state[a[0]]);
+  if(bad[0] && state[bad[0][0]]>0) return {type:bad[0][1],text:bad[0][2]};
+  return {type:"Формальное согласие",text:"Разговор завершился без достаточной ясности по рабочей развилке."};
+}
+function finish(){
+  const out=outcome();
+  card.classList.add("hidden");result.classList.remove("hidden");
+  step.textContent="Задание завершено";points.textContent=`Баллы: ${score} из 8`;bar.style.width="100%";
+  result.innerHTML=`<h2>Итог траектории</h2><div class="score">${score} / 8</div>
+  <div class="outcome"><strong>${out.type}</strong><p>${out.text}</p></div>
+  <p><b>Что должен делать руководитель в подобных обсуждениях:</b> возвращать команду к конкретной развилке, просить назвать факты и критерии выбора, проверять, одинаково ли участники понимают итог, и фиксировать решение только после того, как оно действительно принято командой.</p>
+  <p class="note">Если спор становится личным, участники формально соглашаются или начинают ждать решения руководителя, это сигнал, что обсуждение было закрыто раньше, чем появилась рабочая ясность.</p>
+  <div class="actions"><button id="again" type="button">Пройти еще раз</button></div>`;
+  result.querySelector("#again").onclick=resetAll;
+}
+function resetAll(){
+  i=0;score=0;state={productive:0,formal:0,personal:0,takeover:0};history=[];checked=false;incoming=stages[0].team;render();
+}
+render();
+})();
+</script>
+</body>
+</html>

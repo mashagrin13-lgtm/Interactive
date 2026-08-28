@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Выстройте действия после первой успешной проверки</title>
+<style>
+:root{
+  --p:#f6f7f9;--l:#d9dee7;--t:#20242b;--m:#667085;--a:#315f9d;
+  --g:#2f6d42;--b:#9b3434;--gb:#eef7f0;--bb:#fbefef
+}
+*{box-sizing:border-box}
+body{margin:0;padding:18px 12px 28px;background:#fff;color:var(--t);font:15px/1.45 Arial,sans-serif}
+.app{max-width:560px;margin:auto}
+h1{font-size:24px;line-height:1.2;margin:0 0 10px}
+h2{font-size:19px;line-height:1.25;margin:0 0 10px}
+p{margin:8px 0}
+.lead{color:var(--m);margin-bottom:14px}
+.box,.card{border:1px solid var(--l);border-radius:12px;padding:14px;margin-bottom:15px}
+.box{background:var(--p)}
+ol{margin:8px 0 0 20px;padding:0}li{margin:6px 0}
+.rule,.case{margin-top:12px;padding:10px 11px;background:#fff;border:1px solid var(--l);border-radius:9px;font-size:14px}
+.case{font-weight:700}
+.action-card{border:1px solid var(--l);border-radius:10px;padding:11px;margin:9px 0;background:#fff}
+.action-card b{display:block;margin-bottom:6px}
+select{width:100%;min-height:44px;padding:9px 10px;border:1px solid var(--l);border-radius:9px;background:#fff;color:var(--t);font-size:16px}
+.preview{margin-top:14px;padding:11px;border:1px dashed var(--l);border-radius:9px;background:#fafbfc}
+.preview b{display:block;margin-bottom:6px}
+.preview .step{margin:6px 0}
+.actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:14px}
+button{min-height:44px;border:1px solid var(--a);background:var(--a);color:#fff;border-radius:9px;padding:10px 14px;font-size:15px;cursor:pointer}
+button.alt{background:#fff;color:var(--a)}
+button:disabled{opacity:.55;cursor:not-allowed}
+.fb{margin-top:14px;padding:12px;border-radius:9px}
+.fb.good{background:var(--gb);border-left:4px solid var(--g)}
+.fb.bad{background:var(--bb);border-left:4px solid var(--b)}
+.item{padding:9px 10px;margin:7px 0;background:#fff;border:1px solid var(--l);border-radius:8px;font-size:14px}
+.item.ok{border-left:4px solid var(--g)}
+.item.err{border-left:4px solid var(--b)}
+.hidden{display:none!important}
+.score{font-size:30px;font-weight:700;margin:6px 0 10px}
+.note{font-size:13px;color:var(--m)}
+</style>
+</head>
+<body>
+<main class="app">
+<h1>Выстройте действия после первой успешной проверки</h1>
+<p class="lead">Вы — руководитель среднего звена. Пилот нового порядка дал измеримый положительный результат. Теперь важно не остановиться на локальном успехе и не масштабировать изменение слишком резко.</p>
+
+<section class="box">
+<b>Что нужно сделать</b>
+<ol>
+<li>Для каждой карточки выберите место в последовательности: 1, 2, 3 или «не включать».</li>
+<li>В рабочей последовательности должно быть ровно три действия.</li>
+<li>Сначала сделайте результат видимым, затем определите, что именно становится новым правилом, и закрепите ответственность за дальнейшую работу.</li>
+<li>Не путайте закрепление изменения с бессрочным сохранением пилота или мгновенной отменой контроля.</li>
+</ol>
+
+<div class="case">Пилот нового порядка обработки обращений сократил среднее время ответа с 18 до 12 часов без роста числа возвратов.</div>
+
+<div class="rule"><b>Логика закрепления:</b> доказать эффект → перевести успешную практику в понятное правило → закрепить владельца и дальнейший цикл контроля.</div>
+</section>
+
+<section id="card" class="card">
+<div id="cards"></div>
+
+<div class="preview" id="preview">
+<b>Ваша последовательность</b>
+<span>Распределите карточки.</span>
+</div>
+
+<div class="actions">
+<button id="check" type="button">Проверить порядок</button>
+<button id="reset" class="alt" type="button">Сбросить</button>
+</div>
+
+<div id="fb" class="fb hidden" aria-live="polite"></div>
+</section>
+</main>
+
+<script>
+(function(){
+const items=[
+{
+ id:"show",
+ text:"Показать результат команде: что изменилось в пилоте, по каким данным это видно и что именно дало эффект.",
+ correct:"1",
+ why:"Короткая победа должна стать видимым доказательством. Команда получает не обещание, а конкретные данные, связывающие новый способ работы с результатом."
+},
+{
+ id:"rule",
+ text:"Определить правило работы дальше: какие элементы пилота становятся стандартом, где он применяется и по каким показателям будет проверяться.",
+ correct:"2",
+ why:"После доказательства эффекта нужно перевести удачный опыт в воспроизводимый рабочий порядок. Иначе результат останется локальным эпизодом."
+},
+{
+ id:"owner",
+ text:"Назначить владельца процесса, который следит за применением правила, собирает данные и поднимает отклонения.",
+ correct:"3",
+ why:"Закрепление требует ответственности за поддержку нового порядка. Без владельца процесс постепенно возвращается к старым привычкам или начинает применяться по-разному."
+},
+{
+ id:"pilot",
+ text:"Оставить новый порядок только у пилотной группы, чтобы не рисковать достигнутым результатом.",
+ correct:"x",
+ why:"Пилот нужен для проверки, а не для бессрочной изоляции успешной практики. После подтверждения эффекта руководитель должен определить условия расширения и закрепления."
+},
+{
+ id:"control",
+ text:"Сразу отменить контроль: если пилот успешен, сотрудники уже доказали, что могут работать самостоятельно.",
+ correct:"x",
+ why:"Один успешный пилот не означает, что контроль больше не нужен. Его можно менять по мере устойчивости результата, но не отменять автоматически до закрепления правила и наблюдения за масштабированием."
+}
+];
+
+let values={};
+let locked=false;
+
+const cards=document.getElementById("cards");
+const preview=document.getElementById("preview");
+const fb=document.getElementById("fb");
+const check=document.getElementById("check");
+const reset=document.getElementById("reset");
+
+function render(){
+ cards.innerHTML=items.map(x=>`
+ <div class="action-card">
+  <b>${x.text}</b>
+  <select data-id="${x.id}" ${locked?"disabled":""}>
+   <option value="">Выберите место</option>
+   <option value="1" ${values[x.id]==="1"?"selected":""}>1 — первое действие</option>
+   <option value="2" ${values[x.id]==="2"?"selected":""}>2 — второе действие</option>
+   <option value="3" ${values[x.id]==="3"?"selected":""}>3 — третье действие</option>
+   <option value="x" ${values[x.id]==="x"?"selected":""}>Не включать</option>
+  </select>
+ </div>`).join("");
+
+ cards.querySelectorAll("select").forEach(s=>{
+  s.addEventListener("change",()=>{
+   if(locked)return;
+   if(s.value)values[s.dataset.id]=s.value;
+   else delete values[s.dataset.id];
+   updatePreview();
+  });
+ });
+ updatePreview();
+}
+
+function updatePreview(){
+ const ordered=["1","2","3"].map(pos=>{
+  const x=items.find(i=>values[i.id]===pos);
+  return x ? x.text : "…";
+ });
+ preview.innerHTML=`<b>Ваша последовательность</b>
+ ${ordered.map((t,i)=>`<div class="step"><b>${i+1}.</b> ${t}</div>`).join("")}`;
+}
+
+function score(){
+ return items.reduce((s,x)=>s+(values[x.id]===x.correct?1:0),0);
+}
+
+check.addEventListener("click",()=>{
+ if(locked)return;
+
+ if(items.some(x=>!values[x.id])){
+  fb.className="fb bad";
+  fb.innerHTML="<b>Распределите все пять карточек.</b><p>Три действия должны попасть в последовательность, еще два — в «не включать».</p>";
+  return;
+ }
+
+ const used=["1","2","3"].map(p=>items.filter(x=>values[x.id]===p).length);
+ if(used.some(n=>n!==1)){
+  fb.className="fb bad";
+  fb.innerHTML="<b>Каждая позиция 1–3 должна использоваться один раз.</b><p>В рабочей последовательности должно быть ровно три разных действия.</p>";
+  return;
+ }
+
+ const excluded=items.filter(x=>values[x.id]==="x").length;
+ if(excluded!==2){
+  fb.className="fb bad";
+  fb.innerHTML="<b>Две карточки нужно исключить.</b><p>Не каждое действие после успешного пилота помогает закрепить изменение.</p>";
+  return;
+ }
+
+ locked=true;
+ render();
+ const s=score();
+ fb.className=`fb ${s===5?"good":"bad"}`;
+ fb.innerHTML=`<b>${s===5?"Последовательность собрана верно.":`Верно размещено: ${s} из 5 карточек.`}</b>
+ ${items.map(x=>`<div class="item ${values[x.id]===x.correct?"ok":"err"}"><b>${x.correct==="x"?"Не включать":x.correct+"-е действие"}</b>${x.why}</div>`).join("")}
+ <p><b>Рабочая последовательность:</b> сначала показать доказанный результат, затем зафиксировать новый рабочий стандарт, после этого закрепить владельца процесса. Контроль можно постепенно пересматривать по данным, а масштаб расширять там, где сохраняются условия успешного пилота.</p>
+ <p class="note">Короткая победа становится устойчивым изменением только тогда, когда успешное действие превращается в понятное правило и получает владельца.</p>`;
+});
+
+reset.addEventListener("click",()=>{
+ values={};locked=false;fb.className="fb hidden";fb.innerHTML="";
+ render();
+});
+
+render();
+})();
+</script>
+</body>
+</html>

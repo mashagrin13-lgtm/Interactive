@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Задайте вопросы, которые помогают понять сопротивление</title>
+<style>
+:root{
+  --p:#f6f7f9;--l:#d9dee7;--t:#20242b;--m:#667085;--a:#315f9d;
+  --g:#2f6d42;--b:#9b3434;--gb:#eef7f0;--bb:#fbefef
+}
+*{box-sizing:border-box}
+body{margin:0;padding:18px 12px 28px;background:#fff;color:var(--t);font:15px/1.45 Arial,sans-serif}
+.app{max-width:560px;margin:auto}
+h1{font-size:24px;line-height:1.2;margin:0 0 10px}
+p{margin:8px 0}.lead{color:var(--m);margin-bottom:14px}
+.box,.card{border:1px solid var(--l);border-radius:12px;padding:14px;margin-bottom:15px}
+.box{background:var(--p)}
+ol{margin:8px 0 0 20px;padding:0}li{margin:6px 0}
+.quote{margin-top:12px;padding:11px 12px;background:#fff;border:1px solid var(--l);border-radius:9px;font-weight:700}
+.q{font-weight:700;margin:0 0 8px}
+.option{display:block;border:1px solid var(--l);border-radius:9px;padding:10px 11px;margin:8px 0;cursor:pointer}
+.option input{margin-right:8px;vertical-align:top}
+.actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:14px}
+button{min-height:44px;border:1px solid var(--a);background:var(--a);color:#fff;border-radius:9px;padding:10px 14px;font-size:15px;cursor:pointer}
+button.alt{background:#fff;color:var(--a)}
+button:disabled{opacity:.55;cursor:not-allowed}
+.fb{margin-top:14px;padding:12px;border-radius:9px}
+.fb.good{background:var(--gb);border-left:4px solid var(--g)}
+.fb.bad{background:var(--bb);border-left:4px solid var(--b)}
+.item{margin:8px 0;padding:9px 10px;background:#fff;border:1px solid var(--l);border-radius:8px;font-size:14px}
+.item.ok{border-left:4px solid var(--g)}
+.item.err{border-left:4px solid var(--b)}
+.hidden{display:none!important}
+.note{font-size:13px;color:var(--m)}
+</style>
+</head>
+<body>
+<main class="app">
+<h1>Задайте вопросы, которые помогают понять сопротивление</h1>
+<p class="lead">Вы — руководитель. Сотрудник отвергает новый подход. Ваша задача — не спорить с реакцией и не приписывать человеку мотив, а собрать факты о том, что именно стоит за сопротивлением.</p>
+
+<section class="box">
+<b>Что нужно сделать</b>
+<ol>
+<li>Прочитайте реплику сотрудника.</li>
+<li>Выберите все вопросы, которые помогают уточнить причину сопротивления.</li>
+<li>Не выбирайте вопросы, которые уже содержат обвинение или заранее объясняют поведение человека.</li>
+<li>Нажмите «Проверить» и посмотрите, какую информацию дает каждый вопрос.</li>
+</ol>
+
+<div class="quote">«Мы уже пробовали этот подход, он не сработает».</div>
+</section>
+
+<section id="card" class="card">
+<div class="q">Какие вопросы руководителю стоит задать дальше?</div>
+
+<label class="option">
+<input type="checkbox" value="q1">
+Что именно в новом подходе кажется нерабочим?
+</label>
+
+<label class="option">
+<input type="checkbox" value="q2">
+Какой опыт или факты привели вас к такому выводу?
+</label>
+
+<label class="option">
+<input type="checkbox" value="q3">
+Почему вы не хотите просто выполнять новую задачу?
+</label>
+
+<label class="option">
+<input type="checkbox" value="q4">
+Какая часть изменения требует от вас самого большого пересмотра привычной работы?
+</label>
+
+<div class="actions">
+<button id="check" type="button">Проверить</button>
+<button id="reset" class="alt" type="button">Сбросить</button>
+</div>
+
+<div id="fb" class="fb hidden" aria-live="polite"></div>
+</section>
+</main>
+
+<script>
+(function(){
+const correct=new Set(["q1","q2","q4"]);
+const explanations={
+ q1:["ok","Помогает конкретизировать предмет сопротивления: человек может говорить о данных, процессе, риске или прошлом опыте, а не отвергать изменение целиком."],
+ q2:["ok","Переводит разговор к наблюдаемым фактам и позволяет проверить, действительно ли прошлый опыт сопоставим с текущей ситуацией."],
+ q3:["err","Вопрос уже содержит вывод, что человек «не хочет выполнять задачу». Это скорее запускает защиту, чем помогает понять причину."],
+ q4:["ok","Помогает увидеть, какое изменение в привычном способе работы вызывает наибольшее напряжение. Это особенно важно, если проблема может быть адаптивной."]
+};
+const card=document.getElementById("card"),fb=document.getElementById("fb"),
+check=document.getElementById("check"),reset=document.getElementById("reset");
+let locked=false;
+
+check.addEventListener("click",()=>{
+ if(locked)return;
+ const selected=[...card.querySelectorAll('input[type="checkbox"]:checked')].map(x=>x.value);
+ if(!selected.length){
+  fb.className="fb bad";
+  fb.innerHTML="<b>Выберите хотя бы один вопрос.</b><p>Ищите формулировки, которые добавляют факты, а не объясняют поведение сотрудника заранее.</p>";
+  return;
+ }
+ locked=true;
+ card.querySelectorAll('input[type="checkbox"]').forEach(x=>x.disabled=true);
+ check.disabled=true;
+
+ const exact=selected.length===correct.size && selected.every(x=>correct.has(x));
+ fb.className=`fb ${exact?"good":"bad"}`;
+ fb.innerHTML=`<b>${exact?"Верно.":"Проверьте, не подменили ли вы уточнение готовым объяснением."}</b>
+ ${Object.keys(explanations).map(id=>{
+   const chosen=selected.includes(id);
+   const [kind,text]=explanations[id];
+   const status=correct.has(id)
+     ? (chosen ? "ok" : "err")
+     : (chosen ? "err" : "ok");
+   const lead=correct.has(id)
+     ? (chosen ? "Подходит." : "Стоило выбрать.")
+     : (chosen ? "Не подходит." : "Верно не выбрано.");
+   return `<div class="item ${status}"><b>${lead}</b>${text}</div>`;
+ }).join("")}
+ <p><b>Рабочая логика:</b> сначала уточните, что именно человек считает нерабочим, на каких фактах основан вывод и какую привычную часть работы затрагивает изменение. Только после этого можно решать, нужен ли новый аргумент, обучение, изменение процесса или работа с адаптивным сопротивлением.</p>`;
+});
+
+reset.addEventListener("click",()=>{
+ locked=false;
+ card.querySelectorAll('input[type="checkbox"]').forEach(x=>{x.checked=false;x.disabled=false});
+ check.disabled=false;
+ fb.className="fb hidden";
+ fb.innerHTML="";
+});
+})();
+</script>
+</body>
+</html>

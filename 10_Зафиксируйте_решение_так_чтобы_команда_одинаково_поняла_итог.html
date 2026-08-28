@@ -1,0 +1,267 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Зафиксируйте решение так, чтобы команда одинаково поняла итог</title>
+<style>
+:root{
+  --bg:#fff;--panel:#f6f7f9;--line:#d9dee7;--text:#20242b;--muted:#667085;
+  --accent:#315f9d;--good:#2f6d42;--bad:#9b3434;--goodbg:#eef7f0;--badbg:#fbefef;
+}
+*{box-sizing:border-box}
+body{margin:0;padding:18px 12px 28px;background:var(--bg);color:var(--text);font-family:Arial,sans-serif;line-height:1.45}
+.app{max-width:560px;margin:auto}
+h1{font-size:24px;line-height:1.2;margin:0 0 10px}
+h2{font-size:19px;line-height:1.25;margin:0 0 10px}
+p{margin:8px 0}
+.lead{color:var(--muted);font-size:15px;margin-bottom:14px}
+.box,.card{border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:15px}
+.box{background:var(--panel)}
+ol{margin:8px 0 0 20px;padding:0}li{margin:6px 0}
+.rule{margin-top:12px;padding:10px 11px;background:#fff;border:1px solid var(--line);border-radius:9px;font-size:14px}
+.meta{display:flex;justify-content:space-between;gap:10px;color:var(--muted);font-size:13px;margin:12px 0 6px}
+.bar{height:8px;background:#eceff3;border-radius:999px;overflow:hidden;margin-bottom:14px}
+.bar>div{height:100%;background:var(--accent);transition:width .2s ease}
+.tag{font-size:12px;color:var(--muted);margin-bottom:6px}
+.transcript{background:var(--panel);border-radius:10px;padding:12px;margin:10px 0 14px;font-size:14px}
+.transcript p{margin:6px 0}
+.field{margin:13px 0}
+.field label{display:block;font-weight:700;margin-bottom:6px}
+select{width:100%;min-height:44px;padding:9px 10px;border:1px solid var(--line);border-radius:9px;background:#fff;color:var(--text);font-size:16px}
+.actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:14px}
+button{min-height:44px;border:1px solid var(--accent);background:var(--accent);color:#fff;border-radius:9px;padding:10px 14px;font-size:15px;cursor:pointer}
+button.alt{background:#fff;color:var(--accent)}
+button:disabled{opacity:.55;cursor:not-allowed}
+.fb{margin-top:14px;padding:12px;border-radius:9px;font-size:14px}
+.fb.good{background:var(--goodbg);border-left:4px solid var(--good)}
+.fb.bad{background:var(--badbg);border-left:4px solid var(--bad)}
+.checklist{margin-top:10px}
+.checkitem{margin:7px 0;padding:9px 10px;border-radius:8px;background:#fff;border:1px solid var(--line)}
+.checkitem.ok{border-left:4px solid var(--good)}
+.checkitem.err{border-left:4px solid var(--bad)}
+.hidden{display:none!important}
+.score{font-size:30px;font-weight:700;margin:6px 0 10px}
+.summary{background:var(--panel);border-radius:10px;padding:12px;margin:12px 0}
+.note{font-size:13px;color:var(--muted)}
+</style>
+</head>
+<body>
+<main class="app">
+<h1>Зафиксируйте решение так, чтобы команда одинаково поняла итог</h1>
+<p class="lead">Вы — руководитель и завершаете совещание. В обсуждении прозвучали аргументы, предложения и предварительные варианты. В протокол должны попасть только те договоренности, по которым команда действительно приняла решение.</p>
+
+<section class="box">
+<b>Что нужно сделать</b>
+<ol>
+<li>Прочитайте короткую стенограмму встречи.</li>
+<li>Отделите обсуждавшиеся варианты от принятого решения.</li>
+<li>Заполните пять полей протокола: <b>решение → владелец → срок → критерий готовности → коммуникация</b>.</li>
+<li>Не подменяйте критерий готовности действием. Он должен отвечать на вопрос: «По какому факту мы поймем, что задача действительно завершена?»</li>
+<li>После проверки посмотрите, в каком месте из-за неточной фиксации участники могли бы разойтись в трактовках.</li>
+</ol>
+<div class="rule"><b>Проверка руководителя перед закрытием встречи:</b> что именно принято? кто отвечает за результат? к какому сроку? какой факт означает «готово»? кто еще должен узнать о решении и в каком виде?</div>
+</section>
+
+<div class="meta"><span id="step"></span><span id="points"></span></div>
+<div class="bar"><div id="bar"></div></div>
+
+<section id="card" class="card"></section>
+<section id="result" class="card hidden" aria-live="polite"></section>
+</main>
+
+<script>
+(function(){
+const cases=[
+{
+ title:"Запуск обновленной версии сервиса",
+ transcript:[
+  "Руководитель продукта: «Если не успеваем проверить интеграцию, можно перенести весь запуск на две недели».",
+  "Руководитель разработки: «Две недели слишком много. К пятнице мы можем закрыть критичные ошибки и повторно проверить оплату».",
+  "Руководитель клиентского сервиса: «Мне нужен минимум один день, чтобы предупредить ключевых клиентов».",
+  "Руководитель проекта: «Тогда фиксируем так: запуск оставляем на понедельник, но только если к пятнице до 16:00 повторный тест оплаты и авторизации пройдет без критичных ошибок».",
+  "Руководитель разработки: «Проверку беру на себя».",
+  "Руководитель клиентского сервиса: «Если в пятницу подтверждаем запуск, я в тот же день отправляю уведомление ключевым клиентам и инструкцию команде поддержки».",
+  "Руководитель проекта: «Да. Если критичная ошибка остается — переносим запуск на неделю, без отдельного совещания»."
+ ],
+ fields:{
+  decision:[
+   ["d1","Запустить обновление в понедельник при успешной проверке оплаты и авторизации; при критичной ошибке перенести запуск на неделю."],
+   ["d2","Перенести запуск на две недели, чтобы полностью проверить интеграцию."],
+   ["d3","Закрыть критичные ошибки к пятнице."],
+   ["d4","Оставить дату запуска без дополнительных условий."]
+  ],
+  owner:[
+   ["o1","Руководитель разработки"],
+   ["o2","Руководитель проекта"],
+   ["o3","Руководитель клиентского сервиса"],
+   ["o4","Вся команда"]
+  ],
+  deadline:[
+   ["t1","Пятница, 16:00"],
+   ["t2","Понедельник, начало рабочего дня"],
+   ["t3","До конца следующей недели"],
+   ["t4","После завершения тестирования"]
+  ],
+  ready:[
+   ["r1","Повторный тест оплаты и авторизации завершен без критичных ошибок."],
+   ["r2","Провести повторный тест и две встречи с разработчиками."],
+   ["r3","Закрыть как можно больше ошибок до пятницы."],
+   ["r4","Команда разработки считает систему готовой."]
+  ],
+  comm:[
+   ["c1","После подтверждения запуска клиентский сервис в пятницу уведомляет ключевых клиентов и отправляет инструкцию команде поддержки."],
+   ["c2","Сообщить всем, что запуск состоится в понедельник."],
+   ["c3","Руководитель проекта при необходимости отдельно предупредит заинтересованных."],
+   ["c4","Дополнительная коммуникация не нужна."]
+  ]
+ },
+ correct:{decision:"d1",owner:"o1",deadline:"t1",ready:"r1",comm:"c1"},
+ explanations:{
+  decision:"В протокол попадает итоговая договоренность, а не вариант, который активно обсуждали и отвергли. Перенос на две недели был предложением, но команда его не приняла.",
+  owner:"За проверку, от которой зависит решение о запуске, прямо взял ответственность руководитель разработки. Формулировка «вся команда» размывает владельца.",
+  deadline:"Срок контрольного результата — пятница, 16:00. Понедельник — дата потенциального запуска, а не срок проверки.",
+  ready:"Критерий готовности — наблюдаемый результат проверки: отсутствие критичных ошибок в оплате и авторизации. «Провести тест» описывает действие, но не доказывает, что система готова.",
+  comm:"Команда явно договорилась, кто и что сообщает после подтверждения запуска. Формулировка «сообщить всем» оставляет неясными аудиторию, владельца и момент коммуникации."
+ }
+},
+{
+ title:"Изменение процесса найма",
+ transcript:[
+  "HR-бизнес-партнер: «Можно добавить еще одно интервью с руководителем функции, чтобы снизить риск ошибочного найма».",
+  "Руководитель отдела продаж: «Это снова увеличит срок. Мне важнее, чтобы кандидаты приходили на финал уже с подтвержденными ожиданиями по доходу и графику».",
+  "Рекрутер: «Тогда я могу добавить эти вопросы в первичный скрининг и фиксировать ответы в карточке кандидата».",
+  "HR-бизнес-партнер: «Согласна. Дополнительное интервью пока не вводим».",
+  "Руководитель отдела продаж: «Давайте две недели посмотрим, как работает новый скрининг».",
+  "Рекрутер: «С понедельника начну по новой форме».",
+  "HR-бизнес-партнер: «Через две недели считаем тест успешным, если минимум 90% кандидатов на финальном интервью не меняют заявленные ожидания по доходу и графику. Итог напиши руководителям продаж и HR в общий канал»."
+ ],
+ fields:{
+  decision:[
+   ["d1","На две недели изменить первичный скрининг: заранее проверять ожидания по доходу и графику; дополнительное интервью пока не вводить."],
+   ["d2","Добавить обязательное дополнительное интервью с руководителем функции."],
+   ["d3","Сократить количество интервью, чтобы ускорить найм."],
+   ["d4","Продолжить текущий процесс и собрать больше данных."]
+  ],
+  owner:[
+   ["o1","Рекрутер"],
+   ["o2","HR-бизнес-партнер"],
+   ["o3","Руководитель отдела продаж"],
+   ["o4","Руководители продаж и HR совместно"]
+  ],
+  deadline:[
+   ["t1","Через две недели после старта нового скрининга"],
+   ["t2","В понедельник"],
+   ["t3","До конца квартала"],
+   ["t4","Когда накопится достаточно кандидатов"]
+  ],
+  ready:[
+   ["r1","Минимум 90% кандидатов на финальном интервью подтверждают ранее заявленные ожидания по доходу и графику."],
+   ["r2","Провести новый скрининг со всеми кандидатами в течение двух недель."],
+   ["r3","Руководители продаж довольны качеством кандидатов."],
+   ["r4","Количество интервью не увеличилось."]
+  ],
+  comm:[
+   ["c1","По итогам двух недель рекрутер пишет результат руководителям продаж и HR в общий канал."],
+   ["c2","Рекрутер рассказывает результат на ближайшем совещании, если его спросят."],
+   ["c3","HR-бизнес-партнер сообщает директору по персоналу."],
+   ["c4","Достаточно обновить карточки кандидатов."]
+  ]
+ },
+ correct:{decision:"d1",owner:"o1",deadline:"t1",ready:"r1",comm:"c1"},
+ explanations:{
+  decision:"Дополнительное интервью обсуждалось, но было отвергнуто. Реальное решение — изменить первичный скрининг на ограниченный тестовый период.",
+  owner:"Новую форму скрининга применяет рекрутер, поэтому он владелец выполнения и последующей фиксации результата.",
+  deadline:"Понедельник — дата начала нового порядка. Срок, к которому оценивается результат решения, — через две недели.",
+  ready:"Критерий готовности должен показывать, сработало ли изменение. Сам факт проведения скрининга — действие, а не результат проверки гипотезы.",
+  comm:"В стенограмме есть конкретная договоренность: после теста результат публикуется в общем канале для руководителей продаж и HR."
+ }
+}
+];
+
+let current=0, answers=Array(cases.length).fill(null), checked=Array(cases.length).fill(false);
+const card=document.getElementById("card"),result=document.getElementById("result"),
+step=document.getElementById("step"),points=document.getElementById("points"),bar=document.getElementById("bar");
+
+function score(){
+ return answers.reduce((s,a,i)=>{
+  if(!checked[i]||!a)return s;
+  const c=cases[i].correct;
+  return s+(a.decision===c.decision)+(a.owner===c.owner)+(a.deadline===c.deadline)+(a.ready===c.ready)+(a.comm===c.comm);
+ },0);
+}
+function update(){
+ step.textContent=`Ситуация ${current+1} из ${cases.length}`;
+ points.textContent=`Баллы: ${score()} из 10`;
+ bar.style.width=`${((current+1)/cases.length)*100}%`;
+}
+function options(field,selected){
+ return cases[current].fields[field].map(([v,l])=>`<option value="${v}" ${selected===v?"selected":""}>${l}</option>`).join("");
+}
+function render(){
+ result.classList.add("hidden");card.classList.remove("hidden");update();
+ const c=cases[current],a=answers[current]||{},done=checked[current];
+ card.innerHTML=`<div class="tag">Фрагмент рабочего совещания</div>
+ <h2>${c.title}</h2>
+ <div class="transcript">${c.transcript.map(x=>`<p>${x}</p>`).join("")}</div>
+
+ <div class="field"><label for="decision">1. Решение</label><select id="decision" ${done?"disabled":""}><option value="">Выберите</option>${options("decision",a.decision)}</select></div>
+ <div class="field"><label for="owner">2. Владелец результата</label><select id="owner" ${done?"disabled":""}><option value="">Выберите</option>${options("owner",a.owner)}</select></div>
+ <div class="field"><label for="deadline">3. Срок</label><select id="deadline" ${done?"disabled":""}><option value="">Выберите</option>${options("deadline",a.deadline)}</select></div>
+ <div class="field"><label for="ready">4. Критерий готовности</label><select id="ready" ${done?"disabled":""}><option value="">Выберите</option>${options("ready",a.ready)}</select></div>
+ <div class="field"><label for="comm">5. Коммуникация</label><select id="comm" ${done?"disabled":""}><option value="">Выберите</option>${options("comm",a.comm)}</select></div>
+
+ <div class="actions">
+  <button id="back" class="alt" type="button" ${current===0?"disabled":""}>Назад</button>
+  ${done?`<button id="next" type="button">${current===cases.length-1?"Показать итог":"Следующая ситуация"}</button>`:`<button id="check" type="button">Проверить протокол</button>`}
+  <button id="reset" class="alt" type="button">Сбросить</button>
+ </div>
+ <div id="fb" class="fb ${done?"":"hidden"}" aria-live="polite"></div>`;
+ card.querySelector("#back").onclick=()=>{if(current>0){current--;render()}};
+ card.querySelector("#reset").onclick=resetAll;
+ if(done){renderFeedback();card.querySelector("#next").onclick=()=>{if(current===cases.length-1)finish();else{current++;render()}}}
+ else card.querySelector("#check").onclick=check;
+}
+function check(){
+ const vals={decision:card.querySelector("#decision").value,owner:card.querySelector("#owner").value,deadline:card.querySelector("#deadline").value,ready:card.querySelector("#ready").value,comm:card.querySelector("#comm").value};
+ const fb=card.querySelector("#fb");
+ if(Object.values(vals).some(v=>!v)){fb.className="fb bad";fb.innerHTML="<b>Заполните все пять полей.</b><p>Протокол считается закрытым только тогда, когда зафиксированы решение, владелец, срок, критерий готовности и коммуникация.</p>";return}
+ answers[current]=vals;checked[current]=true;render();
+}
+function renderFeedback(){
+ const c=cases[current],a=answers[current],keys=["decision","owner","deadline","ready","comm"];
+ const labels={decision:"Решение",owner:"Владелец",deadline:"Срок",ready:"Критерий готовности",comm:"Коммуникация"};
+ const ok=keys.filter(k=>a[k]===c.correct[k]).length;
+ const fb=card.querySelector("#fb");
+ fb.className=`fb ${ok===5?"good":"bad"}`;
+ fb.innerHTML=`<b>${ok===5?"Протокол собран без смысловых разрывов.":`Верно заполнено полей: ${ok} из 5.`}</b>
+ <div class="checklist">${keys.map(k=>`<div class="checkitem ${a[k]===c.correct[k]?"ok":"err"}"><b>${labels[k]}:</b> ${c.explanations[k]}</div>`).join("")}</div>
+ ${ok<5?`<p><b>Где команда могла бы разойтись в трактовках:</b> ${ambiguity(c,a)}</p>`:`<p>Участникам понятно, что именно принято, кто отвечает, когда проверяется результат, что считается готовностью и кому передается итог.</p>`}`;
+}
+function ambiguity(c,a){
+ const issues=[];
+ if(a.decision!==c.correct.decision)issues.push("разные участники могут считать принятым разные варианты");
+ if(a.owner!==c.correct.owner)issues.push("ответственность может остаться размытой");
+ if(a.deadline!==c.correct.deadline)issues.push("команда может ориентироваться на разные контрольные даты");
+ if(a.ready!==c.correct.ready)issues.push("исполнитель может выполнить действие, но считать задачу завершенной до получения нужного результата");
+ if(a.comm!==c.correct.comm)issues.push("заинтересованные стороны могут узнать о решении слишком поздно или не получить его вовсе");
+ return issues.join("; ")+".";
+}
+function finish(){
+ card.classList.add("hidden");result.classList.remove("hidden");
+ step.textContent="Задание завершено";bar.style.width="100%";points.textContent=`Баллы: ${score()} из 10`;
+ const s=score();
+ const msg=s>=9?"Вы уверенно отделяете содержание обсуждения от принятого решения и фиксируете протокол так, чтобы у команды оставалось минимум пространства для разных трактовок.":s>=7?"Основная логика понятна, но в отдельных полях обсуждавшиеся действия или даты еще подменяют итоговые договоренности. Особенно внимательно проверяйте критерий готовности и коммуникацию.":"Стоит еще раз пройти по пяти полям протокола. Самая частая ошибка — записать ярко обсуждавшийся вариант вместо решения или действие вместо критерия готовности.";
+ result.innerHTML=`<h2>Итог</h2><div class="score">${s} / 10</div><p>${msg}</p>
+ <div class="summary"><b>Перед завершением совещания проговорите вслух:</b><p>Что именно решили? Кто владелец? Когда должен быть результат? Какой наблюдаемый факт означает «готово»? Кто должен узнать о решении и когда?</p></div>
+ <div class="actions"><button id="again" type="button">Пройти еще раз</button></div>`;
+ result.querySelector("#again").onclick=resetAll;
+}
+function resetAll(){
+ current=0;answers=Array(cases.length).fill(null);checked=Array(cases.length).fill(false);render();
+}
+render();
+})();
+</script>
+</body>
+</html>

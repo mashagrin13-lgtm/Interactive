@@ -1,0 +1,224 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Выберите первое действие для снятия препятствия</title>
+<style>
+:root{
+  --p:#f6f7f9;--l:#d9dee7;--t:#20242b;--m:#667085;--a:#315f9d;
+  --g:#2f6d42;--b:#9b3434;--gb:#eef7f0;--bb:#fbefef
+}
+*{box-sizing:border-box}
+body{margin:0;padding:18px 12px 28px;background:#fff;color:var(--t);font:15px/1.45 Arial,sans-serif}
+.app{max-width:560px;margin:auto}
+h1{font-size:24px;line-height:1.2;margin:0 0 10px}
+h2{font-size:19px;line-height:1.25;margin:0 0 10px}
+p{margin:8px 0}.lead{color:var(--m);margin-bottom:14px}
+.box,.card{border:1px solid var(--l);border-radius:12px;padding:14px;margin-bottom:15px}
+.box{background:var(--p)}
+ol{margin:8px 0 0 20px;padding:0}li{margin:6px 0}
+.rule{margin-top:12px;padding:10px 11px;background:#fff;border:1px solid var(--l);border-radius:9px;font-size:14px}
+.meta{display:flex;justify-content:space-between;gap:10px;color:var(--m);font-size:13px;margin:12px 0 6px}
+.bar{height:8px;background:#eceff3;border-radius:99px;overflow:hidden;margin-bottom:14px}
+.bar>div{height:100%;background:var(--a);transition:width .2s ease}
+.tag{font-size:12px;color:var(--m);margin-bottom:6px}
+.casebox{background:var(--p);border-radius:10px;padding:12px;margin:9px 0 14px;font-size:16px;font-weight:700}
+.q{font-weight:700;margin:12px 0 8px}
+.option{display:block;border:1px solid var(--l);border-radius:9px;padding:10px 11px;margin:7px 0;cursor:pointer}
+.option input{margin-right:8px;vertical-align:top}
+.actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:14px}
+button{min-height:44px;border:1px solid var(--a);background:var(--a);color:#fff;border-radius:9px;padding:10px 14px;font-size:15px;cursor:pointer}
+button.alt{background:#fff;color:var(--a)}
+button:disabled{opacity:.55;cursor:not-allowed}
+.fb{margin-top:14px;padding:12px;border-radius:9px}
+.fb.good{background:var(--gb);border-left:4px solid var(--g)}
+.fb.bad{background:var(--bb);border-left:4px solid var(--b)}
+.hidden{display:none!important}
+.score{font-size:30px;font-weight:700;margin:6px 0 10px}
+.summary{background:var(--p);border-radius:10px;padding:12px;margin:12px 0}
+.note{font-size:13px;color:var(--m)}
+</style>
+</head>
+<body>
+<main class="app">
+<h1>Выберите первое действие для снятия препятствия</h1>
+<p class="lead">Вы — руководитель среднего звена. Новый способ работы уже запущен, но в разных местах возникают препятствия. Определите первое действие, которое воздействует на причину проблемы, а не просто усиливает давление на сотрудников.</p>
+
+<section class="box">
+<b>Что нужно сделать</b>
+<ol>
+<li>Последовательно разберите пять рабочих ситуаций.</li>
+<li>В каждой выберите первое действие руководителя.</li>
+<li>Сначала определите, что мешает изменению: конструкция процесса, дефицит навыка или ограничение за пределами ваших полномочий.</li>
+<li>После ответа прочитайте объяснение и сравните выбранное действие с причиной препятствия.</li>
+</ol>
+<div class="rule"><b>Ориентир:</b> если мешает сам процесс — измените рабочее условие. Если человек не умеет выполнять новое действие — дайте практику. Если требуется чужой ресурс, приоритет или полномочие — поднимите вопрос тому, кто может это изменить.</div>
+</section>
+
+<div class="meta"><span id="step"></span><span id="points"></span></div>
+<div class="bar"><div id="bar"></div></div>
+
+<section id="card" class="card"></section>
+<section id="result" class="card hidden" aria-live="polite"></section>
+</main>
+
+<script>
+(function(){
+const cases=[
+{
+ title:"Дублирование данных",
+ text:"Сотрудники не используют новый шаблон передачи задач, потому что он требует вручную копировать те же данные из другой системы. На одну задачу уходит дополнительно около 15 минут.",
+ options:[
+  ["train","Провести дополнительное обучение по заполнению шаблона."],
+  ["punish","Ввести контроль соблюдения и фиксировать нарушения."],
+  ["process","Убрать дублирование: настроить перенос данных или исключить повторяющиеся поля из шаблона."],
+  ["wait","Попросить сотрудников привыкнуть: со временем заполнение станет быстрее."]
+ ],
+ correct:"process",
+ explain:"Препятствие встроено в сам процесс. Сотрудники умеют выполнять действие, но новый порядок создает лишнюю работу. Обучение или усиление контроля заставят людей лучше выполнять ненужный шаг, но не устранят потерю времени."
+},
+{
+ title:"Ошибки в новом инструменте",
+ text:"После перехода на новую систему сотрудники регулярно выбирают неправильный тип зависимости между задачами. Они знают, где находится нужная функция, но на практическом задании только 4 из 10 человек выполняют операцию без ошибок.",
+ options:[
+  ["manual","Дать еще одну подробную инструкцию и попросить внимательно ее прочитать."],
+  ["practice","Провести короткую практику на типовых кейсах с обратной связью, затем повторить самостоятельное задание."],
+  ["control","Попросить руководителя проверять каждую зависимость перед сохранением."],
+  ["process","Отказаться от использования зависимостей, пока команда не привыкнет к системе."]
+ ],
+ correct:"practice",
+ explain:"Здесь подтвержден дефицит навыка: сотрудники знают функцию, но выполняют действие нестабильно. Нужна практика с обратной связью и повторное самостоятельное выполнение."
+},
+{
+ title:"Нет доступа к нужным данным",
+ text:"Новый порядок требует проверять показатель из системы другого подразделения. У команды нет прав доступа, а выдать их может только владелец корпоративной системы.",
+ options:[
+  ["teach","Научить сотрудников запрашивать данные у коллег вручную."],
+  ["escalate","Поднять вопрос владельцу системы и согласовать необходимый уровень доступа."],
+  ["workaround","Создать локальную таблицу, куда сотрудники будут копировать данные вручную."],
+  ["demand","Потребовать соблюдать новый порядок независимо от ограничений доступа."]
+ ],
+ correct:"escalate",
+ explain:"Команда не может снять это препятствие своими действиями. Нужен человек с полномочиями изменить права доступа. Обходной процесс создаст дополнительную работу и закрепит барьер вместо его устранения."
+},
+{
+ title:"Старое требование осталось у соседнего руководителя",
+ text:"Компания перешла на новый формат еженедельного отчета, но руководитель соседнего подразделения продолжает требовать от общих сотрудников еще и старую версию. В результате они готовят два отчета.",
+ options:[
+  ["train","Еще раз обучить сотрудников новому формату."],
+  ["ignore","Оставить оба отчета на переходный период без срока окончания."],
+  ["employees","Попросить сотрудников самостоятельно решить, чей формат считать приоритетным."],
+  ["escalate","Согласовать единое требование с руководителем соседнего подразделения, а если приоритеты не удается снять на этом уровне — подключить общего руководителя."]
+ ],
+ correct:"escalate",
+ explain:"Проблема вызвана конфликтующими управленческими требованиями. Сотрудники не должны выбирать между двумя руководителями или компенсировать конфликт двойной работой. Сначала нужно снять конфликт требований."
+},
+{
+ title:"Лишнее согласование",
+ text:"По новому порядку сотрудники должны согласовывать с руководителем каждое изменение клиентской заявки, хотя изменения до установленного лимита уже входят в их полномочия. Из-за этого очередь согласований растет.",
+ options:[
+  ["process","Убрать обязательное согласование для изменений в пределах уже утвержденных полномочий и оставить эскалацию для исключений."],
+  ["training","Провести обучение по правилам согласования."],
+  ["control","Установить норматив времени, за которое руководитель обязан согласовать каждую заявку."],
+  ["habit","Сохранить порядок на месяц, чтобы собрать больше данных и дать сотрудникам привыкнуть."]
+ ],
+ correct:"process",
+ explain:"Лишний этап противоречит уже заданным границам полномочий и создает очередь. Здесь полезнее убрать барьер, чем ускорять ненужное согласование."
+}
+];
+
+let i=0,answers=Array(cases.length).fill(null),checked=Array(cases.length).fill(false);
+let patterns={train:0,control:0,wait:0};
+
+const card=document.getElementById("card"),result=document.getElementById("result"),
+step=document.getElementById("step"),points=document.getElementById("points"),bar=document.getElementById("bar");
+
+function score(){return answers.reduce((s,a,j)=>s+(checked[j]&&a===cases[j].correct?1:0),0)}
+function update(){
+ step.textContent=`Ситуация ${i+1} из ${cases.length}`;
+ points.textContent=`Баллы: ${score()} из ${cases.length}`;
+ bar.style.width=`${((i+1)/cases.length)*100}%`;
+}
+function render(){
+ result.classList.add("hidden");card.classList.remove("hidden");update();
+ const c=cases[i],a=answers[i],done=checked[i];
+ card.innerHTML=`<div class="tag">Рабочее препятствие</div>
+ <h2>${c.title}</h2>
+ <div class="casebox">${c.text}</div>
+ <div class="q">Что руководителю стоит сделать первым?</div>
+ ${c.options.map(([v,l])=>`<label class="option"><input type="radio" name="x" value="${v}" ${a===v?"checked":""} ${done?"disabled":""}>${l}</label>`).join("")}
+ <div class="actions">
+  <button id="back" class="alt" type="button" ${i===0?"disabled":""}>Назад</button>
+  ${done?`<button id="next" type="button">${i===cases.length-1?"Показать итог":"Далее"}</button>`:`<button id="check" type="button">Проверить</button>`}
+  <button id="reset" class="alt" type="button">Сбросить</button>
+ </div>
+ <div id="fb" class="fb ${done?(a===c.correct?"good":"bad"):"hidden"}" aria-live="polite">${done?feedback(c,a):""}</div>`;
+
+ card.querySelector("#back").onclick=()=>{if(i>0){i--;render()}};
+ card.querySelector("#reset").onclick=resetAll;
+ if(done)card.querySelector("#next").onclick=()=>{if(i===cases.length-1)finish();else{i++;render()}};
+ else card.querySelector("#check").onclick=check;
+}
+function feedback(c,a){
+ let extra="";
+ if(a!==c.correct){
+  if(["train","training","manual","teach"].includes(a)){
+   extra="<p><b>Риск:</b> обучение используется как универсальный ответ, хотя причина может находиться не в навыке.</p>";
+  }else if(["control","punish","demand"].includes(a)){
+   extra="<p><b>Риск:</b> контроль повышает давление, но оставляет исходное препятствие на месте.</p>";
+  }else if(["wait","habit","ignore"].includes(a)){
+   extra="<p><b>Риск:</b> команда вынуждена адаптироваться к барьеру вместо того, чтобы устранить его причину.</p>";
+  }
+ }
+ return `<b>${a===c.correct?"Верное первое действие.":"Это действие не устраняет основную причину."}</b><p>${c.explain}</p>${extra}`;
+}
+function check(){
+ const e=card.querySelector('input[name="x"]:checked'),fb=card.querySelector("#fb");
+ if(!e){
+  fb.className="fb bad";
+  fb.innerHTML="<b>Выберите действие.</b><p>Сначала определите, что является источником проблемы: процесс, навык или ограничение полномочий.</p>";
+  return;
+ }
+ answers[i]=e.value;checked[i]=true;
+ if(e.value!==cases[i].correct){
+  if(["train","training","manual","teach"].includes(e.value))patterns.train++;
+  if(["control","punish","demand"].includes(e.value))patterns.control++;
+  if(["wait","habit","ignore"].includes(e.value))patterns.wait++;
+ }
+ render();
+}
+function finish(){
+ card.classList.add("hidden");result.classList.remove("hidden");
+ step.textContent="Задание завершено";bar.style.width="100%";points.textContent=`Баллы: ${score()} из ${cases.length}`;
+ const s=score();
+ let msg=s===5
+  ?"Вы последовательно выбираете действие по природе препятствия: меняете процесс, развиваете навык или подключаете нужный уровень полномочий."
+  :s>=3
+  ?"Основная логика понятна, но в отдельных ситуациях стоит точнее отделять проблему исполнения от системного барьера."
+  :"Стоит еще раз использовать последовательность «что мешает → кто может это изменить → какое минимальное действие воздействует на причину».";
+
+ let pattern="";
+ const max=Math.max(patterns.train,patterns.control,patterns.wait);
+ if(max>0&&patterns.train===max)pattern="<p>У вас заметна склонность отвечать обучением даже на системные препятствия. Обучение помогает, когда человеку не хватает навыка, но не исправляет лишний этап или отсутствие доступа.</p>";
+ else if(max>0&&patterns.control===max)pattern="<p>У вас заметна склонность усиливать контроль. Он может сделать нарушение заметнее, но не устранит неудобный процесс, конфликт требований или нехватку полномочий.</p>";
+ else if(max>0&&patterns.wait===max)pattern="<p>В нескольких ситуациях вы оставляли препятствие на месте и рассчитывали на адаптацию сотрудников. Это переносит стоимость плохого процесса на команду.</p>";
+
+ result.innerHTML=`<h2>Итог</h2><div class="score">${s} / ${cases.length}</div><p>${msg}</p>${pattern}
+ <div class="summary">
+  <p><b>Изменить процесс:</b> если барьер создают лишние шаги, дублирование, неоднозначное правило или ненужное согласование.</p>
+  <p><b>Научить:</b> если действие нужно и процесс устроен нормально, но сотрудники пока не умеют выполнять его надежно.</p>
+  <p><b>Эскалировать:</b> если для снятия препятствия нужны чужие полномочия, ресурс или решение между конфликтующими приоритетами.</p>
+ </div>
+ <p class="note">Первое действие руководителя должно уменьшать причину препятствия. Если после вмешательства причина остается на месте, команда просто тратит больше усилий на обход проблемы.</p>
+ <div class="actions"><button id="again" type="button">Пройти еще раз</button></div>`;
+ result.querySelector("#again").onclick=resetAll;
+}
+function resetAll(){
+ i=0;answers=Array(cases.length).fill(null);checked=Array(cases.length).fill(false);patterns={train:0,control:0,wait:0};render();
+}
+render();
+})();
+</script>
+</body>
+</html>

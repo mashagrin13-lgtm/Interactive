@@ -1,0 +1,241 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Определите, что человек пытается сохранить</title>
+<style>
+:root{
+  --p:#f6f7f9;--l:#d9dee7;--t:#20242b;--m:#667085;--a:#315f9d;
+  --g:#2f6d42;--b:#9b3434;--w:#8a5b14;--gb:#eef7f0;--bb:#fbefef;--wb:#fff7e8
+}
+*{box-sizing:border-box}
+body{margin:0;padding:18px 12px 28px;background:#fff;color:var(--t);font:15px/1.45 Arial,sans-serif}
+.app{max-width:560px;margin:auto}
+h1{font-size:24px;line-height:1.2;margin:0 0 10px}
+h2{font-size:19px;line-height:1.25;margin:0 0 10px}
+p{margin:8px 0}
+.lead{color:var(--m);margin-bottom:14px}
+.box,.card{border:1px solid var(--l);border-radius:12px;padding:14px;margin-bottom:15px}
+.box{background:var(--p)}
+ol{margin:8px 0 0 20px;padding:0}li{margin:6px 0}
+.rule{margin-top:12px;padding:10px 11px;background:#fff;border:1px solid var(--l);border-radius:9px;font-size:14px}
+.meta{display:flex;justify-content:space-between;gap:10px;color:var(--m);font-size:13px;margin:12px 0 6px}
+.bar{height:8px;background:#eceff3;border-radius:99px;overflow:hidden;margin-bottom:14px}
+.bar>div{height:100%;background:var(--a);transition:width .2s ease}
+.tag{font-size:12px;color:var(--m);margin-bottom:6px}
+.casebox{background:var(--p);border-radius:10px;padding:12px;margin:9px 0 14px}
+.casebox p{margin:5px 0}
+.q{font-weight:700;margin:12px 0 8px}
+.option{display:block;border:1px solid var(--l);border-radius:9px;padding:10px 11px;margin:7px 0;cursor:pointer}
+.option input{margin-right:8px;vertical-align:top}
+.actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:14px}
+button{min-height:44px;border:1px solid var(--a);background:var(--a);color:#fff;border-radius:9px;padding:10px 14px;font-size:15px;cursor:pointer}
+button.alt{background:#fff;color:var(--a)}
+button:disabled{opacity:.55;cursor:not-allowed}
+.fb{margin-top:14px;padding:12px;border-radius:9px}
+.fb.good{background:var(--gb);border-left:4px solid var(--g)}
+.fb.bad{background:var(--bb);border-left:4px solid var(--b)}
+.fb.warn{background:var(--wb);border-left:4px solid var(--w)}
+.hyp{margin-top:10px;padding:10px 11px;border:1px dashed var(--l);border-radius:9px;background:#fff;font-size:14px}
+.hidden{display:none!important}
+.score{font-size:30px;font-weight:700;margin:6px 0 10px}
+.summary{background:var(--p);border-radius:10px;padding:12px;margin:12px 0}
+.note{font-size:13px;color:var(--m)}
+</style>
+</head>
+<body>
+<main class="app">
+<h1>Определите, что человек пытается сохранить</h1>
+<p class="lead">Вы — руководитель. Сотрудник понимает ожидаемое поведение, но продолжает действовать по-старому. Ваша задача — сформулировать возможное скрытое обязательство и выбрать действие, которое поможет проверить эту гипотезу.</p>
+
+<section class="box">
+<b>Что нужно сделать</b>
+<ol>
+<li>В каждой ситуации сначала определите, что человек, возможно, пытается защитить или сохранить своим текущим поведением.</li>
+<li>Не воспринимайте выбранное объяснение как факт о человеке. Это рабочая гипотеза, которую руководителю еще нужно проверить.</li>
+<li>Затем выберите первое действие: оно должно помочь проверить гипотезу или безопасно попробовать новое поведение.</li>
+<li>Избегайте решений, которые сразу усиливают контроль, давят на сотрудника или повторяют уже известные инструкции.</li>
+</ol>
+<div class="rule"><b>Логика:</b> желаемое поведение не возникает → смотрим, что человек делает вместо него → предполагаем, от какого риска это поведение его защищает → проверяем предположение через разговор или небольшой эксперимент.</div>
+</section>
+
+<div class="meta"><span id="step"></span><span id="points"></span></div>
+<div class="bar"><div id="bar"></div></div>
+
+<section id="card" class="card"></section>
+<section id="result" class="card hidden" aria-live="polite"></section>
+</main>
+
+<script>
+(function(){
+const cases=[
+{
+ title:"Идеи остаются при сотруднике",
+ situation:"Руководитель несколько раз просил опытного специалиста приносить идеи по улучшению процесса. Специалист хорошо знает работу и в личных разговорах замечает слабые места, но на общих встречах почти ничего не предлагает. После одной из встреч он говорит: «Если идея сырая, потом все запомнят только то, что она была неудачной».",
+ hidden:[
+  ["h1","Ему не хватает информации о процессе."],
+  ["h2","Он старается защитить профессиональную репутацию от возможной критики за неидеальную идею."],
+  ["h3","Он не знает, в каком формате оформлять предложения."],
+  ["h4","Он хочет получить больше формальных полномочий."]
+ ],
+ correctHidden:"h2",
+ actions:[
+  ["a1","Сказать, что от сильного специалиста ожидается больше инициативы, и включить число идей в его KPI."],
+  ["a2","Уточнить, чего именно он опасается при публичном предложении, а затем договориться протестировать одну идею сначала в небольшом рабочем обсуждении без оценки автора."],
+  ["a3","Еще раз отправить шаблон для оформления инициатив."],
+  ["a4","Начать самостоятельно формулировать его идеи и озвучивать их команде от имени руководителя."]
+ ],
+ correctAction:"a2",
+ explainHidden:"В ситуации уже есть важный факт: специалист сам связывает молчание с риском профессиональной оценки. Поэтому наиболее обоснованная гипотеза — он сохраняет образ компетентного специалиста и избегает ситуации, где сырая идея может этому образу угрожать.",
+ explainAction:"Руководителю важно не убеждать сотрудника, что бояться нечего, а проверить, насколько страх оценки действительно удерживает поведение. Небольшой безопасный эксперимент дает возможность сравнить ожидаемый риск с реальным результатом."
+},
+{
+ title:"Руководитель группы не передает решения вниз",
+ situation:"После общей встречи руководитель группы должен передать сотрудникам новые правила работы с приоритетными клиентами. Он понимает правила и может их объяснить, но регулярно оставляет часть решений у себя и просит сотрудников согласовывать с ним каждый спорный случай. В разговоре говорит: «Если они начнут решать сами и ошибутся, отвечать все равно мне».",
+ hidden:[
+  ["h1","Он защищает себя от риска потерять контроль и отвечать за ошибки, принятые без его участия."],
+  ["h2","Ему не хватает информации о новых правилах."],
+  ["h3","Он не умеет проводить командные встречи."],
+  ["h4","Он хочет сократить объем своей ответственности."]
+ ],
+ correctHidden:"h1",
+ actions:[
+  ["a1","Повторно обучить его новым правилам работы с клиентами."],
+  ["a2","Забрать коммуникацию сотрудникам на себя, чтобы решения точно дошли до команды."],
+  ["a3","Уточнить, какие ошибки он считает неприемлемыми, определить границы решений сотрудников и на ограниченный период передать им один тип решений с последующим разбором результата."],
+  ["a4","Потребовать немедленно перестать согласовывать решения и полностью передать полномочия сотрудникам."]
+ ],
+ correctAction:"a3",
+ explainHidden:"Проблема не похожа на дефицит знания: руководитель понимает правила. Его собственная фраза указывает на другое противоречие — он должен расширить самостоятельность команды, но одновременно старается сохранить личный контроль, чтобы снизить риск ответственности за чужую ошибку.",
+ explainAction:"Нужен не резкий отказ от контроля, а проверяемое расширение самостоятельности. Руководитель задает допустимые границы риска и проверяет на ограниченном участке, действительно ли передача решения приводит к тем последствиям, которых человек опасается."
+},
+{
+ title:"Риск замечен, но остается невысказанным",
+ situation:"Аналитик должен заранее поднимать риски по срокам проекта. Он умеет оценивать сроки и видит отклонения, но часто сообщает о них только после того, как проблема уже стала очевидной. На разборе говорит: «Когда я поднимаю риск раньше остальных, меня начинают воспринимать как человека, который тормозит проект».",
+ hidden:[
+  ["h1","Он не умеет оценивать проектные сроки."],
+  ["h2","Он старается сохранить отношения с командой и не получить репутацию человека, который мешает движению проекта."],
+  ["h3","Он хочет, чтобы ответственность за сроки полностью перешла руководителю проекта."],
+  ["h4","Ему не хватает доступа к данным."]
+ ],
+ correctHidden:"h2",
+ actions:[
+  ["a1","Попросить его сообщать обо всех рисках напрямую руководителю, минуя команду."],
+  ["a2","Установить правило: за каждый пропущенный риск снижать оценку результата."],
+  ["a3","Уточнить, в каких ситуациях он ожидает негативной реакции, и договориться на двух ближайших встречах поднимать риск в формате «факт → возможное последствие → вопрос команде», затем сравнить ожидаемую и реальную реакцию."],
+  ["a4","Провести дополнительный тренинг по оценке сроков."]
+ ],
+ correctAction:"a3",
+ explainHidden:"Сотрудник способен увидеть риск, поэтому навык оценки здесь не главный вопрос. Его поведение может защищать принадлежность к группе и профессиональный образ «человека, который помогает двигаться вперед», а раннее предупреждение он воспринимает как угрозу этому образу.",
+ explainAction:"Полезно проверить предположение в реальной, но ограниченной ситуации. Формат сообщения снижает вероятность, что риск прозвучит как блокировка решения, а последующий разбор позволяет сравнить ожидаемую реакцию команды с фактической."
+}
+];
+
+let ci=0,phase=0;
+let answers=cases.map(()=>({hidden:null,action:null}));
+let locked=cases.map(()=>({hidden:false,action:false}));
+let scores=Array(cases.length).fill(0);
+
+const card=document.getElementById("card"),result=document.getElementById("result"),
+step=document.getElementById("step"),points=document.getElementById("points"),bar=document.getElementById("bar");
+
+function total(){return scores.reduce((a,b)=>a+b,0)}
+function update(){
+ step.textContent=`Ситуация ${ci+1} из ${cases.length} · ${phase===0?"гипотеза":"действие"}`;
+ points.textContent=`Баллы: ${total()} из 6`;
+ bar.style.width=`${((ci*2+phase+1)/6)*100}%`;
+}
+function render(){
+ result.classList.add("hidden");card.classList.remove("hidden");update();
+ const c=cases[ci],a=answers[ci],lk=locked[ci];
+ if(phase===0){
+  card.innerHTML=`<div class="tag">Рабочая ситуация</div><h2>${c.title}</h2>
+  <div class="casebox">${c.situation}</div>
+  <div class="q">Какое скрытое обязательство лучше всего объясняет поведение как рабочая гипотеза?</div>
+  ${c.hidden.map(([v,l])=>`<label class="option"><input type="radio" name="x" value="${v}" ${a.hidden===v?"checked":""} ${lk.hidden?"disabled":""}>${l}</label>`).join("")}
+  <div class="actions">
+   <button id="back" class="alt" type="button" ${ci===0?"disabled":""}>Назад</button>
+   ${lk.hidden?`<button id="next" type="button">Выбрать действие</button>`:`<button id="check" type="button">Проверить гипотезу</button>`}
+   <button id="reset" class="alt" type="button">Сбросить</button>
+  </div>
+  <div id="fb" class="fb ${lk.hidden?(a.hidden===c.correctHidden?"good":"bad"):"hidden"}">${lk.hidden?hiddenFeedback(c,a.hidden):""}</div>`;
+ }else{
+  card.innerHTML=`<div class="tag">Следующий шаг руководителя</div><h2>${c.title}</h2>
+  <div class="hyp"><b>Рабочая гипотеза</b><br>${textBy(c.hidden,a.hidden)}</div>
+  <div class="q">Какое действие руководителя будет наиболее уместно?</div>
+  ${c.actions.map(([v,l])=>`<label class="option"><input type="radio" name="x" value="${v}" ${a.action===v?"checked":""} ${lk.action?"disabled":""}>${l}</label>`).join("")}
+  <div class="actions">
+   <button id="back" class="alt" type="button">Назад к гипотезе</button>
+   ${lk.action?`<button id="next" type="button">${ci===cases.length-1?"Показать итог":"Следующая ситуация"}</button>`:`<button id="check" type="button">Проверить действие</button>`}
+   <button id="reset" class="alt" type="button">Сбросить</button>
+  </div>
+  <div id="fb" class="fb ${lk.action?(a.action===c.correctAction?"good":"bad"):"hidden"}">${lk.action?actionFeedback(c,a.action):""}</div>`;
+ }
+ bind();
+}
+function textBy(arr,v){
+ const x=arr.find(x=>x[0]===v); return x?x[1]:"Не выбрано";
+}
+function hiddenFeedback(c,a){
+ const correct=a===c.correctHidden;
+ return `<b>${correct?"Гипотеза опирается на факты кейса.":"Эта версия хуже объясняет наблюдаемое поведение."}</b><p>${c.explainHidden}</p>
+ <p class="note">Важно: даже правильный вариант здесь остается гипотезой. Руководитель не должен сообщать сотруднику: «Я понял, что ты на самом деле защищаешь». Ее нужно проверить вопросами и наблюдением.</p>`;
+}
+function actionFeedback(c,a){
+ const correct=a===c.correctAction;
+ return `<b>${correct?"Рабочее действие.":"Есть более точный первый шаг."}</b><p>${c.explainAction}</p>
+ <p class="note">Цель — проверить предположение и создать небольшой опыт нового поведения, а не заставить человека немедленно отказаться от привычного способа защиты.</p>`;
+}
+function bind(){
+ const reset=card.querySelector("#reset"); if(reset)reset.onclick=resetAll;
+ const back=card.querySelector("#back"); if(back)back.onclick=()=>{
+  if(phase===1){phase=0;render()}
+  else if(ci>0){ci--;phase=1;render()}
+ };
+ const check=card.querySelector("#check"); if(check)check.onclick=doCheck;
+ const next=card.querySelector("#next"); if(next)next.onclick=()=>{
+  if(phase===0){phase=1;render()}
+  else if(ci===cases.length-1)finish();
+  else{ci++;phase=0;render()}
+ };
+}
+function doCheck(){
+ const e=card.querySelector('input[name="x"]:checked'),fb=card.querySelector("#fb");
+ if(!e){
+  fb.className="fb bad";
+  fb.innerHTML="<b>Выберите вариант.</b><p>Опирайтесь на то, что человек делает и чего, судя по фактам, старается избежать или сохранить.</p>";
+  return;
+ }
+ const c=cases[ci],a=answers[ci],lk=locked[ci];
+ if(phase===0){
+  a.hidden=e.value;lk.hidden=true;
+  if(e.value===c.correctHidden)scores[ci]+=1;
+ }else{
+  a.action=e.value;lk.action=true;
+  if(e.value===c.correctAction)scores[ci]+=1;
+ }
+ render();
+}
+function finish(){
+ card.classList.add("hidden");result.classList.remove("hidden");
+ step.textContent="Задание завершено";bar.style.width="100%";points.textContent=`Баллы: ${total()} из 6`;
+ const s=total();
+ let msg=s>=6?"Вы последовательно отделяете наблюдаемое поведение от возможного скрытого обязательства и не превращаете гипотезу в ярлык.":s>=4?"Основная логика понятна, но в отдельных случаях стоит внимательнее различать дефицит знания или навыка и поведение, которое защищает человека от субъективно важного риска.":"Стоит еще раз пройти связку «что человек делает вместо ожидаемого поведения → от какого риска это может защищать → как безопасно проверить предположение».";
+ result.innerHTML=`<h2>Итог</h2><div class="score">${s} / 6</div><p>${msg}</p>
+ <div class="summary">
+  <p><b>Скрытое обязательство — не характеристика личности.</b> Это гипотеза о том, что человек одновременно пытается выполнить новую задачу и сохранить что-то важное: репутацию, контроль, принадлежность к группе, ощущение безопасности или другую ценность.</p>
+  <p><b>Первое действие руководителя</b> — не спорить с этим обязательством, а сделать его проверяемым: уточнить ожидаемое последствие и провести небольшой безопасный эксперимент.</p>
+ </div>
+ <p class="note">Если новое поведение не появляется, это не означает автоматически «сопротивление». Сначала нужно убедиться, что человек знает, что делать, умеет это делать и действительно сталкивается с внутренним противоречием.</p>
+ <div class="actions"><button id="again" type="button">Пройти еще раз</button></div>`;
+ result.querySelector("#again").onclick=resetAll;
+}
+function resetAll(){
+ ci=0;phase=0;answers=cases.map(()=>({hidden:null,action:null}));locked=cases.map(()=>({hidden:false,action:false}));scores=Array(cases.length).fill(0);render();
+}
+render();
+})();
+</script>
+</body>
+</html>

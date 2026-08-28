@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Чем измерять эту работу?</title>
+<style>
+  :root{--bg:#fff;--panel:#f6f7f9;--line:#d9dde4;--text:#1f2937;--muted:#667085;--accent:#2f5f9e;--good:#256c3b;--bad:#9b2c2c}
+  *{box-sizing:border-box}
+  body{margin:0;padding:20px 12px;background:var(--bg);color:var(--text);font-family:Arial,Helvetica,sans-serif;line-height:1.45}
+  .app{max-width:560px;margin:0 auto}
+  h1{font-size:24px;line-height:1.2;margin:0 0 10px}
+  .lead{margin:0 0 16px;color:var(--muted);font-size:15px}
+  .progress-wrap{margin:14px 0 18px}
+  .progress-meta{display:flex;justify-content:space-between;gap:12px;font-size:13px;color:var(--muted);margin-bottom:6px}
+  .progress{height:8px;background:#eceff3;border-radius:999px;overflow:hidden}
+  .progress>div{height:100%;width:0;background:var(--accent);transition:width .2s ease}
+  .card{border:1px solid var(--line);border-radius:12px;padding:16px;margin-bottom:14px;background:#fff}
+  .case-tag{display:inline-block;font-size:12px;color:var(--muted);margin-bottom:6px}
+  h2{font-size:19px;line-height:1.25;margin:0 0 8px}
+  .context{margin:0 0 14px;font-size:15px}
+  .question{margin-top:14px}
+  .question-title{font-weight:700;margin-bottom:8px}
+  label.option{display:block;border:1px solid var(--line);border-radius:9px;padding:10px 11px;margin:8px 0;cursor:pointer;font-size:14px}
+  label.option:hover{background:var(--panel)}
+  label.option input{margin-right:8px;vertical-align:top}
+  .actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+  button{min-height:44px;border-radius:9px;border:1px solid var(--accent);background:var(--accent);color:#fff;padding:10px 14px;font-size:15px;cursor:pointer}
+  button.secondary{background:#fff;color:var(--accent)}
+  button:disabled{opacity:.55;cursor:not-allowed}
+  .feedback{margin-top:14px;padding:12px;border-radius:9px;background:var(--panel);font-size:14px}
+  .feedback.good{border-left:4px solid var(--good)}
+  .feedback.bad{border-left:4px solid var(--bad)}
+  .feedback strong{display:block;margin-bottom:4px}
+  .hidden{display:none}
+  .result h2{margin-bottom:8px}
+  .score{font-size:28px;font-weight:700;margin:6px 0 8px}
+  .diagnosis{margin-top:10px}
+  .diagnosis p{margin:8px 0}
+  .note{margin-top:12px;font-size:13px;color:var(--muted)}
+</style>
+</head>
+<body>
+<main class="app" id="app">
+  <h1>Чем измерять эту работу?</h1>
+  <p class="lead">Вы — руководитель. Для каждой роли выберите два показателя: основной, который показывает результат работы, и ограничивающий, который не дает улучшать один показатель ценой другого.</p>
+
+  <div class="progress-wrap">
+    <div class="progress-meta"><span id="stepText">Ситуация 1 из 4</span><span id="scoreText">Баллы: 0</span></div>
+    <div class="progress"><div id="progressBar"></div></div>
+  </div>
+
+  <section id="caseCard" class="card"></section>
+  <section id="result" class="card result hidden" aria-live="polite"></section>
+</main>
+
+<script>
+(function(){
+  const cases = [
+    {
+      role:"Специалист клиентской поддержки",
+      context:"Команда отвечает на обращения корпоративных клиентов. Руководителю важно, чтобы проблема решалась с первого раза и клиент не ждал слишком долго.",
+      mainQ:"Какой показатель лучше взять как основной?",
+      mainOptions:[
+        ["revenue","Выручка компании"],["nps","Общий NPS компании"],["repeat","Доля обращений, по которым клиент повторно обращается с той же проблемой в течение 7 дней"],["messages","Количество сообщений специалиста в рабочем чате"]
+      ],
+      mainCorrect:"repeat",
+      guardQ:"Какой показатель лучше использовать как ограничивающий?",
+      guardOptions:[
+        ["sla","Доля первых ответов в пределах установленного SLA"],["tickets","Общее количество созданных обращений"],["calls","Количество внутренних созвонов"],["profit","Прибыль подразделения"]
+      ],
+      guardCorrect:"sla",
+      feedback:{
+        main:"Повторные обращения находятся близко к результату конкретной работы: специалист может влиять на полноту диагностики и качество решения. Выручка и общий NPS слишком удалены от его ежедневных действий, а число сообщений измеряет активность, а не результат.",
+        guard:"SLA нужен, чтобы качество решения не улучшалось ценой чрезмерно долгого ответа. Пара «повторное обращение + SLA» одновременно удерживает качество и скорость."
+      }
+    },
+    {
+      role:"Рекрутер",
+      context:"Рекрутер закрывает вакансии для нескольких подразделений. Руководитель хочет оценивать не количество отправленных резюме, а способность быстро приводить подходящих кандидатов.",
+      mainQ:"Какой показатель лучше взять как основной?",
+      mainOptions:[
+        ["cv","Количество отправленных резюме"],["qualified","Доля кандидатов после первичного скрининга, которых нанимающий руководитель приглашает на интервью"],["headcount","Рост общей численности компании"],["vacancies","Количество открытых вакансий в компании"]
+      ],
+      mainCorrect:"qualified",
+      guardQ:"Какой показатель лучше использовать как ограничивающий?",
+      guardOptions:[
+        ["time","Медианное время от открытия вакансии до первого квалифицированного кандидата"],["messages","Количество сообщений кандидатам"],["offers","Общее число офферов по компании"],["budget","Годовой HR-бюджет"]
+      ],
+      guardCorrect:"time",
+      feedback:{
+        main:"Доля кандидатов, которых после скрининга готовы видеть на интервью, показывает качество первичной квалификации и находится достаточно близко к работе рекрутера. Количество резюме легко увеличить без улучшения результата.",
+        guard:"Время до первого квалифицированного кандидата не дает улучшать качество отбора слишком медленно. Вместе эти два показателя дают управленцу картину «подходящие кандидаты + скорость»."
+      }
+    },
+    {
+      role:"Специалист по закупкам",
+      context:"Специалист готовит документы для согласования новых поставщиков. Частая проблема — возвраты пакетов из-за неполных данных, которые сдвигают сроки закупки.",
+      mainQ:"Какой показатель лучше взять как основной?",
+      mainOptions:[
+        ["firstpass","Доля пакетов поставщиков, принятых на согласование без возврата на исправление"],["suppliers","Количество поставщиков в базе"],["ebitda","EBITDA компании"],["emails","Количество писем поставщикам"]
+      ],
+      mainCorrect:"firstpass",
+      guardQ:"Какой показатель лучше использовать как ограничивающий?",
+      guardOptions:[
+        ["leadtime","Медианное время подготовки полного пакета документов"],["meetings","Количество встреч с поставщиками"],["contracts","Общее число действующих договоров"],["saving","Экономия всей компании на закупках"]
+      ],
+      guardCorrect:"leadtime",
+      feedback:{
+        main:"Принятие пакета без возврата отражает качество конкретного результата специалиста. Число писем или поставщиков может расти, не уменьшая потери процесса.",
+        guard:"Время подготовки удерживает скорость. Иначе специалист может добиваться идеальной комплектности, но слишком долго задерживать старт согласования."
+      }
+    },
+    {
+      role:"Бизнес-аналитик",
+      context:"Аналитик готовит регулярные отчеты для руководителей регионов. Отчет нужен, чтобы быстро принять решение по запасам и не возвращаться за уточнениями.",
+      mainQ:"Какой показатель лучше взять как основной?",
+      mainOptions:[
+        ["accepted","Доля отчетов, которые заказчик принимает без возврата на уточнение или переработку"],["charts","Количество графиков в отчете"],["downloads","Количество скачиваний файла"],["sales","Общий объем продаж компании"]
+      ],
+      mainCorrect:"accepted",
+      guardQ:"Какой показатель лучше использовать как ограничивающий?",
+      guardOptions:[
+        ["ontime","Доля отчетов, подготовленных к согласованному сроку"],["pages","Количество страниц отчета"],["meetings","Количество встреч аналитика"],["margin","Маржинальность компании"]
+      ],
+      guardCorrect:"ontime",
+      feedback:{
+        main:"Принятие без возврата показывает, пригоден ли результат аналитика для дальнейшей работы. Количество графиков и скачиваний описывает форму или активность, а не полезность результата.",
+        guard:"Срок нужен, потому что даже качественный отчет теряет ценность, если приходит после момента принятия решения."
+      }
+    }
+  ];
+
+  let index=0, score=0, locked=false;
+  const errorTypes={remote:0,activity:0,balance:0};
+  const card=document.getElementById("caseCard"), stepText=document.getElementById("stepText"), scoreText=document.getElementById("scoreText"), progressBar=document.getElementById("progressBar"), result=document.getElementById("result");
+
+  function classifyWrong(value){
+    const remote=["revenue","nps","profit","headcount","vacancies","offers","budget","ebitda","contracts","saving","sales","margin"];
+    const activity=["messages","tickets","calls","cv","suppliers","emails","meetings","charts","downloads","pages"];
+    if(remote.includes(value)) errorTypes.remote++; else if(activity.includes(value)) errorTypes.activity++; else errorTypes.balance++;
+  }
+
+  function render(){
+    const c=cases[index]; locked=false;
+    stepText.textContent=`Ситуация ${index+1} из ${cases.length}`;
+    scoreText.textContent=`Баллы: ${score}`;
+    progressBar.style.width=`${(index/cases.length)*100}%`;
+    card.innerHTML=`
+      <div class="case-tag">Роль ${index+1}</div>
+      <h2>${c.role}</h2>
+      <p class="context">${c.context}</p>
+      <div class="question"><div class="question-title">${c.mainQ}</div>
+        ${c.mainOptions.map(([v,l])=>`<label class="option"><input type="radio" name="main" value="${v}">${l}</label>`).join("")}
+      </div>
+      <div class="question"><div class="question-title">${c.guardQ}</div>
+        ${c.guardOptions.map(([v,l])=>`<label class="option"><input type="radio" name="guard" value="${v}">${l}</label>`).join("")}
+      </div>
+      <div class="actions"><button id="checkBtn" type="button">Проверить решение</button></div>
+      <div id="feedback" class="feedback hidden" aria-live="polite"></div>`;
+    document.getElementById("checkBtn").addEventListener("click",check);
+  }
+
+  function check(){
+    if(locked) return;
+    const main=card.querySelector('input[name="main"]:checked');
+    const guard=card.querySelector('input[name="guard"]:checked');
+    const feedback=document.getElementById("feedback"), btn=document.getElementById("checkBtn");
+    if(!main||!guard){
+      feedback.className="feedback bad";
+      feedback.innerHTML="<strong>Нужно выбрать оба показателя.</strong>Основной показатель показывает результат, ограничивающий — защищает от перекоса по скорости или качеству.";
+      return;
+    }
+    locked=true; btn.disabled=true;
+    let gained=0;
+    const mainOk=main.value===cases[index].mainCorrect, guardOk=guard.value===cases[index].guardCorrect;
+    if(mainOk) gained++; else classifyWrong(main.value);
+    if(guardOk) gained++; else { classifyWrong(guard.value); errorTypes.balance++; }
+    score+=gained; scoreText.textContent=`Баллы: ${score}`;
+    feedback.className=`feedback ${gained===2?"good":"bad"}`;
+    feedback.innerHTML=`<strong>${gained===2?"Пара показателей выбрана верно.":`Верных решений: ${gained} из 2.`}</strong>
+      <p><b>Основной показатель.</b> ${cases[index].feedback.main}</p>
+      <p><b>Ограничивающий показатель.</b> ${cases[index].feedback.guard}</p>
+      <div class="actions"><button id="nextBtn" type="button">${index===cases.length-1?"Показать итог":"Следующая ситуация"}</button></div>`;
+    document.getElementById("nextBtn").addEventListener("click",next);
+  }
+
+  function next(){ index++; if(index<cases.length) render(); else showResult(); }
+
+  function showResult(){
+    card.classList.add("hidden"); progressBar.style.width="100%"; stepText.textContent="Задание завершено"; scoreText.textContent=`Баллы: ${score} из ${cases.length*2}`;
+    let diagnosis="";
+    if(score===8){
+      diagnosis="Вы уверенно различаете показатель результата и показатель, который удерживает качество или скорость. В работе применяйте ту же проверку: сотрудник должен влиять на метрику напрямую, а пара показателей — не позволять улучшать один результат ценой другого.";
+    } else {
+      const issues=[];
+      if(errorTypes.remote>0) issues.push("Вы иногда выбирали слишком удаленные бизнес-показатели. Они важны для компании, но плохо подходят для ежедневной обратной связи конкретному сотруднику.");
+      if(errorTypes.activity>0) issues.push("В некоторых ситуациях активность принималась за результат. Количество писем, встреч или резюме имеет смысл только тогда, когда доказана связь с нужным результатом.");
+      if(errorTypes.balance>0) issues.push("Стоит внимательнее проверять баланс пары показателей: основной показывает результат, ограничивающий не дает улучшать его ценой скорости или качества.");
+      diagnosis=issues.join(" ");
+    }
+    result.classList.remove("hidden");
+    result.innerHTML=`<h2>Итог</h2><div class="score">${score} / ${cases.length*2}</div><div class="diagnosis"><p>${diagnosis}</p></div>
+      <p class="note">После выбора метрики задайте три вопроса: сотрудник может на нее влиять? показатель отражает результат, а не активность? есть ли риск улучшить его ценой другого важного результата?</p>
+      <div class="actions"><button id="restartBtn" class="secondary" type="button">Пройти еще раз</button></div>`;
+    document.getElementById("restartBtn").addEventListener("click",()=>{ index=0; score=0; errorTypes.remote=0; errorTypes.activity=0; errorTypes.balance=0; result.classList.add("hidden"); card.classList.remove("hidden"); render(); });
+  }
+
+  render();
+})();
+</script>
+</body>
+</html>

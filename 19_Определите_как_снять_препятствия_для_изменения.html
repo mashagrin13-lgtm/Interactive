@@ -1,0 +1,224 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Определите, как снять препятствия для изменения</title>
+<style>
+:root{
+  --p:#f6f7f9;--l:#d9dee7;--t:#20242b;--m:#667085;--a:#315f9d;
+  --g:#2f6d42;--b:#9b3434;--w:#8a5b14;--gb:#eef7f0;--bb:#fbefef;--wb:#fff7e8
+}
+*{box-sizing:border-box}
+body{margin:0;padding:18px 12px 28px;background:#fff;color:var(--t);font:15px/1.45 Arial,sans-serif}
+.app{max-width:560px;margin:auto}
+h1{font-size:24px;line-height:1.2;margin:0 0 10px}
+p{margin:8px 0}.lead{color:var(--m);margin-bottom:14px}
+.box,.card{border:1px solid var(--l);border-radius:12px;padding:14px;margin-bottom:15px}
+.box{background:var(--p)}
+ol{margin:8px 0 0 20px;padding:0}li{margin:6px 0}
+.rule{margin-top:12px;padding:10px 11px;background:#fff;border:1px solid var(--l);border-radius:9px;font-size:14px}
+.meta{display:flex;justify-content:space-between;gap:10px;color:var(--m);font-size:13px;margin:12px 0 6px}
+.bar{height:8px;background:#eceff3;border-radius:99px;overflow:hidden;margin-bottom:14px}
+.bar>div{height:100%;background:var(--a);transition:width .2s ease}
+.carditem{border:1px solid var(--l);border-radius:10px;padding:10px;margin:8px 0;background:#fff}
+.carditem.dragging{opacity:.45}
+.carditem b{display:block;margin-bottom:5px}
+.carditem select{width:100%;min-height:42px;padding:8px;border:1px solid var(--l);border-radius:8px;background:#fff;font-size:14px;margin-top:7px}
+.zones{display:grid;grid-template-columns:1fr;gap:8px;margin-top:12px}
+.zone{border:1px dashed #aeb7c4;border-radius:10px;padding:10px;min-height:96px;background:#fafbfc}
+.zone.over{border-style:solid;border-color:var(--a)}
+.zone h3{font-size:15px;margin:0 0 4px}.zone small{display:block;color:var(--m);margin-bottom:6px}
+.pill{border:1px solid var(--l);border-radius:8px;padding:7px 8px;margin:5px 0;background:#fff;font-size:12px}
+.actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:14px}
+button{min-height:44px;border:1px solid var(--a);background:var(--a);color:#fff;border-radius:9px;padding:10px 14px;font-size:15px;cursor:pointer}
+button.alt{background:#fff;color:var(--a)}
+button:disabled{opacity:.55;cursor:not-allowed}
+.fb{margin-top:14px;padding:12px;border-radius:9px}
+.fb.good{background:var(--gb);border-left:4px solid var(--g)}
+.fb.bad{background:var(--bb);border-left:4px solid var(--b)}
+.fb.warn{background:var(--wb);border-left:4px solid var(--w)}
+.item{padding:9px 10px;margin:7px 0;background:#fff;border:1px solid var(--l);border-radius:8px;font-size:14px}
+.item.ok{border-left:4px solid var(--g)}
+.item.err{border-left:4px solid var(--b)}
+.hidden{display:none!important}
+.note{font-size:13px;color:var(--m)}
+@media(min-width:520px){.zones{grid-template-columns:1fr 1fr 1fr}}
+</style>
+</head>
+<body>
+<main class="app">
+<h1>Определите, как снять препятствия для изменения</h1>
+<p class="lead">Вы — руководитель среднего звена и сопровождаете внедрение нового процесса. Команда сталкивается с разными препятствиями. Ваша задача — не применять ко всем одну меру, а определить, что можно убрать на уровне процесса, где нужен навык, а где требуется решение выше ваших полномочий.</p>
+
+<section class="box">
+<b>Что нужно сделать</b>
+<ol>
+<li>Распределите 12 препятствий по трем зонам: <b>убрать / научить / эскалировать</b>.</li>
+<li>Перетаскивайте карточки мышью или выберите зону из списка внутри карточки.</li>
+<li>В «убрать» относите системные помехи, которые можно устранить в пределах текущих полномочий.</li>
+<li>В «научить» — ситуации, где новый способ известен, но людям не хватает знания или практического навыка.</li>
+<li>В «эскалировать» — препятствия, для снятия которых нужен приоритет, доступ, ресурс или решение за пределами полномочий руководителя.</li>
+</ol>
+<div class="rule"><b>Проверка:</b> обучение не исправляет лишний этап процесса, а эскалация не нужна там, где руководитель сам способен убрать помеху. При этом системный конфликт полномочий нельзя решить дополнительной инструкцией сотрудникам.</div>
+</section>
+
+<div class="meta"><span id="progress">Распределено: 0 из 12</span><span id="score"></span></div>
+<div class="bar"><div id="bar" style="width:0%"></div></div>
+
+<section class="card">
+<div id="cards"></div>
+
+<div class="zones">
+<section class="zone" data-zone="remove">
+<h3>Убрать</h3>
+<small>Изменить процесс, правило или рабочее условие в пределах своих полномочий.</small>
+<div id="remove"></div>
+</section>
+
+<section class="zone" data-zone="teach">
+<h3>Научить</h3>
+<small>Дать знание, практику или обратную связь по новому действию.</small>
+<div id="teach"></div>
+</section>
+
+<section class="zone" data-zone="escalate">
+<h3>Эскалировать</h3>
+<small>Поднять вопрос туда, где есть нужные полномочия, ресурс или право менять приоритет.</small>
+<div id="escalate"></div>
+</section>
+</div>
+
+<div class="actions">
+<button id="check" type="button">Проверить</button>
+<button id="reset" class="alt" type="button">Сбросить</button>
+</div>
+
+<div id="fb" class="fb hidden" aria-live="polite"></div>
+</section>
+</main>
+
+<script>
+(function(){
+const items=[
+{id:"c1",text:"Сотрудники не знают, как работать в новой системе: на практической проверке большинство не может самостоятельно создать типовую заявку.",correct:"teach",why:"Здесь подтвержден дефицит навыка. Нужна короткая практика на типовых задачах с разбором ошибок и повторным самостоятельным выполнением."},
+{id:"c2",text:"Для нового процесса нужен доступ к данным другого подразделения, а текущая роль сотрудников его не дает.",correct:"escalate",why:"Без доступа процесс физически не может работать. Если руководитель не управляет правами другого подразделения, нужен владелец системы или руководитель с соответствующими полномочиями."},
+{id:"c3",text:"Руководитель соседнего подразделения продолжает требовать старый формат отчета, хотя новый порядок утвержден для всей компании.",correct:"escalate",why:"Сотрудники получают конфликтующие требования от двух руководителей. Это не вопрос обучения: нужно снять конфликт управленческих приоритетов на уровне, где есть полномочия изменить требование."},
+{id:"c4",text:"Новый порядок требует вручную переносить одни и те же данные из одной формы в другую, что добавляет около двух часов работы в неделю.",correct:"remove",why:"Это системная потеря внутри процесса. Если дублирование можно убрать настройкой формы или изменением шага, дополнительное обучение лишь научит людей быстрее выполнять лишнюю работу."},
+{id:"c5",text:"В новой системе сотрудники часто выбирают неправильный тип заявки, хотя нужный вариант есть в интерфейсе и правило уже объясняли один раз.",correct:"teach",why:"Правило известно, но действие выполняется нестабильно. Нужны практика, примеры и обратная связь, а не изменение самого процесса."},
+{id:"c6",text:"Для передачи задачи нужно получить подпись руководителя даже в случаях до 20 000 рублей, хотя решение по этой сумме входит в полномочия сотрудника.",correct:"remove",why:"Лишнее согласование создает задержку и не добавляет контроля там, где полномочия уже определены. Препятствие можно снять изменением локального порядка."},
+{id:"c7",text:"Команда должна использовать новый шаблон, но ссылка на актуальную версию находится в закрытой папке, куда у половины сотрудников нет доступа.",correct:"remove",why:"Если руководитель или владелец процесса может открыть доступ или перенести шаблон в доступное место, препятствие нужно убрать, а не обучать обходному пути."},
+{id:"c8",text:"Сотрудники понимают новый порядок, но не умеют вести сложный разговор с клиентом по обновленному сценарию и избегают его.",correct:"teach",why:"Это дефицит практического навыка. Подойдет разбор примеров, ролевая практика и обратная связь по реальным разговорам."},
+{id:"c9",text:"Два подразделения одновременно требуют одного и того же эксперта на критичные задачи, а выполнить оба обязательства в срок невозможно.",correct:"escalate",why:"Нужен выбор между конкурирующими приоритетами и распределение дефицитного ресурса. Это решение требует полномочий выше уровня исполнителей."},
+{id:"c10",text:"В инструкции к новому процессу используются новые термины, но их определения нигде не зафиксированы, поэтому сотрудники по-разному понимают одно и то же поле.",correct:"remove",why:"Это дефект самого рабочего стандарта. Нужно уточнить определения и обновить инструкцию; обучение не должно компенсировать неоднозначное правило."},
+{id:"c11",text:"После обучения сотрудники знают последовательность действий, но при нестандартном кейсе не умеют выбрать подходящий вариант без подсказки.",correct:"teach",why:"Базовое знание есть, но навык переноса на нестандартные ситуации еще не сформирован. Нужна практика на вариативных кейсах и разбор критериев выбора."},
+{id:"c12",text:"Для нового процесса нужен дополнительный бюджет на внешнюю проверку, которого нет в утвержденном плане подразделения.",correct:"escalate",why:"Если бюджет нельзя перераспределить в текущих полномочиях, препятствие требует решения владельца бюджета. Обучение или локальная перестройка процесса ресурс не создадут."}
+];
+
+const names={remove:"Убрать",teach:"Научить",escalate:"Эскалировать"};
+let assigned={},locked=false,dragged=null;
+const cards=document.getElementById("cards"),fb=document.getElementById("fb"),
+progress=document.getElementById("progress"),scoreEl=document.getElementById("score"),
+bar=document.getElementById("bar"),check=document.getElementById("check"),reset=document.getElementById("reset");
+
+function renderCards(){
+ cards.innerHTML=items.map(x=>`
+ <article class="carditem" draggable="${locked?"false":"true"}" data-id="${x.id}">
+  <b>${x.text}</b>
+  <select data-sel="${x.id}" ${locked?"disabled":""}>
+   <option value="">Выберите зону</option>
+   <option value="remove" ${assigned[x.id]==="remove"?"selected":""}>Убрать</option>
+   <option value="teach" ${assigned[x.id]==="teach"?"selected":""}>Научить</option>
+   <option value="escalate" ${assigned[x.id]==="escalate"?"selected":""}>Эскалировать</option>
+  </select>
+ </article>`).join("");
+
+ cards.querySelectorAll(".carditem").forEach(el=>{
+  el.addEventListener("dragstart",e=>{
+   if(locked)return;
+   dragged=el.dataset.id;
+   el.classList.add("dragging");
+   e.dataTransfer.setData("text/plain",dragged);
+  });
+  el.addEventListener("dragend",()=>{dragged=null;el.classList.remove("dragging")});
+ });
+
+ cards.querySelectorAll("select[data-sel]").forEach(sel=>{
+  sel.addEventListener("change",()=>{
+   if(locked)return;
+   if(sel.value)assigned[sel.dataset.sel]=sel.value;
+   else delete assigned[sel.dataset.sel];
+   renderZones();update();
+  });
+ });
+}
+
+function renderZones(){
+ Object.keys(names).forEach(z=>{
+  const el=document.getElementById(z);
+  const found=items.filter(x=>assigned[x.id]===z);
+  el.innerHTML=found.length?found.map(x=>`<div class="pill">${x.text}</div>`).join(""):`<div class="note">Пока пусто</div>`;
+ });
+}
+
+document.querySelectorAll(".zone").forEach(z=>{
+ z.addEventListener("dragover",e=>{if(locked)return;e.preventDefault();z.classList.add("over")});
+ z.addEventListener("dragleave",()=>z.classList.remove("over"));
+ z.addEventListener("drop",e=>{
+  if(locked)return;e.preventDefault();z.classList.remove("over");
+  const id=e.dataTransfer.getData("text/plain")||dragged;
+  if(id){assigned[id]=z.dataset.zone;renderCards();renderZones();update()}
+ });
+});
+
+function update(){
+ const n=Object.keys(assigned).length;
+ progress.textContent=`Распределено: ${n} из 12`;
+ scoreEl.textContent="";
+ bar.style.width=`${n/12*100}%`;
+}
+
+function score(){return items.reduce((s,x)=>s+(assigned[x.id]===x.correct?1:0),0)}
+
+function pattern(){
+ const counts={remove:0,teach:0,escalate:0};
+ Object.values(assigned).forEach(v=>counts[v]++);
+ const max=Math.max(...Object.values(counts));
+ const dominant=Object.keys(counts).find(k=>counts[k]===max);
+ if(max>=8){
+  if(dominant==="teach")return "Вы слишком часто выбирали обучение. Оно полезно при дефиците знания или навыка, но не устраняет лишние этапы, нехватку доступа или конфликт приоритетов.";
+  if(dominant==="remove")return "Вы слишком часто пытались убрать препятствие локально. Часть барьеров действительно находится в процессе, но конфликт полномочий, бюджета или приоритетов требует решения выше.";
+  if(dominant==="escalate")return "Вы слишком часто эскалировали. Это превращает вышестоящего руководителя в диспетчера проблем, которые можно снять локально или через обучение.";
+ }
+ return "Хорошая практика — сначала определить природу препятствия, а уже затем выбирать действие. Одинаковая реакция на разные барьеры создает лишние задержки.";
+}
+
+check.addEventListener("click",()=>{
+ if(locked)return;
+ if(Object.keys(assigned).length<items.length){
+  fb.className="fb bad";
+  fb.innerHTML="<b>Распределите все 12 карточек.</b><p>Для каждого препятствия нужен один основной управленческий ход.</p>";
+  return;
+ }
+ locked=true;
+ renderCards();
+ const s=score();
+ scoreEl.textContent=`Баллы: ${s} из 12`;
+ bar.style.width="100%";
+ fb.className=`fb ${s>=10?"good":"bad"}`;
+ fb.innerHTML=`<b>${s===12?"Все препятствия распределены верно.":`Верно распределено: ${s} из 12.`}</b>
+ <p>${pattern()}</p>
+ ${items.map(x=>`<div class="item ${assigned[x.id]===x.correct?"ok":"err"}"><b>${names[x.correct]}</b>${x.why}</div>`).join("")}
+ <p><b>Вывод для руководителя:</b> сначала спросите, что именно мешает новому поведению: плохая конструкция процесса, недостаток навыка или ограничение за пределами ваших полномочий. От ответа зависит вмешательство.</p>`;
+});
+
+reset.addEventListener("click",()=>{
+ assigned={};locked=false;fb.className="fb hidden";fb.innerHTML="";
+ renderCards();renderZones();update();
+});
+
+renderCards();renderZones();update();
+})();
+</script>
+</body>
+</html>

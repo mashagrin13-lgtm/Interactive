@@ -1,0 +1,202 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Определите, когда решение нужно пересмотреть</title>
+<style>
+:root{
+  --p:#f6f7f9;--l:#d9dee7;--t:#20242b;--m:#667085;--a:#315f9d;
+  --g:#2f6d42;--b:#9b3434;--w:#8a5b14;--gb:#eef7f0;--bb:#fbefef;--wb:#fff7e8
+}
+*{box-sizing:border-box}
+body{margin:0;padding:18px 12px 28px;background:#fff;color:var(--t);font:15px/1.45 Arial,sans-serif}
+.app{max-width:560px;margin:auto}
+h1{font-size:24px;line-height:1.2;margin:0 0 10px}
+h2{font-size:19px;line-height:1.25;margin:0 0 10px}
+p{margin:8px 0}
+.lead{color:var(--m);margin-bottom:14px}
+.box,.card{border:1px solid var(--l);border-radius:12px;padding:14px;margin-bottom:15px}
+.box{background:var(--p)}
+ol{margin:8px 0 0 20px;padding:0}
+li{margin:6px 0}
+.rule{margin-top:12px;padding:10px 11px;background:#fff;border:1px solid var(--l);border-radius:9px;font-size:14px}
+.meta{display:flex;justify-content:space-between;gap:10px;color:var(--m);font-size:13px;margin:12px 0 6px}
+.bar{height:8px;background:#eceff3;border-radius:99px;overflow:hidden;margin-bottom:14px}
+.bar>div{height:100%;background:var(--a);transition:width .2s ease}
+.tag{font-size:12px;color:var(--m);margin-bottom:6px}
+.context,.update{background:var(--p);border-radius:10px;padding:12px;margin:9px 0 14px}
+.update{font-size:16px;font-weight:700}
+.q{font-weight:700;margin:12px 0 8px}
+.option{display:block;border:1px solid var(--l);border-radius:9px;padding:10px 11px;margin:7px 0;cursor:pointer}
+.option input{margin-right:8px;vertical-align:top}
+.actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:14px}
+button{min-height:44px;border:1px solid var(--a);background:var(--a);color:#fff;border-radius:9px;padding:10px 14px;font-size:15px;cursor:pointer}
+button.alt{background:#fff;color:var(--a)}
+button:disabled{opacity:.55;cursor:not-allowed}
+.fb{margin-top:14px;padding:12px;border-radius:9px}
+.fb.good{background:var(--gb);border-left:4px solid var(--g)}
+.fb.bad{background:var(--bb);border-left:4px solid var(--b)}
+.fb.warn{background:var(--wb);border-left:4px solid var(--w)}
+.hidden{display:none!important}
+.score{font-size:30px;font-weight:700;margin:6px 0 10px}
+.summary{background:var(--p);border-radius:10px;padding:12px;margin:12px 0}
+.note{font-size:13px;color:var(--m)}
+</style>
+</head>
+<body>
+<main class="app">
+<h1>Определите, когда решение нужно пересмотреть</h1>
+<p class="lead">Вы — руководитель проекта. Решение уже принято, работа началась, и в процессе появляются новые вводные. Ваша задача — отличить обычное отклонение в исполнении от изменения, которое разрушает исходную логику решения.</p>
+
+<section class="box">
+<b>Что нужно сделать</b>
+<ol>
+<li>Прочитайте исходное решение и условие, при котором оно считалось рабочим.</li>
+<li>Последовательно разберите четыре новые вводные.</li>
+<li>Для каждой выберите уровень реакции: <b>продолжаем по плану / корректируем исполнение / возвращаемся к самому решению</b>.</li>
+<li>После ответа прочитайте объяснение. Система покажет, изменилась ли сама предпосылка решения или только способ его выполнения.</li>
+<li>Не возвращайте решение на обсуждение из-за любого неудобства, но и не пытайтесь исправить исполнением ситуацию, в которой исходное условие уже нарушено.</li>
+</ol>
+
+<div class="rule">
+<b>Исходное решение</b><br>
+Сохранить дату запуска клиентского кабинета и передать верстку раздела аналитики внешнему исполнителю. Внутренняя команда концентрируется на платежной интеграции.
+<br><br>
+<b>Ключевое условие решения</b><br>
+Готовая сборка от внешнего исполнителя должна поступить так, чтобы у внутренней команды осталось не меньше 5 рабочих дней на ревью, исправления и интеграционное тестирование.
+</div>
+</section>
+
+<div class="meta"><span id="step"></span><span id="points"></span></div>
+<div class="bar"><div id="bar"></div></div>
+
+<section id="card" class="card"></section>
+<section id="result" class="card hidden" aria-live="polite"></section>
+</main>
+
+<script>
+(function(){
+const items=[
+{
+ text:"Подрядчик просит перенести промежуточную дизайн-сверку с вторника на среду. Срок передачи рабочей сборки не меняется, технические требования остаются прежними.",
+ correct:"continue",
+ explain:"Ключевое условие решения не изменилось: дата рабочей сборки и пятидневное окно на внутреннюю проверку сохраняются. Это обычное изменение внутри плана, которое не требует отдельного управленческого вмешательства."
+},
+{
+ text:"В первой сборке нашли три некритичных визуальных дефекта. Автоматические проверки проходят, подрядчик подтверждает исправление в следующей версии без изменения даты финальной передачи.",
+ correct:"adjust",
+ explain:"Само решение остается рабочим: критичные сроки и окно интеграции не нарушены. Но исполнение нужно скорректировать — зафиксировать дефекты, владельца исправлений и проверить их в следующей версии. Возвращаться к вопросу «нужно ли вообще отдавать работу наружу» пока оснований нет."
+},
+{
+ text:"Подрядчик сообщает, что рабочая сборка будет готова на три рабочих дня позже. Вместо пяти дней на внутреннее ревью, исправления и интеграционный тест останется только два.",
+ correct:"revisit",
+ explain:"Изменилось ключевое допущение, на котором держалось решение. Команда больше не получает согласованное окно на приемку и тестирование. Нужно вернуть сам вопрос на обсуждение: сократить переданный объем, добавить ресурс, изменить последовательность или пересмотреть дату запуска."
+},
+{
+ text:"В день начала внутреннего ревью основной разработчик неожиданно недоступен один день. В команде есть другой специалист с нужным доступом и опытом; если передать ему проверку, пятидневное окно сохраняется.",
+ correct:"adjust",
+ explain:"Риск возник внутри исполнения, но исходное решение не потеряло жизнеспособность. Команда может сохранить его, перераспределив работу. Это корректировка исполнения, а не повод пересматривать сам выбор подрядчика или дату запуска."
+}
+];
+
+const labels=[
+ ["continue","Продолжаем по плану"],
+ ["adjust","Корректируем исполнение"],
+ ["revisit","Возвращаемся к самому решению"]
+];
+
+let i=0,answers=Array(items.length).fill(null),checked=Array(items.length).fill(false);
+let overreact=0,underreact=0;
+
+const card=document.getElementById("card"),result=document.getElementById("result"),
+step=document.getElementById("step"),points=document.getElementById("points"),bar=document.getElementById("bar");
+
+function score(){return answers.reduce((s,a,j)=>s+(checked[j]&&a===items[j].correct?1:0),0)}
+function update(){
+ step.textContent=`Вводная ${i+1} из ${items.length}`;
+ points.textContent=`Баллы: ${score()} из ${items.length}`;
+ bar.style.width=`${((i+1)/items.length)*100}%`;
+}
+function render(){
+ result.classList.add("hidden");card.classList.remove("hidden");update();
+ const item=items[i],done=checked[i],ans=answers[i];
+ card.innerHTML=`<div class="tag">Новая информация по проекту</div>
+ <div class="update">${item.text}</div>
+ <div class="q">Какой уровень реакции нужен руководителю?</div>
+ ${labels.map(([v,l])=>`<label class="option"><input type="radio" name="answer" value="${v}" ${ans===v?"checked":""} ${done?"disabled":""}>${l}</label>`).join("")}
+ <div class="actions">
+  <button id="back" class="alt" type="button" ${i===0?"disabled":""}>Назад</button>
+  ${done?`<button id="next" type="button">${i===items.length-1?"Показать итог":"Далее"}</button>`:`<button id="check" type="button">Проверить</button>`}
+  <button id="reset" class="alt" type="button">Сбросить</button>
+ </div>
+ <div id="fb" class="fb ${done?(ans===item.correct?"good":"bad"):"hidden"}" aria-live="polite">
+ ${done?feedbackHTML(item,ans):""}
+ </div>`;
+
+ card.querySelector("#back").onclick=()=>{if(i>0){i--;render()}};
+ card.querySelector("#reset").onclick=resetAll;
+ if(done)card.querySelector("#next").onclick=()=>{if(i===items.length-1)finish();else{i++;render()}};
+ else card.querySelector("#check").onclick=check;
+}
+function feedbackHTML(item,ans){
+ let title=ans===item.correct?"Верный уровень реакции.":"Нужен другой уровень вмешательства.";
+ let extra="";
+ if(ans!==item.correct){
+   const rank={continue:0,adjust:1,revisit:2};
+   if(rank[ans]>rank[item.correct]) extra="<p><b>Что произошло:</b> вы подняли решение на более высокий уровень, чем требуется. Не каждое отклонение означает, что исходный выбор стал неверным.</p>";
+   else extra="<p><b>Что произошло:</b> вы оставили проблему на уровне исполнения, хотя новая вводная уже затрагивает условие, на котором держалось исходное решение.</p>";
+ }
+ return `<b>${title}</b><p>${item.explain}</p>${extra}`;
+}
+function check(){
+ const sel=card.querySelector('input[name="answer"]:checked'),fb=card.querySelector("#fb");
+ if(!sel){
+   fb.className="fb bad";
+   fb.innerHTML="<b>Выберите один вариант.</b><p>Спросите себя: изменилась сама предпосылка решения или только способ его выполнения?</p>";
+   return;
+ }
+ answers[i]=sel.value;
+ checked[i]=true;
+
+ if(sel.value!==items[i].correct){
+   const rank={continue:0,adjust:1,revisit:2};
+   if(rank[sel.value]>rank[items[i].correct]) overreact++;
+   else underreact++;
+ }
+ render();
+}
+function finish(){
+ card.classList.add("hidden");result.classList.remove("hidden");
+ step.textContent="Задание завершено";bar.style.width="100%";points.textContent=`Баллы: ${score()} из ${items.length}`;
+ const s=score();
+ let msg="";
+ if(s===4){
+   msg="Вы уверенно различаете три уровня реакции: обычное изменение внутри плана, корректировку исполнения и ситуацию, в которой нужно пересматривать само решение.";
+ }else if(overreact>underreact){
+   msg="Вы склонны слишком быстро возвращать вопрос на уровень решения. Это может перегружать управленческие обсуждения: часть отклонений достаточно исправить внутри исполнения, не открывая заново уже принятое решение.";
+ }else if(underreact>overreact){
+   msg="Вы склонны удерживать вопрос на уровне исполнения даже тогда, когда изменилось ключевое допущение. Это риск позднего пересмотра: команда продолжает «чинить процесс», хотя исходное решение уже потеряло основание.";
+ }else{
+   msg="Основная логика понятна, но важно точнее различать изменение исполнения и изменение предпосылки. Для этого заранее фиксируйте условия, при которых решение остается рабочим.";
+ }
+
+ result.innerHTML=`<h2>Итог</h2><div class="score">${s} / ${items.length}</div>
+ <p>${msg}</p>
+ <div class="summary">
+  <p><b>Продолжаем по плану</b> — новая информация не меняет результат, ограничения и ключевые условия решения.</p>
+  <p><b>Корректируем исполнение</b> — возникло отклонение, но его можно устранить в рамках уже принятого решения.</p>
+  <p><b>Возвращаемся к решению</b> — нарушено допущение или ограничение, на котором решение было основано.</p>
+ </div>
+ <p class="note">Практический вывод для руководителя: условия пересмотра лучше определять в момент принятия решения. Тогда новые вводные оцениваются не по уровню тревоги, а по заранее согласованным границам.</p>
+ <div class="actions"><button id="again" type="button">Пройти еще раз</button></div>`;
+ result.querySelector("#again").onclick=resetAll;
+}
+function resetAll(){
+ i=0;answers=Array(items.length).fill(null);checked=Array(items.length).fill(false);overreact=0;underreact=0;render();
+}
+render();
+})();
+</script>
+</body>
+</html>

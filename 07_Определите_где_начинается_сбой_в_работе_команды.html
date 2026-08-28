@@ -1,0 +1,543 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Определите, где начинается сбой в работе команды</title>
+<style>
+  :root{
+    --bg:#ffffff;
+    --panel:#f6f7f9;
+    --line:#d9dee7;
+    --text:#20242b;
+    --muted:#667085;
+    --accent:#315f9d;
+    --good:#2f6d42;
+    --bad:#9b3434;
+    --good-bg:#eef7f0;
+    --bad-bg:#fbefef;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;
+    padding:18px 12px 28px;
+    background:var(--bg);
+    color:var(--text);
+    font-family:Arial, Helvetica, sans-serif;
+    line-height:1.45;
+  }
+  .app{max-width:560px;margin:0 auto}
+  h1{font-size:24px;line-height:1.2;margin:0 0 10px}
+  h2{font-size:19px;line-height:1.25;margin:0 0 10px}
+  p{margin:8px 0}
+  .lead{color:var(--muted);font-size:15px;margin-bottom:14px}
+  .instructions,.card{
+    border:1px solid var(--line);
+    border-radius:12px;
+    padding:14px;
+    margin-bottom:15px;
+  }
+  .instructions{background:var(--panel)}
+  .instructions ol{margin:8px 0 0 20px;padding:0}
+  .instructions li{margin:6px 0}
+  .chain{
+    margin-top:12px;
+    padding:10px 11px;
+    background:#fff;
+    border:1px solid var(--line);
+    border-radius:9px;
+    font-size:14px;
+    overflow-wrap:anywhere;
+  }
+  .legend{
+    margin-top:10px;
+    font-size:13px;
+    color:var(--muted);
+  }
+  .legend p{margin:5px 0}
+  .progress-meta{
+    display:flex;
+    justify-content:space-between;
+    gap:10px;
+    color:var(--muted);
+    font-size:13px;
+    margin:12px 0 6px;
+  }
+  .bar{
+    height:8px;
+    background:#eceff3;
+    border-radius:999px;
+    overflow:hidden;
+    margin-bottom:14px;
+  }
+  .bar>div{
+    height:100%;
+    background:var(--accent);
+    transition:width .2s ease;
+  }
+  .tag{font-size:12px;color:var(--muted);margin-bottom:6px}
+  .observation{
+    background:var(--panel);
+    border-radius:10px;
+    padding:13px;
+    margin:10px 0 14px;
+    font-size:16px;
+    font-weight:700;
+  }
+  .question{font-weight:700;margin:12px 0 8px}
+  label.option{
+    display:block;
+    border:1px solid var(--line);
+    border-radius:9px;
+    padding:10px 11px;
+    margin:7px 0;
+    cursor:pointer;
+    font-size:14px;
+  }
+  label.option:hover{background:var(--panel)}
+  label.option input{margin-right:8px;vertical-align:top}
+  .actions{
+    display:flex;
+    gap:9px;
+    flex-wrap:wrap;
+    margin-top:14px;
+  }
+  button{
+    min-height:44px;
+    border:1px solid var(--accent);
+    background:var(--accent);
+    color:#fff;
+    border-radius:9px;
+    padding:10px 14px;
+    font-size:15px;
+    cursor:pointer;
+  }
+  button.secondary{background:#fff;color:var(--accent)}
+  button:disabled{opacity:.55;cursor:not-allowed}
+  .feedback{
+    margin-top:14px;
+    padding:12px;
+    border-radius:9px;
+    font-size:14px;
+  }
+  .feedback.good{background:var(--good-bg);border-left:4px solid var(--good)}
+  .feedback.bad{background:var(--bad-bg);border-left:4px solid var(--bad)}
+  .feedback strong{display:block;margin-bottom:4px}
+  .summary{
+    background:var(--panel);
+    border-radius:10px;
+    padding:12px;
+    margin:12px 0;
+    font-size:14px;
+  }
+  .summary p{margin:6px 0}
+  .stage2-grid{
+    display:grid;
+    grid-template-columns:1fr;
+    gap:8px;
+    margin-top:12px;
+  }
+  .stage2-grid button{
+    width:100%;
+    text-align:left;
+    background:#fff;
+    color:var(--text);
+    border-color:var(--line);
+  }
+  .stage2-grid button.selected{
+    border-color:var(--accent);
+    background:#eef3fb;
+  }
+  .hidden{display:none!important}
+  .score{font-size:30px;font-weight:700;margin:6px 0 10px}
+  .note{font-size:13px;color:var(--muted)}
+</style>
+</head>
+<body>
+<main class="app">
+  <h1>Определите, где начинается сбой в работе команды</h1>
+  <p class="lead">
+    Вы — руководитель подразделения. В команде появились проблемы со сроками и исполнением решений.
+    Ваша задача — не реагировать на самый заметный симптом, а определить, какой блок взаимодействия
+    начинает давать сбой раньше остальных.
+  </p>
+
+  <section class="instructions">
+    <strong>Как выполнять задание</strong>
+    <ol>
+      <li>На первом этапе последовательно разберите 12 наблюдений за работой команды.</li>
+      <li>Для каждого наблюдения определите, к какому из пяти блоков оно относится.</li>
+      <li>После ответа прочитайте пояснение: оно покажет, какой именно сигнал вы увидели — устойчивую практику или слабое место.</li>
+      <li>На втором этапе посмотрите на всю картину и выберите первый слабый блок в цепочке.</li>
+      <li>Ориентируйтесь на причинную последовательность, а не на самый заметный поздний симптом.</li>
+    </ol>
+
+    <div class="chain">
+      <b>Логика диагностики:</b><br>
+      Доверие → открытое обсуждение → обязательность решений → взаимная требовательность → общий результат
+    </div>
+
+    <div class="legend">
+      <p><b>Доверие:</b> можно признать ошибку, попросить помощь, показать проблему.</p>
+      <p><b>Открытое обсуждение:</b> реальные разногласия попадают на общую встречу.</p>
+      <p><b>Обязательность решений:</b> после обсуждения команда одинаково понимает, что принято.</p>
+      <p><b>Взаимная требовательность:</b> коллеги напрямую поднимают отклонения от договоренностей.</p>
+      <p><b>Общий результат:</b> участники ориентируются не только на локальные KPI, но и на итог команды.</p>
+    </div>
+  </section>
+
+  <div class="progress-meta">
+    <span id="stepText"></span>
+    <span id="scoreText"></span>
+  </div>
+  <div class="bar"><div id="progressBar"></div></div>
+
+  <section id="card" class="card"></section>
+  <section id="result" class="card hidden" aria-live="polite"></section>
+</main>
+
+<script>
+(function(){
+  const blocks = [
+    ["trust","Доверие"],
+    ["conflict","Открытое обсуждение разногласий"],
+    ["commitment","Обязательность решений"],
+    ["accountability","Взаимная требовательность"],
+    ["results","Общий результат"]
+  ];
+
+  const items = [
+    {
+      text:"При ошибке руководитель группы сразу сообщил коллегам о проблеме и попросил помощи.",
+      correct:"trust",
+      strength:true,
+      explanation:"Это сигнал рабочего доверия: человек не скрывает ошибку и может обратиться за помощью без попытки защитить статус."
+    },
+    {
+      text:"На встрече никто не возразил против срока, хотя позже выяснилось, что два руководителя считали его нереалистичным.",
+      correct:"conflict",
+      strength:false,
+      explanation:"Разногласие существовало уже во время встречи, но не попало в открытое обсуждение. Это слабое место блока рабочих разногласий."
+    },
+    {
+      text:"После встречи два руководителя отдельно написали директору, что согласованный срок выполнить невозможно.",
+      correct:"conflict",
+      strength:false,
+      explanation:"Содержательный спор ушел в кулуарное общение. Команда формально завершила обсуждение, не разобрав реальную позицию участников."
+    },
+    {
+      text:"Новый руководитель группы спокойно уточняет у коллег, как они решают незнакомые ему вопросы, и просит показать рабочие примеры.",
+      correct:"trust",
+      strength:true,
+      explanation:"Это еще один признак доверия: просьба о помощи не воспринимается как угроза профессиональному статусу."
+    },
+    {
+      text:"После принятого решения один отдел продолжил работать по первоначальному варианту, который команда отвергла.",
+      correct:"commitment",
+      strength:false,
+      explanation:"После обсуждения не возникло общего обязательства выполнять выбранное решение. Это уже проблема обязательности решений."
+    },
+    {
+      text:"Два участника вышли с одного совещания с разным пониманием даты запуска.",
+      correct:"commitment",
+      strength:false,
+      explanation:"Решение не было закреплено достаточно конкретно. У команды появились разные версии одной договоренности."
+    },
+    {
+      text:"На сложной встрече участники обсуждали распределение ресурса только в общих выражениях, а конкретный спор перенесли «на потом».",
+      correct:"conflict",
+      strength:false,
+      explanation:"Ключевая рабочая развилка снова не стала предметом общей дискуссии. Это ранний сигнал избегания содержательного конфликта."
+    },
+    {
+      text:"Коллеги знают, что один из руководителей второй раз нарушил срок, но ждут, когда вопрос поднимет директор.",
+      correct:"accountability",
+      strength:false,
+      explanation:"Отклонение видно команде, но требование выполнения остается только функцией руководителя. Это проблема взаимной требовательности."
+    },
+    {
+      text:"Когда один участник задержал материал, зависимый от него коллега не обратился к нему напрямую, а сразу попросил директора вмешаться.",
+      correct:"accountability",
+      strength:false,
+      explanation:"Команда передает обычный рабочий контроль вверх вместо прямого обсуждения отклонения между участниками."
+    },
+    {
+      text:"Каждое подразделение выполнило свой KPI, но общий запуск продукта состоялся на три недели позже плана.",
+      correct:"results",
+      strength:false,
+      explanation:"Локальные показатели выполнены, а общий результат команды провален. Это сигнал того, что функциональные цели стали важнее общего итога."
+    },
+    {
+      text:"При конфликте ресурсов руководители в первую очередь защищают показатели своих подразделений, даже если из-за этого сдвигается общий проект.",
+      correct:"results",
+      strength:false,
+      explanation:"Командный результат не используется как правило приоритета, когда локальные цели входят в конфликт."
+    },
+    {
+      text:"На ретроспективе руководитель направления первым разобрал собственную ошибку в планировании и показал, как она повлияла на соседние команды.",
+      correct:"trust",
+      strength:true,
+      explanation:"Руководитель демонстрирует рабочую уязвимость и делает ошибку обсуждаемой. Это поддерживает доверие, а не указывает на его дефицит."
+    }
+  ];
+
+  let current = 0;
+  let stage = 1;
+  let answers = Array(items.length).fill(null);
+  let checked = Array(items.length).fill(false);
+  let stage2Choice = null;
+  let stage2Checked = false;
+
+  const card = document.getElementById("card");
+  const result = document.getElementById("result");
+  const stepText = document.getElementById("stepText");
+  const scoreText = document.getElementById("scoreText");
+  const progressBar = document.getElementById("progressBar");
+
+  function scoreStage1(){
+    return answers.reduce((sum,a,i)=>sum+(checked[i] && a===items[i].correct ? 1 : 0),0);
+  }
+
+  function totalScore(){
+    return scoreStage1() + (stage2Checked && stage2Choice==="conflict" ? 2 : 0);
+  }
+
+  function updateHeader(){
+    if(stage===1){
+      stepText.textContent = `Этап 1. Наблюдение ${current+1} из ${items.length}`;
+      progressBar.style.width = `${((current+1)/(items.length+1))*100}%`;
+    } else if(stage===2){
+      stepText.textContent = "Этап 2. Определите первый слабый блок";
+      progressBar.style.width = "100%";
+    } else {
+      stepText.textContent = "Задание завершено";
+      progressBar.style.width = "100%";
+    }
+    scoreText.textContent = `Баллы: ${totalScore()} из 14`;
+  }
+
+  function renderStage1(){
+    stage = 1;
+    result.classList.add("hidden");
+    card.classList.remove("hidden");
+    updateHeader();
+
+    const item = items[current];
+    const done = checked[current];
+    const ans = answers[current];
+
+    card.innerHTML = `
+      <div class="tag">Наблюдение за работой команды</div>
+      <div class="observation">${item.text}</div>
+      <div class="question">К какому блоку относится этот факт?</div>
+
+      ${blocks.map(([v,l])=>`
+        <label class="option">
+          <input type="radio" name="block" value="${v}" ${ans===v?"checked":""} ${done?"disabled":""}>
+          ${l}
+        </label>
+      `).join("")}
+
+      <div class="actions">
+        <button type="button" id="back" class="secondary" ${current===0?"disabled":""}>Назад</button>
+        ${done
+          ? `<button type="button" id="next">${current===items.length-1?"Перейти к общей картине":"Далее"}</button>`
+          : `<button type="button" id="check">Проверить</button>`
+        }
+        <button type="button" id="reset" class="secondary">Сбросить</button>
+      </div>
+
+      <div id="feedback" class="feedback ${done ? (ans===item.correct ? "good" : "bad") : "hidden"}" aria-live="polite">
+        ${done ? `
+          <strong>${ans===item.correct ? "Блок определен верно." : "Этот факт относится к другому блоку."}</strong>
+          <p>${item.explanation}</p>
+          <p><b>Что это показывает:</b> ${item.strength ? "в этом наблюдении видна устойчивая практика." : "в этом наблюдении виден сбой."}</p>
+        ` : ""}
+      </div>
+    `;
+
+    card.querySelector("#back").addEventListener("click", ()=>{
+      if(current>0){ current--; renderStage1(); }
+    });
+    card.querySelector("#reset").addEventListener("click", resetAll);
+
+    if(done){
+      card.querySelector("#next").addEventListener("click", ()=>{
+        if(current===items.length-1){
+          stage=2;
+          renderStage2();
+        } else {
+          current++;
+          renderStage1();
+        }
+      });
+    } else {
+      card.querySelector("#check").addEventListener("click", checkStage1);
+    }
+  }
+
+  function checkStage1(){
+    const selected = card.querySelector('input[name="block"]:checked');
+    const fb = card.querySelector("#feedback");
+
+    if(!selected){
+      fb.className = "feedback bad";
+      fb.innerHTML = "<strong>Выберите один блок.</strong><p>Смотрите на само наблюдаемое поведение: где именно в цепочке оно возникает, а не на возможные поздние последствия.</p>";
+      return;
+    }
+
+    answers[current] = selected.value;
+    checked[current] = true;
+    renderStage1();
+  }
+
+  function renderStage2(){
+    stage=2;
+    updateHeader();
+
+    const weakCounts = {trust:0, conflict:0, commitment:0, accountability:0, results:0};
+    const strengthCounts = {trust:0, conflict:0, commitment:0, accountability:0, results:0};
+
+    items.forEach(item=>{
+      if(item.strength) strengthCounts[item.correct]++;
+      else weakCounts[item.correct]++;
+    });
+
+    card.innerHTML = `
+      <div class="tag">Общая картина</div>
+      <h2>С какого блока руководителю начинать работу?</h2>
+
+      <div class="summary">
+        <p><b>Доверие:</b> сотрудники способны признавать ошибки и обращаться за помощью.</p>
+        <p><b>Обсуждение:</b> значимые возражения регулярно остаются за пределами общей встречи.</p>
+        <p><b>Решения:</b> после обсуждения появляются разные трактовки и работа по отвергнутым вариантам.</p>
+        <p><b>Требовательность:</b> коллеги ждут вмешательства директора при нарушениях договоренностей.</p>
+        <p><b>Результат:</b> локальные KPI защищаются даже при срыве общего проекта.</p>
+      </div>
+
+      <div class="question">Выберите первый слабый блок в причинной цепочке.</div>
+      <div class="stage2-grid">
+        ${blocks.map(([v,l])=>`
+          <button type="button" data-choice="${v}" class="${stage2Choice===v?"selected":""}" ${stage2Checked?"disabled":""}>${l}</button>
+        `).join("")}
+      </div>
+
+      <div class="actions">
+        <button type="button" id="backToCards" class="secondary">Назад к наблюдениям</button>
+        ${stage2Checked
+          ? `<button type="button" id="finish">Показать итог</button>`
+          : `<button type="button" id="checkStage2" ${stage2Choice ? "" : "disabled"}>Проверить вывод</button>`
+        }
+        <button type="button" id="reset" class="secondary">Сбросить</button>
+      </div>
+
+      <div id="feedback2" class="feedback ${stage2Checked ? (stage2Choice==="conflict" ? "good" : "bad") : "hidden"}" aria-live="polite">
+        ${stage2Checked ? stage2Feedback(stage2Choice) : ""}
+      </div>
+    `;
+
+    card.querySelectorAll("[data-choice]").forEach(btn=>{
+      btn.addEventListener("click", ()=>{
+        if(stage2Checked) return;
+        stage2Choice = btn.getAttribute("data-choice");
+        renderStage2();
+      });
+    });
+
+    card.querySelector("#backToCards").addEventListener("click", ()=>{
+      current = items.length-1;
+      renderStage1();
+    });
+    card.querySelector("#reset").addEventListener("click", resetAll);
+
+    if(stage2Checked){
+      card.querySelector("#finish").addEventListener("click", showResult);
+    } else {
+      const checkBtn = card.querySelector("#checkStage2");
+      if(checkBtn){
+        checkBtn.addEventListener("click", ()=>{
+          if(!stage2Choice) return;
+          stage2Checked = true;
+          renderStage2();
+        });
+      }
+    }
+  }
+
+  function stage2Feedback(choice){
+    if(choice==="conflict"){
+      return `
+        <strong>Вы выбрали первый слабый блок.</strong>
+        <p>Доверие в команде не выглядит исходной проблемой: люди способны признавать ошибки и просить помощь. Сбой начинается позже — реальные возражения не попадают в общее обсуждение. Из-за этого команда принимает решения без проработки разногласий, затем хуже исполняет их, не требует выполнения друг от друга и возвращается к локальным интересам.</p>
+        <p><b>Первое действие руководителя:</b> вернуть содержательные разногласия в общую дискуссию и добиться ясности позиций до фиксации решения.</p>
+      `;
+    }
+    if(choice==="trust"){
+      return `
+        <strong>Здесь есть более ранний и лучше подтвержденный сбой.</strong>
+        <p>В наблюдениях есть несколько признаков рабочего доверия: люди сообщают об ошибках, просят помощь и открыто разбирают собственные промахи. Поэтому начинать с доверия оснований нет.</p>
+      `;
+    }
+    if(choice==="commitment"){
+      return `
+        <strong>Проблема обязательности решений действительно есть, но она возникает позже.</strong>
+        <p>До нее команда уже перестает обсуждать реальные возражения. Если участники молчат на встрече, решение может быть принято формально и позже трактоваться по-разному. Начинать стоит с качества обсуждения.</p>
+      `;
+    }
+    if(choice==="accountability"){
+      return `
+        <strong>Это заметный симптом, но не первое слабое звено.</strong>
+        <p>Коллеги действительно ждут директора вместо прямого разговора о нарушении. Однако раньше команда уже принимает решения без открытой проработки разногласий. Пока этот слой не исправлен, усиливать взаимную требовательность будет трудно.</p>
+      `;
+    }
+    return `
+      <strong>Общий результат страдает, но это поздний симптом.</strong>
+      <p>Каждое подразделение защищает свой KPI, однако проблема начинается раньше: реальные разногласия не обсуждаются открыто. Если начать только с формулировки общей цели, команда может снова формально согласиться и продолжить работу по-своему.</p>
+    `;
+  }
+
+  function showResult(){
+    stage=3;
+    card.classList.add("hidden");
+    result.classList.remove("hidden");
+    updateHeader();
+
+    const s = totalScore();
+    let message = "";
+    if(s>=13){
+      message = "Вы уверенно различаете пять блоков и ищете не самый заметный симптом, а ранний сбой в причинной цепочке.";
+    } else if(s>=10){
+      message = "Основная логика понятна. В рабочей диагностике полезно еще внимательнее отделять факты о доверии, обсуждении и исполнении: один поздний симптом может быть следствием более раннего сбоя.";
+    } else {
+      message = "Стоит еще раз пройти по цепочке слева направо. Руководителю важно не начинать с контроля или общей цели автоматически, а проверить, где впервые перестает работать командное взаимодействие.";
+    }
+
+    result.innerHTML = `
+      <h2>Итог</h2>
+      <div class="score">${s} / 14</div>
+      <p>${message}</p>
+      <div class="summary">
+        <p><b>Рабочая логика для руководителя:</b> соберите наблюдаемые факты за несколько недель, распределите их по пяти блокам, отметьте слабые места и начинайте с самого раннего из них. Более поздние симптомы используйте как подтверждение цепочки, а не как автоматическую точку вмешательства.</p>
+      </div>
+      <div class="actions">
+        <button type="button" id="again">Пройти еще раз</button>
+      </div>
+    `;
+    result.querySelector("#again").addEventListener("click", resetAll);
+  }
+
+  function resetAll(){
+    current=0;
+    stage=1;
+    answers=Array(items.length).fill(null);
+    checked=Array(items.length).fill(false);
+    stage2Choice=null;
+    stage2Checked=false;
+    renderStage1();
+  }
+
+  renderStage1();
+})();
+</script>
+</body>
+</html>

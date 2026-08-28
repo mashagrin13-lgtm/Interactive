@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Это цель или действие?</title>
+<style>
+:root{--line:#d9dee7;--panel:#f6f7f9;--text:#20242b;--muted:#667085;--accent:#315f9d;--good:#2f6d42;--bad:#9b3434}
+*{box-sizing:border-box}body{margin:0;padding:18px 12px 28px;background:#fff;color:var(--text);font-family:Arial,sans-serif;line-height:1.45}.app{max-width:560px;margin:auto}
+h1{font-size:24px;line-height:1.2;margin:0 0 10px}h2{font-size:19px;margin:0 0 8px}.lead{font-size:15px;color:var(--muted);margin:0 0 14px}
+.box,.card{border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:15px}.box{background:var(--panel)}ol{margin:8px 0 0 20px;padding:0}li{margin:5px 0}
+.meta{display:flex;justify-content:space-between;gap:10px;color:var(--muted);font-size:13px;margin:12px 0 6px}.bar{height:8px;background:#eceff3;border-radius:999px;overflow:hidden}.bar>div{height:100%;background:var(--accent)}
+.statement{margin:14px 0;padding:14px;background:var(--panel);border-radius:10px;font-size:17px;font-weight:700}.q{font-weight:700;margin:0 0 8px}
+.option{display:block;border:1px solid var(--line);border-radius:9px;padding:11px;margin:8px 0;cursor:pointer}.option input{margin-right:8px}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}button{min-height:44px;border:1px solid var(--accent);border-radius:9px;padding:10px 14px;background:var(--accent);color:#fff;font-size:15px;cursor:pointer}button.alt{background:#fff;color:var(--accent)}button:disabled{opacity:.5;cursor:not-allowed}
+.fb{margin-top:14px;padding:12px;border-radius:9px;font-size:14px}.fb.good{background:#eef7f0;border-left:4px solid var(--good)}.fb.bad{background:#fbefef;border-left:4px solid var(--bad)}.hidden{display:none}.score{font-size:30px;font-weight:700}
+.note{font-size:13px;color:var(--muted)}
+</style>
+</head>
+<body>
+<main class="app">
+<h1>Это цель или действие?</h1>
+<p class="lead">Вы — руководитель. Чтобы задать команде плановое число, сначала отделите итоговый результат от регулярного действия, которое сотрудники могут выполнять в коротком рабочем цикле.</p>
+<section class="box">
+<b>Что нужно сделать</b>
+<ol>
+<li>Прочитайте формулировку на карточке.</li>
+<li>Решите, описывает она итоговый результат или повторяемое действие.</li>
+<li>Выберите один вариант и нажмите «Проверить».</li>
+<li>Прочитайте объяснение: оно покажет, можно ли использовать формулировку как основу для планового числа.</li>
+<li>Перейдите дальше. К предыдущим карточкам можно вернуться; баллы повторно не начисляются.</li>
+</ol>
+<p class="note"><b>Ориентир:</b> регулярное действие можно выполнить сегодня или на этой неделе. Итоговый результат показывает, что должно измениться к определенному моменту.</p>
+</section>
+<div class="meta"><span id="step"></span><span id="points"></span></div>
+<div class="bar"><div id="bar"></div></div>
+<section id="card" class="card" style="margin-top:14px"></section>
+<section id="result" class="card hidden" style="margin-top:14px"></section>
+</main>
+<script>
+(function(){
+const items=[
+["Увеличить повторные продажи на 15%","goal","Это итоговый результат: он описывает изменение бизнес-показателя, но не действие, которое сотрудник может выполнить сегодня. Руководителю нужно найти повторяемое действие, которое влияет на повторные продажи, и уже для него определить плановое число."],
+["Проводить 5 встреч с действующими клиентами в неделю","action","Это регулярное действие: его можно выполнить и посчитать в течение недели. Но руководителю еще нужно проверить, действительно ли такие встречи связаны с нужным итоговым результатом. Измеримость действия сама по себе не доказывает его полезность."],
+["Повысить качество сервиса","goal","Это направление результата, а не регулярное действие. Формулировка пока слишком общая: сначала руководителю нужно уточнить, что именно будет означать рост качества и по какому показателю он станет заметен."],
+["Разбирать 8 старых обращений в день","action","Это регулярное действие: его можно выполнять ежедневно и использовать как плановое число. При этом нужен контроль качества, чтобы команда не увеличивала скорость ценой повторных обращений или ошибок."],
+["Сократить срок найма до 30 дней","goal","Это итоговый результат. Его нельзя непосредственно выполнить сегодня. Срок найма складывается из нескольких этапов, поэтому для планового числа нужно найти действие в зоне влияния команды, которое регулярно двигает этот показатель."],
+["Проводить 4 первичных интервью в неделю","action","Это регулярное действие. Оно может стать плановым числом, если руководитель проверил связь между количеством первичных интервью и скоростью закрытия вакансий. Если интервью идут по плану, а срок найма не сокращается, нужно пересмотреть гипотезу, а не просто повысить число."]
+];
+let i=0,answers=Array(items.length).fill(null),checked=Array(items.length).fill(false);
+const card=document.getElementById("card"),result=document.getElementById("result"),step=document.getElementById("step"),points=document.getElementById("points"),bar=document.getElementById("bar");
+function score(){return answers.reduce((s,a,j)=>s+(checked[j]&&a===items[j][1]?1:0),0)}
+function head(){step.textContent=`Карточка ${i+1} из ${items.length}`;points.textContent=`Баллы: ${score()} из ${items.length}`;bar.style.width=`${((i+1)/items.length)*100}%`}
+function render(){
+result.classList.add("hidden");card.classList.remove("hidden");head();
+const [text,correct,feedback]=items[i],done=checked[i],ans=answers[i];
+card.innerHTML=`<div class="statement">${text}</div><div class="q">Что это?</div>
+<label class="option"><input type="radio" name="type" value="goal" ${ans==="goal"?"checked":""} ${done?"disabled":""}>Итоговый результат</label>
+<label class="option"><input type="radio" name="type" value="action" ${ans==="action"?"checked":""} ${done?"disabled":""}>Регулярное действие</label>
+<div class="actions"><button type="button" class="alt" id="back" ${i===0?"disabled":""}>Назад</button>${done?`<button type="button" id="next">${i===items.length-1?"Показать итог":"Далее"}</button>`:`<button type="button" id="check">Проверить</button>`}<button type="button" class="alt" id="reset">Сбросить</button></div>
+<div id="fb" class="fb ${done?(ans===correct?"good":"bad"):"hidden"}">${done?`<b>${ans===correct?"Верно.":"Не совсем."}</b><p>${feedback}</p>`:""}</div>`;
+card.querySelector("#back").onclick=()=>{if(i>0){i--;render()}};
+card.querySelector("#reset").onclick=reset;
+if(done){card.querySelector("#next").onclick=()=>{if(i===items.length-1)finish();else{i++;render()}}}
+else{card.querySelector("#check").onclick=check}
+}
+function check(){
+const sel=card.querySelector('input[name="type"]:checked'),fb=card.querySelector("#fb");
+if(!sel){fb.className="fb bad";fb.innerHTML="<b>Выберите вариант.</b><p>Сначала определите, можно ли выполнить формулировку как повторяемое действие в коротком цикле или она описывает итог, к которому нужно прийти.</p>";return}
+answers[i]=sel.value;checked[i]=true;render()
+}
+function finish(){
+card.classList.add("hidden");result.classList.remove("hidden");step.textContent="Задание завершено";bar.style.width="100%";points.textContent=`Баллы: ${score()} из ${items.length}`;
+const s=score();let msg=s===6?"Вы уверенно различаете итоговый результат и регулярное действие. Следующий шаг руководителя — проверить, действительно ли выбранное действие связано с итоговой целью и находится в зоне влияния команды.":s>=4?"Логика в целом понятна, но в отдельных случаях результат и действие смешиваются. Перед выбором планового числа проверяйте: можно ли выполнить это действие сегодня или на этой неделе и посчитать факт выполнения.":"Стоит еще раз развести два уровня. Итоговый результат показывает, что должно измениться. Плановое число задает повторяемое действие, которое команда выполняет в коротком цикле.";
+result.innerHTML=`<h2>Итог</h2><div class="score">${s} / ${items.length}</div><p>${msg}</p><p><b>Проверка для практики:</b> сначала сформулируйте итоговую цель, затем найдите повторяемое действие в зоне влияния сотрудника и только после этого задавайте плановое число.</p><div class="actions"><button id="again" type="button">Пройти еще раз</button></div>`;
+result.querySelector("#again").onclick=reset
+}
+function reset(){i=0;answers=Array(items.length).fill(null);checked=Array(items.length).fill(false);render()}
+render()
+})();
+</script>
+</body></html>

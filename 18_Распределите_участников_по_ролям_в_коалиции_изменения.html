@@ -1,0 +1,331 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Распределите участников по ролям в коалиции изменения</title>
+<style>
+:root{
+  --p:#f6f7f9;--l:#d9dee7;--t:#20242b;--m:#667085;--a:#315f9d;
+  --g:#2f6d42;--b:#9b3434;--w:#8a5b14;--gb:#eef7f0;--bb:#fbefef;--wb:#fff7e8
+}
+*{box-sizing:border-box}
+body{margin:0;padding:18px 12px 28px;background:#fff;color:var(--t);font:15px/1.45 Arial,sans-serif}
+.app{max-width:560px;margin:auto}
+h1{font-size:24px;line-height:1.2;margin:0 0 10px}
+h2{font-size:19px;line-height:1.25;margin:0 0 10px}
+p{margin:8px 0}
+.lead{color:var(--m);margin-bottom:14px}
+.box,.card{border:1px solid var(--l);border-radius:12px;padding:14px;margin-bottom:15px}
+.box{background:var(--p)}
+ol{margin:8px 0 0 20px;padding:0}li{margin:6px 0}
+.rule{margin-top:12px;padding:10px 11px;background:#fff;border:1px solid var(--l);border-radius:9px;font-size:14px}
+.meta{display:flex;justify-content:space-between;gap:10px;color:var(--m);font-size:13px;margin:12px 0 6px}
+.bar{height:8px;background:#eceff3;border-radius:99px;overflow:hidden;margin-bottom:14px}
+.bar>div{height:100%;background:var(--a)}
+.person{border:1px solid var(--l);border-radius:10px;padding:11px;margin:8px 0;background:#fff}
+.person.dragging{opacity:.45}
+.person b{display:block;margin-bottom:4px}
+.person .details{font-size:13px;color:var(--m);margin:5px 0}
+.person .details span{display:block;margin:3px 0}
+.draghint{font-size:12px;color:var(--m);margin-top:6px}
+.zones{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
+.zone{border:1px dashed #aeb7c4;border-radius:10px;padding:9px;min-height:112px;background:#fafbfc}
+.zone.over{border-style:solid;border-color:var(--a)}
+.zone h3{font-size:14px;line-height:1.25;margin:0 0 7px}
+.zone small{display:block;color:var(--m);margin-bottom:6px}
+.drop-list{min-height:42px}
+.pill{border:1px solid var(--l);border-radius:8px;padding:7px 8px;margin:5px 0;background:#fff;font-size:12px}
+.mobile-assign{margin-top:8px}
+.mobile-assign select{width:100%;min-height:42px;padding:8px;border:1px solid var(--l);border-radius:8px;background:#fff;font-size:14px}
+.actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:14px}
+button{min-height:44px;border:1px solid var(--a);background:var(--a);color:#fff;border-radius:9px;padding:10px 14px;font-size:15px;cursor:pointer}
+button.alt{background:#fff;color:var(--a)}
+button:disabled{opacity:.55;cursor:not-allowed}
+.fb{margin-top:14px;padding:12px;border-radius:9px}
+.fb.good{background:var(--gb);border-left:4px solid var(--g)}
+.fb.bad{background:var(--bb);border-left:4px solid var(--b)}
+.fb.warn{background:var(--wb);border-left:4px solid var(--w)}
+.item{padding:9px 10px;margin:7px 0;background:#fff;border:1px solid var(--l);border-radius:8px;font-size:14px}
+.item.ok{border-left:4px solid var(--g)}
+.item.err{border-left:4px solid var(--b)}
+.hidden{display:none!important}
+.score{font-size:30px;font-weight:700;margin:6px 0 10px}
+.note{font-size:13px;color:var(--m)}
+@media(max-width:420px){.zones{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<main class="app">
+<h1>Распределите участников по ролям в коалиции изменения</h1>
+<p class="lead">Вы — руководитель среднего звена и готовите внедрение нового порядка передачи задач между подразделениями. Формального решения недостаточно: нужно понять, кого подключить к изменению и в какой роли.</p>
+
+<section class="box">
+<b>Что нужно сделать</b>
+<ol>
+<li>Изучите шесть участников: их должность, влияние, отношение к изменению и возможный вклад.</li>
+<li>Перетащите карточки в одну из четырех зон. На мобильном можно выбрать зону из списка внутри карточки.</li>
+<li>Не распределяйте людей только по формальной должности. Учитывайте влияние на коллег, экспертизу, доверие и роль после запуска.</li>
+<li>После распределения нажмите «Проверить». Система покажет, где в коалиции возникнет пробел.</li>
+</ol>
+<div class="rule"><b>Логика:</b> коалиция нужна не только для формального одобрения. В ней должны быть люди, которые могут поддержать решение полномочиями, убедить коллег доверием, снять содержательные сомнения и удержать новый способ работы после запуска.</div>
+</section>
+
+<div class="meta"><span>6 участников</span><span id="points">Баллы: 0 из 6</span></div>
+<div class="bar"><div id="bar" style="width:0%"></div></div>
+
+<section class="card">
+<div id="people"></div>
+
+<div class="zones">
+  <section class="zone" data-zone="ally">
+    <h3>Подключить как союзника</h3>
+    <small>Нужны полномочия, доверие или влияние для продвижения изменения.</small>
+    <div class="drop-list" id="ally"></div>
+  </section>
+
+  <section class="zone" data-zone="concerns">
+    <h3>Обсудить опасения</h3>
+    <small>Есть влияние и сомнения, которые важно разобрать до запуска.</small>
+    <div class="drop-list" id="concerns"></div>
+  </section>
+
+  <section class="zone" data-zone="info">
+    <h3>Дать информацию</h3>
+    <small>Человек пока не понимает смысл, границы или механику изменения.</small>
+    <div class="drop-list" id="info"></div>
+  </section>
+
+  <section class="zone" data-zone="transition">
+    <h3>Поддерживать переход после старта</h3>
+    <small>Человек помогает закреплять новый способ работы в повседневной практике.</small>
+    <div class="drop-list" id="transition"></div>
+  </section>
+</div>
+
+<div class="actions">
+<button id="check" type="button">Проверить коалицию</button>
+<button id="reset" class="alt" type="button">Сбросить</button>
+</div>
+
+<div id="fb" class="fb hidden" aria-live="polite"></div>
+</section>
+</main>
+
+<script>
+(function(){
+const people=[
+{
+ id:"p1",name:"Алексей — директор операционного блока",
+ role:"Должность: руководитель трех подразделений",
+ influence:"Влияние: высокое формальное",
+ attitude:"Отношение: поддерживает изменение",
+ contribution:"Вклад: может снять конфликт приоритетов и закрепить новые правила между функциями",
+ correct:"ally",
+ explanation:"Его ценность — формальные полномочия и возможность убрать межфункциональные барьеры. Если оставить его только в роли наблюдателя, изменение может упереться в конфликт приоритетов между подразделениями."
+},
+{
+ id:"p2",name:"Ирина — старший специалист",
+ role:"Должность: ведущий эксперт без управленческой роли",
+ influence:"Влияние: высокое неформальное, коллеги часто ориентируются на ее мнение",
+ attitude:"Отношение: сомневается, потому что два прошлых изменения быстро отменили",
+ contribution:"Вклад: может стать источником доверия или, наоборот, скепсиса внутри команды",
+ correct:"concerns",
+ explanation:"Высокое неформальное влияние и явные сомнения делают ее критичной фигурой до запуска. Если просто дать ей инструкцию, источник недоверия останется."
+},
+{
+ id:"p3",name:"Михаил — руководитель региональной команды",
+ role:"Должность: линейный руководитель",
+ influence:"Влияние: среднее",
+ attitude:"Отношение: нейтральное, пока не понимает, зачем меняется процесс",
+ contribution:"Вклад: может объяснить новый порядок своим сотрудникам после того, как сам поймет логику",
+ correct:"info",
+ explanation:"Главный пробел — не сопротивление, а недостаток понимания. Ему сначала нужно дать смысл, границы и механику изменения, иначе он будет передавать команде лишь новую обязанность."
+},
+{
+ id:"p4",name:"Ольга — координатор обучения",
+ role:"Должность: отвечает за обучение и материалы",
+ influence:"Влияние: среднее",
+ attitude:"Отношение: поддерживает изменение",
+ contribution:"Вклад: может собирать типовые ошибки, обновлять инструкции и помогать новым сотрудникам после запуска",
+ correct:"transition",
+ explanation:"Ее максимальная ценность проявляется после старта: она помогает закреплять новый способ работы, а не только объяснить его один раз."
+},
+{
+ id:"p5",name:"Сергей — руководитель группы продаж",
+ role:"Должность: руководитель команды",
+ influence:"Влияние: высокое среди руководителей соседних функций",
+ attitude:"Отношение: поддерживает изменение и готов публично работать по новому правилу",
+ contribution:"Вклад: может показать пример и легитимировать новый порядок среди коллег",
+ correct:"ally",
+ explanation:"Это союзник с высоким доверием среди коллег. Его публичный пример снижает разрыв между формальным решением и реальным поведением руководителей."
+},
+{
+ id:"p6",name:"Наталья — процессный аналитик",
+ role:"Должность: эксперт по межфункциональным процессам",
+ influence:"Влияние: среднее",
+ attitude:"Отношение: поддерживает изменение",
+ contribution:"Вклад: после запуска может отслеживать возвраты задач, точки задержек и предлагать корректировки процесса",
+ correct:"transition",
+ explanation:"Ее задача — удерживать переход после запуска через данные о сбоях и корректировки процесса. Если использовать ее только до старта, команда потеряет важную обратную связь о том, как изменение работает в реальности."
+}
+];
+
+const zoneNames={
+ ally:"Подключить как союзника",
+ concerns:"Обсудить опасения",
+ info:"Дать информацию",
+ transition:"Поддерживать переход после старта"
+};
+
+let assignments={};
+let locked=false;
+let dragged=null;
+
+const peopleEl=document.getElementById("people");
+const fb=document.getElementById("fb");
+const check=document.getElementById("check");
+const reset=document.getElementById("reset");
+const points=document.getElementById("points");
+const bar=document.getElementById("bar");
+
+function renderPeople(){
+ peopleEl.innerHTML=people.map(p=>`
+ <article class="person" draggable="${locked?"false":"true"}" data-id="${p.id}">
+   <b>${p.name}</b>
+   <div class="details">
+     <span>${p.role}</span>
+     <span>${p.influence}</span>
+     <span>${p.attitude}</span>
+     <span>${p.contribution}</span>
+   </div>
+   <div class="draghint">Перетащите карточку в зону или выберите ее ниже.</div>
+   <div class="mobile-assign">
+     <select data-select="${p.id}" ${locked?"disabled":""}>
+       <option value="">Выберите зону</option>
+       ${Object.entries(zoneNames).map(([v,l])=>`<option value="${v}" ${assignments[p.id]===v?"selected":""}>${l}</option>`).join("")}
+     </select>
+   </div>
+ </article>`).join("");
+
+ peopleEl.querySelectorAll(".person").forEach(el=>{
+   el.addEventListener("dragstart",e=>{
+     if(locked)return;
+     dragged=el.dataset.id;
+     el.classList.add("dragging");
+     e.dataTransfer.setData("text/plain",dragged);
+   });
+   el.addEventListener("dragend",()=>{
+     dragged=null;
+     el.classList.remove("dragging");
+   });
+ });
+
+ peopleEl.querySelectorAll("select[data-select]").forEach(sel=>{
+   sel.addEventListener("change",()=>{
+     if(locked)return;
+     const id=sel.dataset.select;
+     if(sel.value)assignments[id]=sel.value;
+     else delete assignments[id];
+     renderZones();
+     updateProgress();
+   });
+ });
+}
+
+function renderZones(){
+ Object.keys(zoneNames).forEach(z=>{
+   const list=document.getElementById(z);
+   const ids=people.filter(p=>assignments[p.id]===z);
+   list.innerHTML=ids.length?ids.map(p=>`<div class="pill">${p.name}</div>`).join(""):`<div class="note">Пока пусто</div>`;
+ });
+}
+
+document.querySelectorAll(".zone").forEach(zone=>{
+ zone.addEventListener("dragover",e=>{
+   if(locked)return;
+   e.preventDefault();
+   zone.classList.add("over");
+ });
+ zone.addEventListener("dragleave",()=>zone.classList.remove("over"));
+ zone.addEventListener("drop",e=>{
+   if(locked)return;
+   e.preventDefault();
+   zone.classList.remove("over");
+   const id=e.dataTransfer.getData("text/plain")||dragged;
+   if(id){
+     assignments[id]=zone.dataset.zone;
+     renderPeople();
+     renderZones();
+     updateProgress();
+   }
+ });
+});
+
+function updateProgress(){
+ const n=Object.keys(assignments).length;
+ points.textContent=`Распределено: ${n} из 6`;
+ bar.style.width=`${(n/6)*100}%`;
+}
+
+function consequences(){
+ const problems=[];
+ if(assignments["p2"]!=="concerns"){
+   problems.push("Формально изменение поддержано руководителями, но внутри команды сохраняется источник недоверия: влиятельный скептик остался без содержательного разговора.");
+ }
+ if(assignments["p1"]!=="ally"){
+   problems.push("В коалиции не хватает участника с полномочиями снять конфликт приоритетов между подразделениями. Изменение может застрять на межфункциональных барьерах.");
+ }
+ if(assignments["p5"]!=="ally"){
+   problems.push("Коалиция теряет заметный пример нового поведения среди руководителей. Формальное решение есть, но коллегам сложнее увидеть, что новый порядок реально поддерживается в работе.");
+ }
+ if(assignments["p3"]!=="info"){
+   problems.push("Руководитель региональной команды может передать сотрудникам только новую обязанность, не объяснив смысл и границы изменения.");
+ }
+ if(assignments["p4"]!=="transition" || assignments["p6"]!=="transition"){
+   problems.push("После старта ослабевает поддержка перехода: типовые ошибки, обратная связь и корректировка процесса могут остаться без владельцев.");
+ }
+ return problems;
+}
+
+function score(){
+ return people.reduce((s,p)=>s+(assignments[p.id]===p.correct?1:0),0);
+}
+
+check.addEventListener("click",()=>{
+ if(locked)return;
+ if(Object.keys(assignments).length<people.length){
+   fb.className="fb bad";
+   fb.innerHTML="<b>Распределите всех шесть участников.</b><p>Коалиция строится не только из явных сторонников. Важно решить, что делать и с теми, кто сомневается или пока не понимает изменение.</p>";
+   return;
+ }
+ locked=true;
+ const s=score();
+ const probs=consequences();
+ renderPeople();
+ fb.className=`fb ${s===6?"good":"bad"}`;
+ fb.innerHTML=`<b>${s===6?"Коалиция собрана сбалансированно.":`Верно распределено: ${s} из 6.`}</b>
+ ${people.map(p=>`<div class="item ${assignments[p.id]===p.correct?"ok":"err"}"><b>${p.name}</b><p>Оптимальная зона: <b>${zoneNames[p.correct]}</b>. ${p.explanation}</p></div>`).join("")}
+ ${probs.length?`<p><b>Возможные последствия текущего распределения:</b></p>${probs.map(x=>`<div class="item err">${x}</div>`).join("")}`:`<p><b>Последствие:</b> у изменения есть и формальная поддержка, и доверие коллег, и работа с сомнениями, и люди, которые удержат переход после запуска.</p>`}`;
+ points.textContent=`Баллы: ${s} из 6`;
+ bar.style.width="100%";
+});
+
+reset.addEventListener("click",()=>{
+ assignments={};
+ locked=false;
+ fb.className="fb hidden";
+ fb.innerHTML="";
+ check.disabled=false;
+ renderPeople();
+ renderZones();
+ updateProgress();
+});
+
+renderPeople();
+renderZones();
+updateProgress();
+})();
+</script>
+</body>
+</html>

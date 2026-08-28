@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Соберите объяснение изменения, которое дает команде рабочий ориентир</title>
+<style>
+:root{
+  --p:#f6f7f9;--l:#d9dee7;--t:#20242b;--m:#667085;--a:#315f9d;
+  --g:#2f6d42;--b:#9b3434;--gb:#eef7f0;--bb:#fbefef
+}
+*{box-sizing:border-box}
+body{margin:0;padding:18px 12px 28px;background:#fff;color:var(--t);font:15px/1.45 Arial,sans-serif}
+.app{max-width:560px;margin:auto}
+h1{font-size:24px;line-height:1.2;margin:0 0 10px}
+p{margin:8px 0}
+.lead{color:var(--m);margin-bottom:14px}
+.box,.card{border:1px solid var(--l);border-radius:12px;padding:14px;margin-bottom:15px}
+.box{background:var(--p)}
+ol{margin:8px 0 0 20px;padding:0}li{margin:6px 0}
+.rule,.context{margin-top:12px;padding:10px 11px;background:#fff;border:1px solid var(--l);border-radius:9px;font-size:14px}
+.field{margin:13px 0}
+.field label{display:block;font-weight:700;margin-bottom:5px}
+.field small{display:block;color:var(--m);margin-bottom:5px}
+select{width:100%;min-height:44px;padding:9px 10px;border:1px solid var(--l);border-radius:9px;background:#fff;color:var(--t);font-size:16px}
+.preview{margin-top:14px;padding:11px;border:1px dashed var(--l);border-radius:9px;background:#fafbfc;font-size:14px}
+.preview b{display:block;margin-bottom:5px}
+.preview p{margin:6px 0}
+.actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:14px}
+button{min-height:44px;border:1px solid var(--a);background:var(--a);color:#fff;border-radius:9px;padding:10px 14px;font-size:15px;cursor:pointer}
+button.alt{background:#fff;color:var(--a)}
+button:disabled{opacity:.55;cursor:not-allowed}
+.fb{margin-top:14px;padding:12px;border-radius:9px}
+.fb.good{background:var(--gb);border-left:4px solid var(--g)}
+.fb.bad{background:var(--bb);border-left:4px solid var(--b)}
+.item{padding:9px 10px;margin:7px 0;background:#fff;border:1px solid var(--l);border-radius:8px}
+.item.ok{border-left:4px solid var(--g)}
+.item.err{border-left:4px solid var(--b)}
+.hidden{display:none!important}
+.note{font-size:13px;color:var(--m)}
+</style>
+</head>
+<body>
+<main class="app">
+<h1>Соберите объяснение изменения, которое дает команде рабочий ориентир</h1>
+<p class="lead">Вы — руководитель среднего звена. Компания меняет порядок передачи задач между подразделениями, а сотрудники воспринимают это как новую бюрократию. Ваша задача — объяснить изменение так, чтобы было понятно не только что теперь делать, но и зачем меняется способ работы.</p>
+
+<section class="box">
+<b>Что нужно сделать</b>
+<ol>
+<li>Соберите сообщение из четырех частей: <b>проблема текущего подхода → причина изменения → новый способ работы → ожидаемый результат</b>.</li>
+<li>Выбирайте формулировки, которые связывают изменение с реальной рабочей проблемой.</li>
+<li>Не подменяйте смысл лозунгом, описанием новой обязанности или общей фразой о развитии компании.</li>
+<li>После проверки система покажет, услышала бы команда рабочую логику или только новую нагрузку.</li>
+</ol>
+
+<div class="context">
+<b>Ситуация:</b> компания внедряет новый порядок передачи задач между подразделениями. Теперь при передаче нужно фиксировать владельца, срок, критерий готовности и ключевые вводные. Сотрудники считают, что это добавит бюрократии.
+</div>
+
+<div class="rule">
+<b>Проверка руководителя:</b> после объяснения сотрудник должен понимать, какую проблему решает изменение, почему старый способ перестал работать, что конкретно меняется в поведении и какой результат должен стать лучше.
+</div>
+</section>
+
+<section id="card" class="card">
+<div class="field">
+<label for="problem">1. Проблема текущего подхода</label>
+<small>Что сейчас мешает работе?</small>
+<select id="problem">
+<option value="">Выберите</option>
+<option value="p1">Из-за роста количества межфункциональных проектов задачи часто передаются без полного контекста, поэтому команды тратят время на уточнения и переделки.</option>
+<option value="p2">Компания хочет работать современнее и использовать единый стандарт взаимодействия.</option>
+<option value="p3">Сотрудники недостаточно дисциплинированно относятся к передаче задач.</option>
+<option value="p4">У разных подразделений исторически сложились разные рабочие привычки.</option>
+</select>
+</div>
+
+<div class="field">
+<label for="reason">2. Причина изменения</label>
+<small>Почему старого способа уже недостаточно?</small>
+<select id="reason">
+<option value="">Выберите</option>
+<option value="r1">Количество зависимостей между подразделениями выросло, и устные договоренности больше не позволяют надежно удерживать владельца, срок и критерий готовности.</option>
+<option value="r2">Компания внедряет современные инструменты и хочет повысить управленческую зрелость.</option>
+<option value="r3">Руководство решило усилить контроль за передачей задач.</option>
+<option value="r4">Новый формат уже используется в других подразделениях, поэтому его нужно внедрить и здесь.</option>
+</select>
+</div>
+
+<div class="field">
+<label for="method">3. Новый способ работы</label>
+<small>Что конкретно меняется?</small>
+<select id="method">
+<option value="">Выберите</option>
+<option value="m1">При передаче задачи фиксируем владельца результата, срок, критерий готовности и ключевые вводные в общей карточке; если одного из элементов нет, задача не считается переданной.</option>
+<option value="m2">Теперь всем нужно заполнять дополнительную карточку при передаче задач.</option>
+<option value="m3">Руководители будут чаще проверять, как сотрудники передают задачи между подразделениями.</option>
+<option value="m4">Команды должны стать более ответственными и внимательными к коллегам.</option>
+</select>
+</div>
+
+<div class="field">
+<label for="result">4. Ожидаемый результат</label>
+<small>Что должно измениться в работе команды?</small>
+<select id="result">
+<option value="">Выберите</option>
+<option value="o1">Снизится число возвратов задач на уточнение, а принимающая команда сможет начинать работу без дополнительного поиска владельца, срока и критериев готовности.</option>
+<option value="o2">Передача задач станет более прозрачной и современной.</option>
+<option value="o3">Сотрудники привыкнут к новому порядку и перестанут считать его бюрократией.</option>
+<option value="o4">Руководителям будет проще контролировать работу подразделений.</option>
+</select>
+</div>
+
+<div class="preview" id="preview"><b>Ваше объяснение</b><span>Выберите четыре блока.</span></div>
+
+<div class="actions">
+<button id="check" type="button">Проверить сообщение</button>
+<button id="reset" class="alt" type="button">Сбросить</button>
+</div>
+
+<div id="fb" class="fb hidden" aria-live="polite"></div>
+</section>
+</main>
+
+<script>
+(function(){
+const correct={problem:"p1",reason:"r1",method:"m1",result:"o1"};
+const labels={problem:"Проблема",reason:"Причина изменения",method:"Новый способ работы",result:"Ожидаемый результат"};
+const explanations={
+ problem:"Рабочая проблема должна быть наблюдаемой: потеря контекста, уточнения, переделки. Общая фраза о «современности» или характеристика сотрудников не объясняет, зачем менять процесс.",
+ reason:"Причина показывает, почему прежний способ перестал выдерживать текущий масштаб работы. Формулировка про «управленческую зрелость» звучит позитивно, но не дает сотруднику причинно-следственной связи.",
+ method:"Здесь нужен конкретный новый порядок действий. Фраза «заполнять дополнительную карточку» описывает обязанность, но не объясняет, какую информацию она должна удержать и когда передача считается завершенной.",
+ result:"Ожидаемый результат должен описывать изменение в работе: меньше возвратов и уточнений, быстрее старт следующего участка процесса. «Прозрачность» или удобство контроля сами по себе слишком общие."
+};
+const ids=["problem","reason","method","result"];
+const card=document.getElementById("card"),fb=document.getElementById("fb"),
+check=document.getElementById("check"),reset=document.getElementById("reset"),preview=document.getElementById("preview");
+let locked=false;
+
+function selectedText(id){
+ const s=document.getElementById(id);
+ return s.value?s.options[s.selectedIndex].text:"…";
+}
+function updatePreview(){
+ const vals=ids.map(selectedText);
+ preview.innerHTML=`<b>Ваше объяснение</b>
+ <p>${vals[0]}</p><p>${vals[1]}</p><p>${vals[2]}</p><p>${vals[3]}</p>`;
+}
+ids.forEach(id=>document.getElementById(id).addEventListener("change",updatePreview));
+
+check.addEventListener("click",()=>{
+ if(locked)return;
+ const vals={};
+ ids.forEach(id=>vals[id]=document.getElementById(id).value);
+ if(Object.values(vals).some(v=>!v)){
+  fb.className="fb bad";
+  fb.innerHTML="<b>Заполните все четыре блока.</b><p>Сотрудник должен услышать полную логику: какая проблема есть сейчас, почему нужен другой способ, что именно меняется и какой рабочий эффект ожидается.</p>";
+  return;
+ }
+ locked=true;
+ ids.forEach(id=>document.getElementById(id).disabled=true);
+ check.disabled=true;
+
+ const score=ids.reduce((s,id)=>s+(vals[id]===correct[id]?1:0),0);
+ fb.className=`fb ${score===4?"good":"bad"}`;
+
+ let verdict="";
+ if(score===4){
+  verdict="Сотрудник услышит смысл изменения, а не только новую обязанность.";
+ }else if(vals.method==="m2" && score<=2){
+  verdict="В таком сообщении на первый план выходит новая обязанность. Команда скорее услышит «теперь нужно заполнять еще одну форму», чем поймет, какую проблему это решает.";
+ }else{
+  verdict="Часть логики потеряна. Если один из четырех блоков остается общим или лозунговым, сотрудники начинают достраивать смысл изменения сами.";
+ }
+
+ fb.innerHTML=`<b>${score===4?"Сообщение собрано корректно.":`Содержательных блоков: ${score} из 4.`}</b>
+ <p>${verdict}</p>
+ ${ids.map(id=>`<div class="item ${vals[id]===correct[id]?"ok":"err"}"><b>${labels[id]}</b>${explanations[id]}</div>`).join("")}
+ <p><b>Итоговая логика:</b> из-за роста межфункциональных зависимостей устные передачи стали приводить к потере контекста. Поэтому при передаче фиксируются ключевые параметры результата. Ожидаемый эффект — меньше возвратов и возможность начать работу без дополнительных уточнений.</p>`;
+});
+
+reset.addEventListener("click",()=>{
+ locked=false;
+ ids.forEach(id=>{const s=document.getElementById(id);s.value="";s.disabled=false});
+ check.disabled=false;
+ fb.className="fb hidden";
+ fb.innerHTML="";
+ updatePreview();
+});
+updatePreview();
+})();
+</script>
+</body>
+</html>

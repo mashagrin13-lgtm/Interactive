@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Отделите рабочую обратную связь от оценок личности</title>
+<style>
+:root{
+  --bg:#fff;--panel:#f6f7f9;--line:#d9dee7;--text:#20242b;--muted:#667085;
+  --accent:#315f9d;--good:#2f6d42;--bad:#9b3434;--goodbg:#eef7f0;--badbg:#fbefef;
+}
+*{box-sizing:border-box}
+body{margin:0;padding:18px 12px 28px;background:var(--bg);color:var(--text);font-family:Arial,sans-serif;line-height:1.45}
+.app{max-width:560px;margin:auto}
+h1{font-size:24px;line-height:1.2;margin:0 0 10px}h2{font-size:19px;line-height:1.25;margin:0 0 10px}
+p{margin:8px 0}.lead{color:var(--muted);font-size:15px;margin-bottom:14px}
+.box,.card{border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:15px}.box{background:var(--panel)}
+ol{margin:8px 0 0 20px;padding:0}li{margin:6px 0}
+.rule{margin-top:12px;padding:10px 11px;border:1px solid var(--line);border-radius:9px;background:#fff;font-size:14px}
+.meta{display:flex;justify-content:space-between;gap:10px;color:var(--muted);font-size:13px;margin:12px 0 6px}
+.bar{height:8px;background:#eceff3;border-radius:999px;overflow:hidden;margin-bottom:14px}.bar>div{height:100%;background:var(--accent);transition:width .2s ease}
+.tag{font-size:12px;color:var(--muted);margin-bottom:6px}
+.statement{background:var(--panel);border-radius:10px;padding:13px;margin:10px 0 14px;font-size:16px;font-weight:700}
+.q{font-weight:700;margin:12px 0 8px}
+label.option{display:block;border:1px solid var(--line);border-radius:9px;padding:10px 11px;margin:7px 0;cursor:pointer;font-size:14px}
+label.option:hover{background:var(--panel)}label.option input{margin-right:8px;vertical-align:top}
+select{width:100%;min-height:44px;margin:6px 0 12px;padding:9px 10px;border:1px solid var(--line);border-radius:9px;background:#fff;color:var(--text);font-size:16px}
+.preview{margin-top:12px;padding:12px;border:1px dashed var(--line);border-radius:9px;background:#fafbfc;font-size:14px}
+.preview b{display:block;margin-bottom:5px}
+.actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:14px}
+button{min-height:44px;border:1px solid var(--accent);background:var(--accent);color:#fff;border-radius:9px;padding:10px 14px;font-size:15px;cursor:pointer}
+button.alt{background:#fff;color:var(--accent)}button:disabled{opacity:.55;cursor:not-allowed}
+.fb{margin-top:14px;padding:12px;border-radius:9px;font-size:14px}.fb.good{background:var(--goodbg);border-left:4px solid var(--good)}.fb.bad{background:var(--badbg);border-left:4px solid var(--bad)}
+.hidden{display:none!important}.score{font-size:30px;font-weight:700;margin:6px 0 10px}.note{font-size:13px;color:var(--muted)}
+</style>
+</head>
+<body>
+<main class="app">
+<h1>Отделите рабочую обратную связь от оценок личности</h1>
+<p class="lead">Вы — руководитель команды. Ваша задача — научиться отличать формулировки, которые помогают обсуждать работу, от реплик, которые оценивают человека или оставляют непонятным, что нужно изменить.</p>
+
+<section class="box">
+<b>Что нужно сделать</b>
+<ol>
+<li>На первом этапе последовательно разберите 10 реплик, которые могут прозвучать между коллегами.</li>
+<li>Для каждой решите: это рабочая обратная связь или формулировка, которая с высокой вероятностью вызовет защиту.</li>
+<li>После ответа прочитайте объяснение. Обращайте внимание, есть ли в реплике наблюдаемое поведение и понятная связь с работой.</li>
+<li>На втором этапе соберите полноценную обратную связь из трех частей: <b>вклад → затруднение → запрос</b>.</li>
+<li>Проверьте итоговую формулировку. Она должна описывать работу, а не личность, и завершаться конкретным изменением поведения.</li>
+</ol>
+<div class="rule"><b>Ориентир:</b> рабочая обратная связь отвечает хотя бы на один из вопросов: что именно человек сделал, как это повлияло на совместную работу, что полезно сохранить или изменить.</div>
+</section>
+
+<div class="meta"><span id="step"></span><span id="points"></span></div>
+<div class="bar"><div id="bar"></div></div>
+
+<section id="card" class="card"></section>
+<section id="result" class="card hidden" aria-live="polite"></section>
+</main>
+
+<script>
+(function(){
+const items=[
+["Ты постоянно думаешь только о себе.","protect","Фраза оценивает человека и приписывает ему устойчивое качество. Из нее непонятно, какое рабочее поведение создает проблему и что нужно изменить."],
+["На трех последних планированиях ты добавлял новые требования после того, как команда уже оценила сроки.","work","Это наблюдаемое повторяющееся поведение. Его можно проверить и дальше связать с влиянием на работу команды."],
+["Ты очень сильный аналитик.","protect","Это положительная оценка, но она слишком общая. Для полезной обратной связи лучше назвать конкретный вклад: что именно в работе человека помогает команде."],
+["Твои расчеты помогают нам быстро отсеивать варианты, которые не проходят по бюджету.","work","Формулировка называет конкретный вклад и его эффект для общей работы. Человеку понятно, какое поведение стоит сохранять."],
+["Будь более командным.","protect","Это требование без наблюдаемого поведения. Человеку придется самому угадывать, что руководитель считает «командностью»."],
+["Если видишь риск по сроку, поднимай его до того, как мы зафиксировали общее решение.","work","Это конкретный запрос к будущему поведению. Его можно выполнить и затем проверить в реальной работе."],
+["Ты слишком конфликтный на совещаниях.","protect","Фраза характеризует личность. Полезнее описать конкретное действие: например, перебивание коллег или переход от аргументов к оценкам."],
+["Когда ты заранее присылаешь расчеты, у остальных участников есть время проверить ограничения до встречи.","work","Здесь обозначены конкретное действие и его эффект для коллег. Это пригодная часть обратной связи о вкладе."],
+["Тебе нужно научиться уважать чужое время.","protect","Формулировка интерпретирует отношение человека. Она не показывает, какое поведение нужно изменить."],
+["На двух последних встречах обсуждение возвращалось к уже закрытым вопросам после твоих новых вводных. Давай договоримся приносить такие данные до фиксации решения.","work","Здесь есть наблюдаемое затруднение и конкретный запрос. Фокус остается на рабочем процессе, а не на качествах человека."]
+];
+let stage=1,i=0,answers=Array(items.length).fill(null),checked=Array(items.length).fill(false),builderChecked=false,builderAns=null;
+const card=document.getElementById("card"),result=document.getElementById("result"),step=document.getElementById("step"),points=document.getElementById("points"),bar=document.getElementById("bar");
+
+function score1(){return answers.reduce((s,a,j)=>s+(checked[j]&&a===items[j][1]?1:0),0)}
+function total(){let s=score1(); if(builderChecked&&builderAns){s+=(builderAns.contribution==="c1");s+=(builderAns.problem==="p1");s+=(builderAns.request==="r1")} return s}
+function head(){
+  if(stage===1){step.textContent=`Этап 1. Реплика ${i+1} из ${items.length}`;bar.style.width=`${((i+1)/(items.length+1))*100}%`}
+  else if(stage===2){step.textContent="Этап 2. Соберите рабочую обратную связь";bar.style.width="100%"}
+  else{step.textContent="Задание завершено";bar.style.width="100%"}
+  points.textContent=`Баллы: ${total()} из 13`
+}
+function render1(){
+  stage=1;result.classList.add("hidden");card.classList.remove("hidden");head();
+  const [text,correct,explain]=items[i],done=checked[i],ans=answers[i];
+  card.innerHTML=`<div class="tag">Реплика в командном взаимодействии</div>
+  <div class="statement">${text}</div>
+  <div class="q">Как руководителю оценить эту формулировку?</div>
+  <label class="option"><input type="radio" name="a" value="work" ${ans==="work"?"checked":""} ${done?"disabled":""}>Рабочая обратная связь</label>
+  <label class="option"><input type="radio" name="a" value="protect" ${ans==="protect"?"checked":""} ${done?"disabled":""}>Формулировка, которая скорее вызовет защиту</label>
+  <div class="actions">
+    <button class="alt" id="back" type="button" ${i===0?"disabled":""}>Назад</button>
+    ${done?`<button id="next" type="button">${i===items.length-1?"Перейти к сборке":"Далее"}</button>`:`<button id="check" type="button">Проверить</button>`}
+    <button class="alt" id="reset" type="button">Сбросить</button>
+  </div>
+  <div id="fb" class="fb ${done?(ans===correct?"good":"bad"):"hidden"}">${done?`<b>${ans===correct?"Верно.":"Посмотрите на формулировку еще раз."}</b><p>${explain}</p>`:""}</div>`;
+  card.querySelector("#back").onclick=()=>{if(i>0){i--;render1()}};
+  card.querySelector("#reset").onclick=resetAll;
+  if(done) card.querySelector("#next").onclick=()=>{if(i===items.length-1)render2();else{i++;render1()}};
+  else card.querySelector("#check").onclick=check1;
+}
+function check1(){
+  const sel=card.querySelector('input[name="a"]:checked'),fb=card.querySelector("#fb");
+  if(!sel){fb.className="fb bad";fb.innerHTML="<b>Выберите вариант.</b><p>Проверьте, описывает ли реплика конкретное рабочее поведение или оценивает человека в целом.</p>";return}
+  answers[i]=sel.value;checked[i]=true;render1()
+}
+function render2(){
+  stage=2;head();
+  const a=builderAns||{};
+  card.innerHTML=`<div class="tag">Сборка управленческой формулировки</div>
+  <h2>Дайте обратную связь руководителю проекта</h2>
+  <p>На последних трех планированиях руководитель проекта приносил новые требования уже после того, как команда оценивала сроки. Из-за этого работу приходилось пересчитывать, но его финансовые расчеты действительно помогают быстро отсекать нереалистичные варианты.</p>
+
+  <label for="c"><b>1. Вклад, который стоит сохранить</b></label>
+  <select id="c" ${builderChecked?"disabled":""}>
+    <option value="">Выберите вариант</option>
+    <option value="c1" ${a.contribution==="c1"?"selected":""}>Твои финансовые расчеты помогают команде быстро отсекать варианты, которые не проходят по бюджету.</option>
+    <option value="c2" ${a.contribution==="c2"?"selected":""}>Ты один из самых сильных руководителей проектов в команде.</option>
+    <option value="c3" ${a.contribution==="c3"?"selected":""}>Все ценят твой опыт и профессионализм.</option>
+  </select>
+
+  <label for="p"><b>2. Затруднение во взаимодействии</b></label>
+  <select id="p" ${builderChecked?"disabled":""}>
+    <option value="">Выберите вариант</option>
+    <option value="p1" ${a.problem==="p1"?"selected":""}>На трех последних планированиях новые требования появлялись после оценки сроков, поэтому команде приходилось пересчитывать план.</option>
+    <option value="p2" ${a.problem==="p2"?"selected":""}>Ты постоянно все усложняешь и мешаешь команде нормально планировать.</option>
+    <option value="p3" ${a.problem==="p3"?"selected":""}>Нам всем бывает сложно работать вместе.</option>
+  </select>
+
+  <label for="r"><b>3. Конкретный запрос</b></label>
+  <select id="r" ${builderChecked?"disabled":""}>
+    <option value="">Выберите вариант</option>
+    <option value="r1" ${a.request==="r1"?"selected":""}>Если видишь новые ограничения, поднимай их до того, как команда фиксирует сроки.</option>
+    <option value="r2" ${a.request==="r2"?"selected":""}>Постарайся быть более командным.</option>
+    <option value="r3" ${a.request==="r3"?"selected":""}>В следующий раз просто согласуй все со мной заранее.</option>
+  </select>
+
+  <div class="preview" id="preview"><b>Ваша обратная связь</b><span>Выберите три элемента.</span></div>
+
+  <div class="actions">
+    <button class="alt" id="back" type="button">Назад к репликам</button>
+    ${builderChecked?`<button id="finish" type="button">Показать итог</button>`:`<button id="check" type="button">Проверить формулировку</button>`}
+    <button class="alt" id="reset" type="button">Сбросить</button>
+  </div>
+  <div id="fb2" class="fb ${builderChecked?(a.contribution==="c1"&&a.problem==="p1"&&a.request==="r1"?"good":"bad"):"hidden"}"></div>`;
+  ["c","p","r"].forEach(id=>card.querySelector("#"+id).onchange=preview);
+  preview();
+  card.querySelector("#back").onclick=()=>{i=items.length-1;render1()};
+  card.querySelector("#reset").onclick=resetAll;
+  if(builderChecked){renderBuilderFeedback();card.querySelector("#finish").onclick=finish}
+  else card.querySelector("#check").onclick=check2;
+}
+function preview(){
+  const c=card.querySelector("#c"),p=card.querySelector("#p"),r=card.querySelector("#r"),pv=card.querySelector("#preview");
+  if(!c||!p||!r||!pv)return;
+  const text=[c,p,r].map(s=>s.value?s.options[s.selectedIndex].text:"…").join(" ");
+  pv.innerHTML=`<b>Ваша обратная связь</b><span>${text}</span>`;
+}
+function check2(){
+  const c=card.querySelector("#c").value,p=card.querySelector("#p").value,r=card.querySelector("#r").value,fb=card.querySelector("#fb2");
+  if(!c||!p||!r){fb.className="fb bad";fb.innerHTML="<b>Соберите все три части.</b><p>Нужны вклад, рабочее затруднение и конкретный запрос к будущему поведению.</p>";return}
+  builderAns={contribution:c,problem:p,request:r};builderChecked=true;render2()
+}
+function renderBuilderFeedback(){
+  const a=builderAns,fb=card.querySelector("#fb2"),n=(a.contribution==="c1")+(a.problem==="p1")+(a.request==="r1");
+  fb.className=`fb ${n===3?"good":"bad"}`;
+  fb.innerHTML=`<b>${n===3?"Формулировка собрана корректно.":`Верных элементов: ${n} из 3.`}</b>
+  ${a.contribution!=="c1"?"<p><b>Вклад:</b> назовите конкретное действие и его пользу для команды, а не общую оценку профессионализма.</p>":""}
+  ${a.problem!=="p1"?"<p><b>Затруднение:</b> опишите наблюдаемое повторяющееся поведение и его рабочее последствие.</p>":""}
+  ${a.request!=="r1"?"<p><b>Запрос:</b> обозначьте действие, которое человек действительно может выполнить и которое можно проверить позже.</p>":""}`;
+}
+function finish(){
+  stage=3;card.classList.add("hidden");result.classList.remove("hidden");head();
+  const s=total();let msg=s>=12?"Вы уверенно удерживаете обратную связь в рабочей плоскости: называете наблюдаемое поведение, связываете его с эффектом и формулируете конкретный запрос.":s>=9?"Основная логика понятна. В отдельных случаях стоит внимательнее отделять оценки человека от описания его поведения и конкретного рабочего запроса.":"Стоит еще раз пройти по конструкции «вклад → затруднение → запрос». Если в реплике нельзя понять, что именно произошло и что человек должен делать иначе, обратная связь остается слишком общей.";
+  result.innerHTML=`<h2>Итог</h2><div class="score">${s} / 13</div><p>${msg}</p>
+  <div class="rule"><b>Проверка перед разговором:</b><br>Я назвал конкретный вклад? Описал наблюдаемое затруднение без оценки личности? Сформулировал действие, которое человек может изменить?</div>
+  <div class="actions"><button id="again" type="button">Пройти еще раз</button></div>`;
+  result.querySelector("#again").onclick=resetAll
+}
+function resetAll(){
+  stage=1;i=0;answers=Array(items.length).fill(null);checked=Array(items.length).fill(false);builderChecked=false;builderAns=null;render1()
+}
+render1()
+})();
+</script>
+</body>
+</html>
