@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Сохраните внимание к сотруднику, не переходя личные границы</title>
+<style>
+:root{--p:#f6f7f9;--l:#d9dee7;--t:#20242b;--m:#667085;--a:#315f9d;--g:#2f6d42;--b:#9b3434;--gb:#eef7f0;--bb:#fbefef}
+*{box-sizing:border-box}body{margin:0;padding:18px 12px 28px;background:#fff;color:var(--t);font:15px/1.45 Arial,sans-serif}
+.app{max-width:560px;margin:auto}h1{font-size:24px;line-height:1.2;margin:0 0 10px}h2{font-size:19px;margin:0 0 10px}
+p{margin:8px 0}.lead{color:var(--m);margin-bottom:14px}.box,.card{border:1px solid var(--l);border-radius:12px;padding:14px;margin-bottom:15px}.box{background:var(--p)}
+ol{margin:8px 0 0 20px;padding:0}li{margin:6px 0}.rule{margin-top:12px;padding:10px 11px;background:#fff;border:1px solid var(--l);border-radius:9px;font-size:14px}
+.meta{display:flex;justify-content:space-between;color:var(--m);font-size:13px;margin:12px 0 6px}.bar{height:8px;background:#eceff3;border-radius:99px;overflow:hidden;margin-bottom:14px}.bar>div{height:100%;background:var(--a)}
+.statement{border:1px solid var(--l);border-radius:10px;padding:11px;margin:9px 0}.statement b{display:block;margin-bottom:7px}
+select{width:100%;min-height:44px;padding:9px 10px;border:1px solid var(--l);border-radius:9px;background:#fff;font-size:16px}
+.actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:14px}button{min-height:44px;border:1px solid var(--a);background:var(--a);color:#fff;border-radius:9px;padding:10px 14px;font-size:15px;cursor:pointer}
+button.alt{background:#fff;color:var(--a)}button:disabled{opacity:.55}.fb{margin-top:14px;padding:12px;border-radius:9px}.fb.good{background:var(--gb);border-left:4px solid var(--g)}.fb.bad{background:var(--bb);border-left:4px solid var(--b)}
+.item{padding:9px 10px;margin:7px 0;background:#fff;border:1px solid var(--l);border-radius:8px;font-size:14px}.item.ok{border-left:4px solid var(--g)}.item.err{border-left:4px solid var(--b)}
+.hidden{display:none!important}.dialogue{background:var(--p);border-radius:10px;padding:12px;margin:10px 0 14px}.speaker{font-weight:700}
+.option{display:block;border:1px solid var(--l);border-radius:9px;padding:10px 11px;margin:8px 0;cursor:pointer}.option input{margin-right:8px;vertical-align:top}
+.score{font-size:30px;font-weight:700}.summary{background:var(--p);border-radius:10px;padding:12px;margin:12px 0}.note{font-size:13px;color:var(--m)}
+</style>
+</head>
+<body>
+<main class="app">
+<h1>Сохраните внимание к сотруднику, не переходя личные границы</h1>
+<p class="lead">Вы — руководитель. Персональное внимание помогает раньше заметить перегрузку, неясность приоритетов и рабочие барьеры. Но интерес к сотруднику не дает права требовать личных подробностей.</p>
+
+<section class="box">
+<b>Что нужно сделать</b>
+<ol>
+<li>На первом этапе распределите 10 реплик руководителя по трем зонам.</li>
+<li><b>Уместный рабочий интерес</b> — вопрос помогает понять рабочую ситуацию и остается в зоне ответственности руководителя.</li>
+<li><b>Можно обсуждать, если сотрудник сам открыл тему</b> — личные подробности не нужны, но можно уточнить рабочие ограничения.</li>
+<li><b>Вторжение или давление</b> — вопрос требует личного откровения или делает помощь зависимой от него.</li>
+<li>На втором этапе выберите продолжение короткого разговора один на один.</li>
+</ol>
+<div class="rule"><b>Ориентир:</b> руководителю важно понять, что влияет на работу и чем он может помочь. Сотрудник сам решает, насколько подробно говорить о личных обстоятельствах.</div>
+</section>
+
+<div class="meta"><span id="step">Этап 1 из 2</span><span id="points">Баллы: 0 из 12</span></div>
+<div class="bar"><div id="bar" style="width:50%"></div></div>
+
+<section id="stage1" class="card">
+<h2>Какие вопросы уместны на встрече один на один?</h2>
+<div id="statements"></div>
+<div class="actions"><button id="check1" type="button">Проверить</button><button id="reset1" class="alt" type="button">Сбросить</button></div>
+<div id="fb1" class="fb hidden"></div>
+</section>
+
+<section id="stage2" class="card hidden">
+<h2>Продолжите разговор</h2>
+<div class="dialogue">
+<p><span class="speaker">Руководитель:</span> «Я заметил, что последние две недели по нескольким задачам сроки начали сдвигаться, хотя раньше такого почти не было. Хочу понять, есть ли в работе что-то, что сейчас мешает».</p>
+<p><span class="speaker">Сотрудник:</span> «Да, сейчас непростой период. Но я не хочу вдаваться в личные детали».</p>
+</div>
+<p><b>Как лучше продолжить разговор?</b></p>
+
+<label class="option"><input type="radio" name="dialogue" value="a">«Понимаю. Личные детали обсуждать не нужно. Давай посмотрим только на работу: нагрузку, сроки, приоритеты и то, где от меня может понадобиться помощь».</label>
+<label class="option"><input type="radio" name="dialogue" value="b">«Мне все-таки важно знать, что именно происходит. Без причины я не смогу понять, насколько серьезно нужно менять нагрузку».</label>
+<label class="option"><input type="radio" name="dialogue" value="c">«Хорошо, тогда не будем это обсуждать. Постарайся просто вернуться к обычному темпу, а через неделю посмотрим на результат».</label>
+<label class="option"><input type="radio" name="dialogue" value="d">«Тогда тебе, наверное, нужен отпуск. Я сниму с тебя часть задач, а потом вернемся к разговору».</label>
+
+<div class="actions"><button id="back" class="alt" type="button">Назад</button><button id="check2" type="button">Проверить</button><button id="reset2" class="alt" type="button">Сбросить</button></div>
+<div id="fb2" class="fb hidden"></div>
+</section>
+
+<section id="result" class="card hidden"></section>
+</main>
+
+<script>
+(function(){
+const zones={work:"Уместный рабочий интерес",conditional:"Можно обсуждать, если сотрудник сам открыл тему",intrusion:"Вторжение или давление"};
+const items=[
+{id:"q1",text:"Что сейчас сильнее всего мешает тебе двигать задачу в согласованном темпе?",correct:"work",why:"Вопрос направлен на рабочий барьер и не требует объяснять личные обстоятельства."},
+{id:"q2",text:"Нагрузка за последние две недели изменилась? Что из текущих задач стоит переприоритизировать?",correct:"work",why:"Руководитель проверяет нагрузку и приоритеты — то, на что может повлиять управленческим решением."},
+{id:"q3",text:"В какой части задачи тебе сейчас не хватает ясности, ресурса или решения с моей стороны?",correct:"work",why:"Вопрос помогает обнаружить рабочее ограничение и связывает разговор с возможным действием руководителя."},
+{id:"q4",text:"Я заметил, что сроки стали чаще сдвигаться. Что изменилось в самой работе?",correct:"work",why:"Руководитель опирается на наблюдаемый факт и спрашивает о работе, а не делает вывод о личном состоянии сотрудника."},
+{id:"q5",text:"Ты сказал, что сейчас дома непросто. Если хочешь, можем обсудить только то, как это влияет на рабочую нагрузку и что мне стоит учесть.",correct:"conditional",why:"Личную тему открыл сотрудник. Руководитель оставляет ему право не раскрывать подробности и переводит разговор к рабочим ограничениям."},
+{id:"q6",text:"Если тебе комфортно об этом говорить: есть ли из-за этой ситуации ограничения по времени или нагрузке, которые мне важно учитывать?",correct:"conditional",why:"Такое уточнение допустимо после того, как сотрудник сам обозначил личную ситуацию. Оно касается только последствий для работы."},
+{id:"q7",text:"Ты упомянул, что переживаешь из-за ситуации вне работы. Хочешь обсудить, какая поддержка именно в рабочих вопросах могла бы помочь?",correct:"conditional",why:"Руководитель не расспрашивает о личной ситуации, а предлагает обсудить рабочую поддержку."},
+{id:"q8",text:"У тебя проблемы дома? Расскажи, что случилось — мне нужно понимать причину.",correct:"intrusion",why:"Вопрос требует личных подробностей, которые не нужны для решения о нагрузке, сроках или поддержке."},
+{id:"q9",text:"Ты в последнее время выглядишь подавленным. У тебя что-то случилось в отношениях?",correct:"intrusion",why:"Руководитель сам задает личную тему и интерпретирует состояние сотрудника, хотя сотрудник ее не открывал."},
+{id:"q10",text:"Если ты не расскажешь, что происходит лично, я не смогу сделать для тебя никаких исключений.",correct:"intrusion",why:"Помощь ставится в зависимость от личного откровения. Для управленческого решения достаточно понять рабочее ограничение."}
+];
+
+let answers={},locked1=false,dialogue=null,locked2=false;
+const statements=document.getElementById("statements"),fb1=document.getElementById("fb1"),fb2=document.getElementById("fb2");
+const stage1=document.getElementById("stage1"),stage2=document.getElementById("stage2"),result=document.getElementById("result");
+const step=document.getElementById("step"),points=document.getElementById("points"),bar=document.getElementById("bar");
+
+function score1(){return items.reduce((s,x)=>s+(answers[x.id]===x.correct?1:0),0)}
+function total(){return score1()+(dialogue==="a"?2:0)}
+
+function renderItems(){
+ statements.innerHTML=items.map((x,i)=>`<div class="statement"><b>${i+1}. «${x.text}»</b><select data-id="${x.id}" ${locked1?"disabled":""}><option value="">Выберите зону</option><option value="work" ${answers[x.id]==="work"?"selected":""}>Уместный рабочий интерес</option><option value="conditional" ${answers[x.id]==="conditional"?"selected":""}>Можно обсуждать, если сотрудник сам открыл тему</option><option value="intrusion" ${answers[x.id]==="intrusion"?"selected":""}>Вторжение или давление</option></select></div>`).join("");
+ statements.querySelectorAll("select").forEach(s=>s.addEventListener("change",()=>{if(!locked1){if(s.value)answers[s.dataset.id]=s.value;else delete answers[s.dataset.id]}}));
+}
+
+document.getElementById("check1").addEventListener("click",()=>{
+ if(locked1)return;
+ if(Object.keys(answers).length<10){fb1.className="fb bad";fb1.innerHTML="<b>Распределите все 10 реплик.</b><p>Определите, помогает ли каждая реплика понять рабочую ситуацию или требует лишнего личного раскрытия.</p>";return}
+ locked1=true;renderItems();const s=score1();points.textContent=`Баллы: ${s} из 12`;
+ fb1.className=`fb ${s>=9?"good":"bad"}`;
+ fb1.innerHTML=`<b>${s===10?"Все реплики распределены верно.":`Верно распределено: ${s} из 10.`}</b>${items.map(x=>`<div class="item ${answers[x.id]===x.correct?"ok":"err"}"><b>${zones[x.correct]}</b>${x.why}</div>`).join("")}<p><b>Главный ориентир:</b> персональное внимание — это регулярный интерес к рабочей ситуации человека, а не право требовать объяснения личных обстоятельств.</p><div class="actions"><button id="to2" type="button">Перейти к диалогу</button></div>`;
+ document.getElementById("to2").addEventListener("click",()=>{stage1.classList.add("hidden");stage2.classList.remove("hidden");step.textContent="Этап 2 из 2";bar.style.width="100%"});
+});
+
+document.getElementById("back").addEventListener("click",()=>{stage2.classList.add("hidden");stage1.classList.remove("hidden");step.textContent="Этап 1 из 2";bar.style.width="50%"});
+
+document.getElementById("check2").addEventListener("click",()=>{
+ if(locked2)return;
+ const e=document.querySelector('input[name="dialogue"]:checked');
+ if(!e){fb2.className="fb bad";fb2.innerHTML="<b>Выберите продолжение.</b><p>Сотрудник уже обозначил границу. Ответ должен ее сохранить и при этом оставить пространство для разговора о работе.</p>";return}
+ dialogue=e.value;locked2=true;document.querySelectorAll('input[name="dialogue"]').forEach(x=>x.disabled=true);document.getElementById("check2").disabled=true;
+ const texts={a:"Руководитель принимает границу сотрудника и переводит разговор к нагрузке, приоритетам, срокам и возможной помощи.",b:"Помощь ставится в зависимость от личного раскрытия, хотя для рабочего решения достаточно понять ограничение.",c:"Личная граница соблюдена, но руководитель прекращает содержательный разговор и оставляет рабочий сбой без разбора.",d:"Руководитель слишком быстро назначает решение за сотрудника, не выяснив, какое изменение в работе действительно поможет."};
+ fb2.className=`fb ${dialogue==="a"?"good":"bad"}`;fb2.innerHTML=`<b>${dialogue==="a"?"Разговор продолжен уместно.":"Есть более точное продолжение."}</b><p>${texts[dialogue]}</p><p><b>Рабочая последовательность:</b> наблюдаемый факт → вопрос о рабочем препятствии → уважение к границе → обсуждение нагрузки, приоритетов или помощи → конкретная договоренность.</p><div class="actions"><button id="finish" type="button">Показать итог</button></div>`;
+ points.textContent=`Баллы: ${total()} из 12`;document.getElementById("finish").addEventListener("click",finish);
+});
+
+function finish(){
+ stage2.classList.add("hidden");result.classList.remove("hidden");step.textContent="Задание завершено";points.textContent=`Баллы: ${total()} из 12`;
+ const s=total(),msg=s>=11?"Вы уверенно отделяете рабочий интерес от вторжения и сохраняете разговор содержательным, даже когда сотрудник не хочет обсуждать личные обстоятельства.":s>=8?"Основная логика понятна. Обратите внимание на пограничные формулировки: доброжелательный вопрос становится лишним, если личные детали не нужны для рабочего решения.":"Стоит еще раз пройти границу между вниманием и вмешательством: руководителю важно знать, что мешает работе и чем он может помочь, но не обязательно знать личную причину.";
+ result.innerHTML=`<h2>Итог</h2><div class="score">${s} / 12</div><p>${msg}</p><div class="summary"><p><b>Уместный интерес:</b> что изменилось в работе, что мешает, какая помощь нужна, что стоит переприоритизировать.</p><p><b>Личная тема:</b> если сотрудник сам ее обозначил, можно уточнить только рабочие последствия и только с его согласия.</p><p><b>Граница:</b> руководителю не нужны личные подробности, чтобы обсудить нагрузку, сроки, приоритеты и доступную поддержку.</p></div><p class="note">Ритуал персонального внимания работает, когда помогает раньше увидеть изменение рабочей ситуации и договориться о конкретном управленческом действии. Это не беседа «по душам» и не скрытая проверка лояльности.</p><div class="actions"><button id="again" type="button">Пройти еще раз</button></div>`;
+ document.getElementById("again").addEventListener("click",resetAll);
+}
+function resetAll(){
+ answers={};locked1=false;dialogue=null;locked2=false;document.querySelectorAll('input[name="dialogue"]').forEach(x=>{x.checked=false;x.disabled=false});document.getElementById("check2").disabled=false;
+ fb1.className="fb hidden";fb1.innerHTML="";fb2.className="fb hidden";fb2.innerHTML="";result.classList.add("hidden");stage2.classList.add("hidden");stage1.classList.remove("hidden");step.textContent="Этап 1 из 2";points.textContent="Баллы: 0 из 12";bar.style.width="50%";renderItems();
+}
+document.getElementById("reset1").addEventListener("click",resetAll);
+document.getElementById("reset2").addEventListener("click",resetAll);
+renderItems();
+})();
+</script>
+</body>
+</html>
