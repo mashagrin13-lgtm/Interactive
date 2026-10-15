@@ -1,0 +1,662 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Найдите принцип и перенесите его</title>
+<style>
+:root{
+  --bg:#f4f6f8; --card:#ffffff; --text:#1f2933; --muted:#667085; --line:#d9dee7;
+  --soft:#eef2f6; --accent:#2f5d62; --accent-soft:#e7f0f1;
+  --ok:#1f6b45; --okbg:#e9f5ee; --bad:#913b35; --badbg:#faeceb;
+  --warn:#7b5719; --warnbg:#fff5dc; --shadow:0 14px 40px rgba(31,41,51,.08);
+}
+*{box-sizing:border-box}
+body{
+  margin:0;background:var(--bg);color:var(--text);
+  font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  line-height:1.55;
+}
+button,input,textarea{font:inherit}
+.app{width:min(100% - 28px,660px);margin:28px auto}
+.shell{background:var(--card);border:1px solid var(--line);border-radius:22px;box-shadow:var(--shadow);overflow:hidden}
+header{padding:22px 22px 18px;border-bottom:1px solid var(--line);background:#fff}
+.eyebrow{margin:0 0 6px;color:var(--accent);font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:.03em}
+h1{margin:0;font-size:clamp(27px,5vw,35px);line-height:1.12;letter-spacing:-.02em}
+.subtitle{margin:10px 0 0;color:var(--muted);font-size:15px}
+.progress-meta{display:flex;justify-content:space-between;gap:12px;margin:18px 0 7px;color:var(--muted);font-size:13px}
+.progress{height:8px;background:var(--soft);border-radius:999px;overflow:hidden}
+.progress span{display:block;height:100%;background:var(--accent);width:16.66%;transition:width .2s ease}
+main{padding:24px 22px 18px}
+.screen{display:none}.screen.active{display:block}
+.step{display:inline-flex;align-items:center;min-height:30px;padding:0 11px;border-radius:999px;background:var(--accent-soft);color:var(--accent);font-size:13px;font-weight:800;margin-bottom:12px}
+h2{margin:0 0 10px;font-size:23px;line-height:1.25}
+.lead{margin:0 0 18px;color:#3b4652}
+.case{margin:16px 0 18px;padding:15px 16px;background:#f8fafb;border:1px solid var(--line);border-radius:14px}
+.case strong{display:block;margin-bottom:6px}
+.quote{margin-top:8px;padding-left:14px;border-left:3px solid #b5c3c5;color:#334155;font-weight:650}
+.instruction{margin:16px 0;padding:14px 15px;background:var(--accent-soft);border-left:4px solid var(--accent);border-radius:0 12px 12px 0;font-size:14px}
+.options{display:grid;gap:10px;margin-top:14px}
+.option{
+  width:100%;text-align:left;border:1px solid var(--line);background:#fff;color:var(--text);
+  border-radius:13px;padding:14px;cursor:pointer;transition:.15s ease
+}
+.option:hover{border-color:#aeb7c4;background:#fafbfc}
+.option.selected{border-color:var(--accent);background:var(--accent-soft)}
+.option.correct{border-color:#7fb395;background:var(--okbg)}
+.option.wrong{border-color:#d29a95;background:var(--badbg)}
+.feedback{display:none;margin-top:16px;padding:15px 16px;border-radius:13px;font-size:14px}
+.feedback.show{display:block}
+.feedback.ok{background:var(--okbg);border:1px solid #b9dcc8;color:#174c33}
+.feedback.bad{background:var(--badbg);border:1px solid #edc3c0;color:#742c27}
+.feedback.neutral{background:var(--warnbg);border:1px solid #ead7a2;color:#66470e}
+
+.analogy-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
+.analogy{
+  border:1px solid var(--line);border-radius:13px;padding:14px;background:#fff;cursor:pointer
+}
+.analogy.selected{border-color:var(--accent);background:var(--accent-soft)}
+.analogy.correct{border-color:#7fb395;background:var(--okbg)}
+.analogy.wrong{border-color:#d29a95;background:var(--badbg)}
+.analogy b{display:block;margin-bottom:4px}
+
+.flow-builder{margin-top:16px}
+.pool-title{font-size:13px;color:var(--muted);font-weight:800;margin-bottom:8px}
+.pool{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px}
+.drag{
+  border:1px solid var(--line);background:#fff;border-radius:999px;padding:9px 12px;
+  cursor:grab;font-size:14px;user-select:none
+}
+.drag.used{opacity:.38;cursor:default}
+.flow{
+  display:grid;gap:12px
+}
+.flow-row{display:grid;grid-template-columns:28px 1fr;gap:10px;align-items:start}
+.num{
+  width:28px;height:28px;border-radius:8px;background:var(--soft);color:var(--muted);
+  display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800
+}
+.drop{
+  min-height:48px;border:1px dashed #aab4c1;border-radius:11px;background:#fafbfc;
+  display:flex;align-items:center;padding:10px 12px;color:var(--muted);cursor:pointer
+}
+.drop.filled{border-style:solid;border-color:var(--accent);background:var(--accent-soft);color:var(--text);font-weight:700}
+
+.field-grid{display:grid;gap:12px;margin-top:16px}
+.field label{display:block;margin-bottom:6px;font-weight:750;font-size:14px}
+.field input,.field textarea{
+  width:100%;border:1px solid var(--line);border-radius:12px;padding:12px 13px;background:#fff;color:var(--text)
+}
+.field textarea{min-height:92px;resize:vertical}
+.field input:focus,.field textarea:focus{outline:3px solid rgba(47,93,98,.16);border-color:var(--accent)}
+.checklist{display:grid;gap:9px;margin-top:16px}
+.checkitem{
+  display:grid;grid-template-columns:24px 1fr;gap:10px;padding:12px 13px;border:1px solid var(--line);border-radius:12px;background:#fff
+}
+.checkitem .mark{
+  width:24px;height:24px;border-radius:50%;background:var(--soft);color:var(--muted);
+  display:flex;align-items:center;justify-content:center;font-weight:800;font-size:12px
+}
+.checkitem.good{border-color:#b9dcc8;background:var(--okbg)}
+.checkitem.good .mark{background:#d6ecdf;color:var(--ok)}
+.checkitem.warn{border-color:#ead7a2;background:var(--warnbg)}
+.checkitem.warn .mark{background:#f5e8bd;color:var(--warn)}
+
+.final-note{margin-top:16px;padding:16px;border:1px solid var(--line);border-radius:14px;background:#f8fafb}
+.final-note h3{margin:0 0 8px;font-size:17px}
+.formula{margin-top:10px;font-weight:800;color:var(--accent)}
+
+footer{padding:16px 22px 22px;border-top:1px solid var(--line);display:flex;gap:10px;flex-wrap:wrap;align-items:center;background:#fff}
+footer .spacer{flex:1}
+.ctrl{border-radius:12px;padding:11px 15px;cursor:pointer;font-weight:750;border:1px solid var(--line)}
+.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+.secondary{background:#fff;color:var(--text)}
+.muted{background:#fff;color:var(--muted)}
+button[disabled]{opacity:.42;cursor:not-allowed}
+.hidden{display:none!important}
+
+@media(max-width:560px){
+  .app{width:min(100% - 16px,660px);margin:8px auto 18px}
+  .shell{border-radius:16px}
+  header,main,footer{padding-left:16px;padding-right:16px}
+  .analogy-grid{grid-template-columns:1fr}
+  footer .spacer{display:none}
+  footer button{flex:1 1 calc(50% - 6px)}
+}
+</style>
+</head>
+<body>
+<div class="app">
+<div class="shell">
+<header>
+  <p class="eyebrow">Проверочный интерактив</p>
+  <h1>Найдите принцип и перенесите его</h1>
+  <p class="subtitle">Не копируйте чужое решение целиком. Найдите, почему оно работает, и адаптируйте механизм под свою задачу.</p>
+  <div class="progress-meta">
+    <span id="progressText">Шаг 1 из 6</span>
+    <span id="scoreText">Верных решений: 0</span>
+  </div>
+  <div class="progress"><span id="progressBar"></span></div>
+</header>
+
+<main>
+<!-- 1 -->
+<section class="screen active" data-screen="1">
+  <div class="step">Шаг 1</div>
+  <h2>Сформулируйте функцию</h2>
+
+  <div class="case">
+    <strong>Ситуация</strong>
+    Критические отклонения по проектам часто становятся заметны только на еженедельной встрече. К этому моменту часть сроков уже невозможно восстановить.
+  </div>
+
+  <div class="instruction">
+    Выберите формулировку, которая описывает <b>что должно происходить</b>, а не конкретный инструмент или поведение сотрудников.
+  </div>
+
+  <div class="options" data-q="q1">
+    <button class="option">Как проводить статусные встречи чаще?</button>
+    <button class="option">Как сделать новый отчет об отклонениях?</button>
+    <button class="option" data-correct="true">Как замечать критические отклонения достаточно рано, чтобы успевать вмешаться?</button>
+    <button class="option">Как заставить руководителей проектов быстрее сообщать о проблемах?</button>
+  </div>
+  <div class="feedback" id="fb1"></div>
+</section>
+
+<!-- 2 -->
+<section class="screen" data-screen="2">
+  <div class="step">Шаг 2</div>
+  <h2>Ищите похожую функцию, а не похожую отрасль</h2>
+  <p class="lead">Полезная аналогия может находиться далеко от вашей работы. Главное — чтобы там решали похожую функцию.</p>
+
+  <div class="instruction">
+    Отметьте примеры, где действительно есть механизм <b>раннего обнаружения отклонения</b>. Можно выбрать несколько вариантов.
+  </div>
+
+  <div class="analogy-grid" id="analogyGrid">
+    <div class="analogy" data-correct="true">
+      <b>Аварийная служба</b>
+      Сигнал о критической ситуации сразу получает приоритет.
+    </div>
+    <div class="analogy" data-correct="true">
+      <b>Производственная линия</b>
+      Датчики сообщают об отклонении параметра до полной остановки.
+    </div>
+    <div class="analogy" data-correct="false">
+      <b>Библиотека</b>
+      Книги распределены по тематическим разделам.
+    </div>
+    <div class="analogy" data-correct="true">
+      <b>Система навигации</b>
+      Предупреждает о препятствии до того, как водитель подъедет к нему.
+    </div>
+  </div>
+  <div class="feedback" id="fb2"></div>
+</section>
+
+<!-- 3 -->
+<section class="screen" data-screen="3">
+  <div class="step">Шаг 3</div>
+  <h2>Отделите форму от принципа</h2>
+
+  <div class="case">
+    <strong>Внешний пример</strong>
+    На производственной линии используется световой сигнал, когда показатель выходит за допустимый диапазон.
+  </div>
+
+  <div class="instruction">
+    Что имеет смысл перенести в проектное управление?
+  </div>
+
+  <div class="options" data-q="q3">
+    <button class="option">Установить в офисе красную лампу.</button>
+    <button class="option">Купить производственную систему мониторинга.</button>
+    <button class="option" data-correct="true">Заранее определить допустимые границы и подавать сигнал при выходе за них.</button>
+    <button class="option">Назначить человека, который весь день смотрит на показатели.</button>
+  </div>
+  <div class="feedback" id="fb3"></div>
+</section>
+
+<!-- 4 -->
+<section class="screen" data-screen="4">
+  <div class="step">Шаг 4</div>
+  <h2>Соберите перенос в рабочий процесс</h2>
+  <p class="lead">Теперь переведите принцип в конкретную последовательность действий для проектной команды.</p>
+
+  <div class="instruction">
+    Перетащите нужные блоки в четыре позиции. На телефоне: нажмите на блок, затем на нужное поле.
+  </div>
+
+  <div class="flow-builder">
+    <div class="pool-title">Блоки</div>
+    <div class="pool" id="pool">
+      <div class="drag" draggable="true" data-id="criterion">Отклонение срока больше трех дней</div>
+      <div class="drag" draggable="true" data-id="signal">Автоматическая отметка риска</div>
+      <div class="drag" draggable="true" data-id="owner">Руководитель проекта</div>
+      <div class="drag" draggable="true" data-id="weekly">Еженедельная презентация</div>
+      <div class="drag" draggable="true" data-id="notify">Уведомление ответственному</div>
+      <div class="drag" draggable="true" data-id="confirm">Подтверждение реакции</div>
+      <div class="drag" draggable="true" data-id="slides">Отчет на 30 слайдов</div>
+    </div>
+
+    <div class="flow">
+      <div class="flow-row"><div class="num">1</div><div class="drop" data-expect="criterion">Критерий отклонения</div></div>
+      <div class="flow-row"><div class="num">2</div><div class="drop" data-expect="signal">Сигнал</div></div>
+      <div class="flow-row"><div class="num">3</div><div class="drop" data-expect="owner">Ответственный</div></div>
+      <div class="flow-row"><div class="num">4</div><div class="drop" data-expect="confirm">Подтверждение реакции</div></div>
+    </div>
+  </div>
+
+  <div class="feedback" id="fb4"></div>
+</section>
+
+<!-- 5 -->
+<section class="screen" data-screen="5">
+  <div class="step">Шаг 5</div>
+  <h2>Проверьте, где аналогия перестает работать буквально</h2>
+
+  <div class="case">
+    <strong>Ограничение</strong>
+    На производстве отклонение параметра можно измерить автоматически. В проекте часть рисков невозможно выразить одним числом.
+  </div>
+
+  <div class="instruction">
+    Как адаптировать принцип, не отказываясь от него целиком?
+  </div>
+
+  <div class="options" data-q="q5">
+    <button class="option">Отказаться от аналогии полностью.</button>
+    <button class="option">Использовать только числовые показатели.</button>
+    <button class="option" data-correct="true">Добавить несколько четких триггеров и возможность вручную отметить критический риск.</button>
+    <button class="option">Поручить руководителю самому проверять все проекты ежедневно.</button>
+  </div>
+  <div class="feedback" id="fb5"></div>
+</section>
+
+<!-- 6 -->
+<section class="screen" data-screen="6">
+  <div class="step">Шаг 6</div>
+  <h2>Перенесите принцип на другую задачу</h2>
+
+  <div class="case">
+    <strong>Новая задача</strong>
+    Новые сотрудники слишком долго ищут ответы на типовые вопросы.
+  </div>
+
+  <div class="instruction">
+    Заполните шесть полей. Здесь нет одного правильного ответа. Важно, чтобы функция, внешний пример, принцип и перенос были связаны между собой.
+  </div>
+
+  <div class="field-grid">
+    <div class="field">
+      <label for="f1">Функция</label>
+      <input id="f1" placeholder="Что должно происходить быстрее или надежнее?">
+    </div>
+    <div class="field">
+      <label for="f2">Внешняя область</label>
+      <input id="f2" placeholder="Где еще решают похожую функцию?">
+    </div>
+    <div class="field">
+      <label for="f3">Как там решают похожую функцию</label>
+      <textarea id="f3" placeholder="Опишите механизм, а не только название инструмента"></textarea>
+    </div>
+    <div class="field">
+      <label for="f4">Принцип</label>
+      <textarea id="f4" placeholder="Почему это работает?"></textarea>
+    </div>
+    <div class="field">
+      <label for="f5">Как перенести его в работу команды</label>
+      <textarea id="f5" placeholder="Что именно можно попробовать у вас?"></textarea>
+    </div>
+    <div class="field">
+      <label for="f6">Какое ограничение нужно проверить</label>
+      <textarea id="f6" placeholder="Где аналогия может не сработать буквально?"></textarea>
+    </div>
+  </div>
+
+  <div class="checklist">
+    <div class="checkitem" data-check="function">
+      <div class="mark">1</div>
+      <div><b>Функция сформулирована как результат</b><div class="small">Не «внедрить базу знаний», а, например, «быстро находить проверенный ответ на типовой вопрос».</div></div>
+    </div>
+    <div class="checkitem" data-check="principle">
+      <div class="mark">2</div>
+      <div><b>Есть принцип, а не копия внешней формы</b><div class="small">Понятно, почему внешний механизм работает.</div></div>
+    </div>
+    <div class="checkitem" data-check="transfer">
+      <div class="mark">3</div>
+      <div><b>Перенос описан применительно к вашей работе</b><div class="small">Есть конкретный способ проверить принцип внутри команды.</div></div>
+    </div>
+    <div class="checkitem" data-check="limit">
+      <div class="mark">4</div>
+      <div><b>Указано ограничение аналогии</b><div class="small">Вы понимаете, что в двух системах устроено по-разному.</div></div>
+    </div>
+  </div>
+
+  <div class="feedback" id="fb6"></div>
+
+  <div class="final-note hidden" id="finalNote">
+    <h3>Памятка</h3>
+    <div>Хорошая аналогия не заканчивается фразой «сделаем как у них». Она дает механизм, который можно проверить в другой среде и подстроить под реальные ограничения.</div>
+    <div class="formula">Функция → 3–5 внешних областей → принцип → перенос → проверка ограничений</div>
+  </div>
+</section>
+</main>
+
+<footer>
+  <button class="ctrl muted" id="resetBtn">Сбросить</button>
+  <div class="spacer"></div>
+  <button class="ctrl secondary" id="backBtn" disabled>Назад</button>
+  <button class="ctrl primary" id="checkBtn">Проверить</button>
+  <button class="ctrl secondary hidden" id="nextBtn">Дальше</button>
+</footer>
+</div>
+</div>
+
+<script>
+(function(){
+  let current=1, score=0;
+  const checked={1:false,2:false,3:false,4:false,5:false,6:false};
+  const awarded={1:false,2:false,3:false,4:false,5:false,6:false};
+
+  const screens=[...document.querySelectorAll('.screen')];
+  const progressText=document.getElementById('progressText');
+  const progressBar=document.getElementById('progressBar');
+  const scoreText=document.getElementById('scoreText');
+  const backBtn=document.getElementById('backBtn');
+  const nextBtn=document.getElementById('nextBtn');
+  const checkBtn=document.getElementById('checkBtn');
+  const resetBtn=document.getElementById('resetBtn');
+
+  function update(){
+    screens.forEach(s=>s.classList.toggle('active',Number(s.dataset.screen)===current));
+    progressText.textContent=`Шаг ${current} из 6`;
+    progressBar.style.width=`${current/6*100}%`;
+    scoreText.textContent=`Верных решений: ${score}`;
+    backBtn.disabled=current===1;
+    nextBtn.classList.toggle('hidden',!checked[current]||current===6);
+    checkBtn.classList.toggle('hidden',checked[current]&&current!==6);
+    checkBtn.textContent=(current===6&&checked[6])?'Проверить еще раз':'Проверить';
+  }
+
+  function feedback(id,type,html){
+    const el=document.getElementById(id);
+    el.className=`feedback show ${type}`;
+    el.innerHTML=html;
+  }
+
+  document.querySelectorAll('.options:not(.multi)').forEach(group=>{
+    group.addEventListener('click',e=>{
+      const btn=e.target.closest('.option');
+      if(!btn || checked[current])return;
+      group.querySelectorAll('.option').forEach(o=>o.classList.remove('selected'));
+      btn.classList.add('selected');
+    });
+  });
+
+  function checkSingle(q,screen,fbId,ok,bad){
+    const group=document.querySelector(`[data-q="${q}"]`);
+    const sel=group.querySelector('.option.selected');
+    if(!sel){feedback(fbId,'neutral','Сначала выберите один вариант.');return false;}
+    checked[screen]=true;
+    const good=sel.dataset.correct==='true';
+
+    group.querySelectorAll('.option').forEach(o=>{
+      if(o.dataset.correct==='true')o.classList.add('correct');
+      else if(o.classList.contains('selected'))o.classList.add('wrong');
+    });
+
+    if(good){
+      if(!awarded[screen]){score++;awarded[screen]=true;}
+      feedback(fbId,'ok',ok);
+    }else feedback(fbId,'bad',bad);
+
+    return true;
+  }
+
+  // screen2 multi
+  const analogyGrid=document.getElementById('analogyGrid');
+  analogyGrid.addEventListener('click',e=>{
+    const card=e.target.closest('.analogy');
+    if(!card || checked[2])return;
+    card.classList.toggle('selected');
+  });
+
+  function checkAnalogies(){
+    const cards=[...document.querySelectorAll('.analogy')];
+    const selected=cards.filter(c=>c.classList.contains('selected'));
+    if(!selected.length){
+      feedback('fb2','neutral','Отметьте хотя бы один пример.');
+      return false;
+    }
+    checked[2]=true;
+    let good=true;
+    cards.forEach(c=>{
+      const should=c.dataset.correct==='true';
+      const is=c.classList.contains('selected');
+      if(should!==is)good=false;
+      if(should)c.classList.add('correct');
+      else if(is)c.classList.add('wrong');
+    });
+    if(good){
+      if(!awarded[2]){score++;awarded[2]=true;}
+      feedback('fb2','ok','Верно. Аварийная служба, производственная линия и навигация по-разному решают одну функцию: <b>дать сигнал достаточно рано, чтобы еще можно было отреагировать</b>.');
+    }else{
+      feedback('fb2','bad','Смотрите не на отрасль, а на функцию. Библиотечная классификация помогает находить объекты по теме, но сама по себе не решает задачу раннего обнаружения отклонения.');
+    }
+    return true;
+  }
+
+  // screen4 drag builder
+  const drags=[...document.querySelectorAll('.drag')];
+  const drops=[...document.querySelectorAll('.drop')];
+  let selectedDrag=null;
+
+  drags.forEach(item=>{
+    item.addEventListener('dragstart',e=>{
+      if(checked[4]){e.preventDefault();return;}
+      selectedDrag=item;
+      e.dataTransfer.setData('text/plain',item.dataset.id);
+    });
+    item.addEventListener('click',()=>{
+      if(checked[4]||item.classList.contains('used'))return;
+      drags.forEach(x=>x.style.outline='');
+      selectedDrag=item;
+      item.style.outline='3px solid rgba(47,93,98,.22)';
+    });
+  });
+
+  drops.forEach(drop=>{
+    drop.addEventListener('dragover',e=>{if(!checked[4])e.preventDefault();});
+    drop.addEventListener('drop',e=>{
+      if(checked[4])return;
+      e.preventDefault();
+      const id=e.dataTransfer.getData('text/plain');
+      const item=drags.find(x=>x.dataset.id===id);
+      place(item,drop);
+    });
+    drop.addEventListener('click',()=>{
+      if(checked[4])return;
+      if(drop.dataset.item){
+        const old=drags.find(x=>x.dataset.id===drop.dataset.item);
+        if(old){old.classList.remove('used');old.style.outline='';}
+        drop.dataset.item='';
+        drop.textContent=placeholder(drop.dataset.expect);
+        drop.classList.remove('filled');
+        return;
+      }
+      if(selectedDrag)place(selectedDrag,drop);
+    });
+  });
+
+  function placeholder(expect){
+    return {criterion:'Критерий отклонения',signal:'Сигнал',owner:'Ответственный',confirm:'Подтверждение реакции'}[expect]||'...';
+  }
+
+  function place(item,drop){
+    if(!item||item.classList.contains('used'))return;
+    if(drop.dataset.item){
+      const old=drags.find(x=>x.dataset.id===drop.dataset.item);
+      if(old){old.classList.remove('used');old.style.outline='';}
+    }
+    drop.dataset.item=item.dataset.id;
+    drop.textContent=item.textContent;
+    drop.classList.add('filled');
+    item.classList.add('used');
+    item.style.outline='';
+    selectedDrag=null;
+  }
+
+  function checkFlow(){
+    if(drops.some(d=>!d.dataset.item)){
+      feedback('fb4','neutral','Заполните все четыре позиции.');
+      return false;
+    }
+    checked[4]=true;
+    let good=true;
+    drops.forEach(d=>{
+      const ok=d.dataset.item===d.dataset.expect;
+      if(!ok)good=false;
+      d.style.borderColor=ok?'#7fb395':'#d29a95';
+      d.style.background=ok?'#e9f5ee':'#faeceb';
+    });
+
+    if(good){
+      if(!awarded[4]){score++;awarded[4]=true;}
+      feedback('fb4','ok','Процесс собран правильно: <b>критерий → сигнал → ответственный → подтверждение реакции</b>. Важен не сам инструмент оповещения, а то, что заранее понятно, когда ситуация становится критичной и кто должен отреагировать.');
+    }else{
+      feedback('fb4','bad','Посмотрите на логику принципа. Сначала должно появиться <b>условие отклонения</b>, затем сигнал, затем конкретный ответственный и подтверждение, что сигнал не потерян.');
+    }
+    return true;
+  }
+
+  // screen6 free response
+  function filled(id){return document.getElementById(id).value.trim();}
+  function setCheck(name,good,textGood,textWarn){
+    const el=document.querySelector(`[data-check="${name}"]`);
+    el.classList.remove('good','warn');
+    el.classList.add(good?'good':'warn');
+    el.querySelector('.mark').textContent=good?'✓':'!';
+    el.querySelector('.small').textContent=good?textGood:textWarn;
+  }
+
+  function checkFinal(){
+    const vals=[1,2,3,4,5,6].map(i=>filled('f'+i));
+    if(vals.filter(Boolean).length<6){
+      feedback('fb6','neutral','Заполните все шесть полей. Даже короткой фразы в каждом достаточно.');
+      return false;
+    }
+
+    const [func,area,how,principle,transfer,limit]=vals;
+    const funcGood = func.length>=12 && !/(внедр|создать|сделать базу|купить|систем)/i.test(func);
+    const principleGood = principle.length>=15 && !/^(сделать|внедрить|купить)/i.test(principle);
+    const transferGood = transfer.length>=15;
+    const limitGood = limit.length>=12;
+
+    setCheck('function',funcGood,
+      'Функция описана как нужный результат, а не как заранее выбранный инструмент.',
+      'Попробуйте убрать готовое решение и описать результат: что новичок должен уметь сделать быстрее или надежнее?');
+    setCheck('principle',principleGood,
+      'Есть объяснение механизма: понятно, почему внешний пример работает.',
+      'Сформулируйте не форму решения, а механизм: за счет чего внешний подход дает результат?');
+    setCheck('transfer',transferGood,
+      'Перенос уже звучит как действие, которое можно попробовать в вашей команде.',
+      'Добавьте конкретику: что именно изменится в работе команды?');
+    setCheck('limit',limitGood,
+      'Указана граница, где перенос нужно проверить, а не копировать буквально.',
+      'Добавьте хотя бы одно различие между внешним примером и вашей ситуацией.');
+
+    checked[6]=true;
+    const passed=[funcGood,principleGood,transferGood,limitGood].filter(Boolean).length;
+
+    if(passed===4){
+      if(!awarded[6]){score++;awarded[6]=true;}
+      feedback('fb6','ok','Перенос собран. У вас есть функция, внешний механизм, рабочий принцип, способ применения и ограничение, которое стоит проверить.');
+    }else if(passed>=2){
+      feedback('fb6','neutral','Основа есть, но один-два элемента стоит уточнить. Посмотрите подсказки под полями и поправьте формулировки.');
+    }else{
+      feedback('fb6','bad','Пока описание слишком похоже на копирование готового решения. Вернитесь к двум вопросам: <b>«Почему это работает там?»</b> и <b>«Как проверить тот же механизм у нас?»</b>');
+    }
+
+    document.getElementById('finalNote').classList.remove('hidden');
+    return true;
+  }
+
+  checkBtn.addEventListener('click',()=>{
+    let done=false;
+    if(current===1){
+      done=checkSingle(
+        'q1',1,'fb1',
+        'Верно. Такая формулировка сохраняет функцию — раннее обнаружение критичного отклонения — и не привязывает команду к встрече, отчету или контролю.',
+        'Здесь уже спрятан способ решения или оценка сотрудников. Для поиска аналогий сначала нужна функция: <b>что система должна уметь делать?</b>'
+      );
+    }
+    if(current===2)done=checkAnalogies();
+    if(current===3){
+      done=checkSingle(
+        'q3',3,'fb3',
+        'Да. Красная лампа — лишь форма. Полезный принцип: <b>заранее определить границу допустимого и подавать сигнал при выходе за нее</b>.',
+        'Это копирование внешней формы или инфраструктуры. Нужен механизм, который можно реализовать разными способами.'
+      );
+    }
+    if(current===4)done=checkFlow();
+    if(current===5){
+      done=checkSingle(
+        'q5',5,'fb5',
+        'Верно. Принцип сохраняется, но становится гибче: часть отклонений ловят четкие триггеры, а для плохо формализуемых рисков остается ручная отметка.',
+        'Аналогия не обязана работать буквально. Если условия отличаются, адаптируйте механизм вместо полного отказа или попытки все свести к одному числу.'
+      );
+    }
+    if(current===6)done=checkFinal();
+    if(done)update();
+  });
+
+  nextBtn.addEventListener('click',()=>{
+    if(current<6){
+      current++;update();window.scrollTo({top:0,behavior:'smooth'});
+    }
+  });
+
+  backBtn.addEventListener('click',()=>{
+    if(current>1){
+      current--;update();window.scrollTo({top:0,behavior:'smooth'});
+    }
+  });
+
+  resetBtn.addEventListener('click',()=>{
+    current=1;score=0;selectedDrag=null;
+    Object.keys(checked).forEach(k=>checked[k]=false);
+    Object.keys(awarded).forEach(k=>awarded[k]=false);
+
+    document.querySelectorAll('.option').forEach(o=>o.classList.remove('selected','correct','wrong'));
+    document.querySelectorAll('.analogy').forEach(c=>c.classList.remove('selected','correct','wrong'));
+    document.querySelectorAll('.feedback').forEach(f=>{f.className='feedback';f.innerHTML='';});
+
+    drags.forEach(d=>{d.classList.remove('used');d.style.outline='';});
+    drops.forEach(d=>{
+      d.dataset.item='';
+      d.textContent=placeholder(d.dataset.expect);
+      d.classList.remove('filled');
+      d.style.borderColor='';d.style.background='';
+    });
+
+    [1,2,3,4,5,6].forEach(i=>document.getElementById('f'+i).value='');
+    document.querySelectorAll('.checkitem').forEach((el,i)=>{
+      el.classList.remove('good','warn');
+      el.querySelector('.mark').textContent=String(i+1);
+    });
+    document.querySelector('[data-check="function"] .small').textContent='Не «внедрить базу знаний», а, например, «быстро находить проверенный ответ на типовой вопрос».';
+    document.querySelector('[data-check="principle"] .small').textContent='Понятно, почему внешний механизм работает.';
+    document.querySelector('[data-check="transfer"] .small').textContent='Есть конкретный способ проверить принцип внутри команды.';
+    document.querySelector('[data-check="limit"] .small').textContent='Вы понимаете, что в двух системах устроено по-разному.';
+    document.getElementById('finalNote').classList.add('hidden');
+
+    update();
+    window.scrollTo({top:0,behavior:'smooth'});
+  });
+
+  update();
+})();
+</script>
+</body>
+</html>

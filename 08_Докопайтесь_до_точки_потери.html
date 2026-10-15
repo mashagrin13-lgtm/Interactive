@@ -1,0 +1,775 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Докопайтесь до точки потери</title>
+<style>
+:root{
+  --bg:#f4f6f8; --card:#fff; --text:#1f2933; --muted:#667085; --line:#d9dee7;
+  --soft:#eef2f6; --accent:#2f5d62; --accent-soft:#e7f0f1;
+  --ok:#1f6b45; --okbg:#e9f5ee; --bad:#913b35; --badbg:#faeceb;
+  --warn:#7b5719; --warnbg:#fff5dc; --shadow:0 14px 40px rgba(31,41,51,.08);
+}
+*{box-sizing:border-box}
+body{
+  margin:0;background:var(--bg);color:var(--text);
+  font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  line-height:1.55;
+}
+button,input,textarea{font:inherit}
+.app{width:min(100% - 28px,700px);margin:28px auto}
+.shell{background:var(--card);border:1px solid var(--line);border-radius:22px;box-shadow:var(--shadow);overflow:hidden}
+header{padding:22px 22px 18px;border-bottom:1px solid var(--line);background:#fff}
+.eyebrow{margin:0 0 6px;color:var(--accent);font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:.03em}
+h1{margin:0;font-size:clamp(27px,5vw,35px);line-height:1.12;letter-spacing:-.02em}
+.subtitle{margin:10px 0 0;color:var(--muted);font-size:15px}
+.progress-meta{display:flex;justify-content:space-between;gap:12px;margin:18px 0 7px;color:var(--muted);font-size:13px}
+.progress{height:8px;background:var(--soft);border-radius:999px;overflow:hidden}
+.progress span{display:block;height:100%;background:var(--accent);width:14.285%;transition:width .2s ease}
+main{padding:24px 22px 18px}
+.screen{display:none}.screen.active{display:block}
+.step{display:inline-flex;align-items:center;min-height:30px;padding:0 11px;border-radius:999px;background:var(--accent-soft);color:var(--accent);font-size:13px;font-weight:800;margin-bottom:12px}
+h2{margin:0 0 10px;font-size:23px;line-height:1.25}
+.lead{margin:0 0 18px;color:#3b4652}
+.case{margin:16px 0 18px;padding:15px 16px;background:#f8fafb;border:1px solid var(--line);border-radius:14px}
+.case strong{display:block;margin-bottom:6px}
+.instruction{margin:16px 0;padding:14px 15px;background:var(--accent-soft);border-left:4px solid var(--accent);border-radius:0 12px 12px 0;font-size:14px}
+.options{display:grid;gap:10px;margin-top:14px}
+.option{
+  width:100%;text-align:left;border:1px solid var(--line);background:#fff;color:var(--text);
+  border-radius:13px;padding:14px;cursor:pointer;transition:.15s ease
+}
+.option:hover{border-color:#aeb7c4;background:#fafbfc}
+.option.selected{border-color:var(--accent);background:var(--accent-soft)}
+.option.correct{border-color:#7fb395;background:var(--okbg)}
+.option.wrong{border-color:#d29a95;background:var(--badbg)}
+.feedback{display:none;margin-top:16px;padding:15px 16px;border-radius:13px;font-size:14px}
+.feedback.show{display:block}
+.feedback.ok{background:var(--okbg);border:1px solid #b9dcc8;color:#174c33}
+.feedback.bad{background:var(--badbg);border:1px solid #edc3c0;color:#742c27}
+.feedback.neutral{background:var(--warnbg);border:1px solid #ead7a2;color:#66470e}
+
+.metrics{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+.metric{padding:12px;border:1px solid var(--line);border-radius:12px;background:#fff}
+.metric b{display:block;font-size:20px;color:var(--accent)}
+
+.tree{margin-top:16px;display:grid;gap:12px}
+.tree-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.node{
+  min-width:130px;padding:11px 12px;border:1px solid var(--line);border-radius:11px;background:#fff;
+  cursor:pointer;text-align:center;font-size:14px
+}
+.node.selected{border-color:var(--accent);background:var(--accent-soft)}
+.node.good{border-color:#7fb395;background:var(--okbg)}
+.node.bad{border-color:#d29a95;background:var(--badbg)}
+.arrow{font-weight:900;color:var(--muted)}
+.delay{font-size:12px;color:var(--muted);display:block;margin-top:4px}
+
+.builder{margin-top:16px}
+.pool-title{font-size:13px;color:var(--muted);font-weight:800;margin-bottom:8px}
+.pool{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
+.block{
+  border:1px solid var(--line);background:#fff;border-radius:999px;padding:9px 12px;cursor:pointer;font-size:14px
+}
+.block.used{opacity:.38;cursor:default}
+.slots{display:grid;gap:10px}
+.slot-row{display:grid;grid-template-columns:30px 1fr;gap:10px;align-items:start}
+.num{
+  width:30px;height:30px;border-radius:8px;background:var(--soft);color:var(--muted);
+  display:flex;align-items:center;justify-content:center;font-weight:800;font-size:12px
+}
+.slot{
+  min-height:48px;border:1px dashed #aab4c1;border-radius:11px;background:#fafbfc;
+  display:flex;align-items:center;padding:10px 12px;color:var(--muted);cursor:pointer
+}
+.slot.filled{border-style:solid;border-color:var(--accent);background:var(--accent-soft);color:var(--text);font-weight:700}
+
+.breakdown{
+  margin-top:16px;border:1px solid var(--line);border-radius:14px;overflow:hidden
+}
+.break-row{
+  display:grid;grid-template-columns:1.4fr .7fr .7fr;gap:0;border-bottom:1px solid var(--line)
+}
+.break-row:last-child{border-bottom:0}
+.break-row > div{padding:11px 12px;border-right:1px solid var(--line)}
+.break-row > div:last-child{border-right:0}
+.break-head{background:#5f7474;color:#fff;font-weight:800;font-size:13px}
+.hot{background:#fff5dc}
+.hot b{color:#7b5719}
+
+.timeline{display:grid;gap:9px;margin-top:14px}
+.timeline .item{
+  display:grid;grid-template-columns:28px 1fr;gap:10px;align-items:start;
+  padding:10px 12px;border:1px solid var(--line);border-radius:11px;background:#fff
+}
+.timeline .n{
+  width:28px;height:28px;border-radius:8px;background:var(--soft);display:flex;align-items:center;justify-content:center;font-weight:800;color:var(--muted)
+}
+.timeline .item.problem{border-color:#ead7a2;background:#fffaf0}
+
+.matrix{
+  margin-top:16px;display:grid;grid-template-columns:1.5fr .8fr .8fr;gap:1px;background:var(--line);border:1px solid var(--line);border-radius:12px;overflow:hidden
+}
+.matrix > div{background:#fff;padding:11px 12px}
+.matrix .head{background:#5f7474;color:#fff;font-weight:800;font-size:13px}
+.rate{
+  display:flex;gap:5px;flex-wrap:wrap
+}
+.rate button{
+  width:30px;height:30px;border-radius:8px;border:1px solid var(--line);background:#fff;cursor:pointer
+}
+.rate button.selected{background:var(--accent);color:#fff;border-color:var(--accent)}
+
+.final-fields{display:grid;gap:12px;margin-top:16px}
+.field label{display:block;font-weight:750;font-size:14px;margin-bottom:6px}
+.field input,.field textarea{
+  width:100%;border:1px solid var(--line);border-radius:12px;padding:12px 13px;background:#fff;color:var(--text)
+}
+.field textarea{min-height:82px;resize:vertical}
+.field input:focus,.field textarea:focus{outline:3px solid rgba(47,93,98,.16);border-color:var(--accent)}
+.checklist{display:grid;gap:9px;margin-top:16px}
+.checkitem{
+  display:grid;grid-template-columns:24px 1fr;gap:10px;padding:12px 13px;border:1px solid var(--line);border-radius:12px;background:#fff
+}
+.checkitem .mark{
+  width:24px;height:24px;border-radius:50%;background:var(--soft);color:var(--muted);
+  display:flex;align-items:center;justify-content:center;font-weight:800;font-size:12px
+}
+.checkitem.good{border-color:#b9dcc8;background:var(--okbg)}
+.checkitem.good .mark{background:#d6ecdf;color:var(--ok)}
+.checkitem.warn{border-color:#ead7a2;background:var(--warnbg)}
+.checkitem.warn .mark{background:#f5e8bd;color:var(--warn)}
+
+.final-note{margin-top:16px;padding:16px;border:1px solid var(--line);border-radius:14px;background:#f8fafb}
+.final-note h3{margin:0 0 8px;font-size:17px}
+.formula{margin-top:10px;font-weight:800;color:var(--accent)}
+
+footer{padding:16px 22px 22px;border-top:1px solid var(--line);display:flex;gap:10px;flex-wrap:wrap;align-items:center;background:#fff}
+footer .spacer{flex:1}
+.ctrl{border-radius:12px;padding:11px 15px;cursor:pointer;font-weight:750;border:1px solid var(--line)}
+.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+.secondary{background:#fff;color:var(--text)}
+.muted{background:#fff;color:var(--muted)}
+button[disabled]{opacity:.42;cursor:not-allowed}
+.hidden{display:none!important}
+
+@media(max-width:560px){
+  .app{width:min(100% - 16px,700px);margin:8px auto 18px}
+  .shell{border-radius:16px}
+  header,main,footer{padding-left:16px;padding-right:16px}
+  .metrics{grid-template-columns:1fr}
+  .break-row{grid-template-columns:1.2fr .8fr .8fr}
+  .matrix{grid-template-columns:1.2fr .8fr .8fr}
+  footer .spacer{display:none}
+  footer button{flex:1 1 calc(50% - 6px)}
+}
+</style>
+</head>
+<body>
+<div class="app">
+<div class="shell">
+<header>
+  <p class="eyebrow">Проверочный интерактив</p>
+  <h1>Докопайтесь до точки потери</h1>
+  <p class="subtitle">Не ускоряйте весь процесс сразу. Найдите участок, где возникает основная задержка, и углубитесь только туда.</p>
+  <div class="progress-meta">
+    <span id="progressText">Шаг 1 из 7</span>
+    <span id="scoreText">Верных решений: 0</span>
+  </div>
+  <div class="progress"><span id="progressBar"></span></div>
+</header>
+
+<main>
+<!-- 1 -->
+<section class="screen active" data-screen="1">
+  <div class="step">Шаг 1</div>
+  <h2>Не лечите весь процесс целиком</h2>
+
+  <div class="case">
+    <strong>Исходные данные</strong>
+    <div class="metrics">
+      <div class="metric"><b>5 недель</b>плановый выпуск</div>
+      <div class="metric"><b>8 недель</b>фактический выпуск</div>
+    </div>
+  </div>
+
+  <div class="instruction">Какой первый шаг даст руководителю больше полезной информации?</div>
+
+  <div class="options" data-q="q1">
+    <button class="option">Попросить всех сократить сроки на 20%.</button>
+    <button class="option">Внедрить автоматизацию.</button>
+    <button class="option" data-correct="true">Разделить цикл выпуска на крупные этапы и сравнить их с планом.</button>
+    <button class="option">Найти сотрудника, который задерживает работу.</button>
+  </div>
+  <div class="feedback" id="fb1"></div>
+</section>
+
+<!-- 2 -->
+<section class="screen" data-screen="2">
+  <div class="step">Шаг 2</div>
+  <h2>Соберите первый уровень</h2>
+  <p class="lead">На первом уровне нужны крупные этапы одного порядка. Не уходите в детали раньше времени.</p>
+
+  <div class="instruction">Нажмите на карточки в правильном порядке, чтобы собрать цикл.</div>
+
+  <div class="builder">
+    <div class="pool-title">Этапы</div>
+    <div class="pool" id="pool1">
+      <button class="block" data-id="approval">Согласование</button>
+      <button class="block" data-id="production">Производство</button>
+      <button class="block" data-id="review">Проверка</button>
+      <button class="block" data-id="publish">Публикация</button>
+    </div>
+
+    <div class="slots">
+      <div class="slot-row"><div class="num">1</div><div class="slot" data-slot="0">Первый этап</div></div>
+      <div class="slot-row"><div class="num">2</div><div class="slot" data-slot="1">Второй этап</div></div>
+      <div class="slot-row"><div class="num">3</div><div class="slot" data-slot="2">Третий этап</div></div>
+      <div class="slot-row"><div class="num">4</div><div class="slot" data-slot="3">Четвертый этап</div></div>
+    </div>
+  </div>
+
+  <div class="feedback" id="fb2"></div>
+</section>
+
+<!-- 3 -->
+<section class="screen" data-screen="3">
+  <div class="step">Шаг 3</div>
+  <h2>Продолжайте только там, где есть потеря</h2>
+
+  <div class="breakdown">
+    <div class="break-row break-head"><div>Этап</div><div>Отклонение</div><div>Что делать</div></div>
+    <div class="break-row hot"><div><b>Согласование</b></div><div>+3 дня</div><div>?</div></div>
+    <div class="break-row"><div>Производство</div><div>по плану</div><div>—</div></div>
+    <div class="break-row hot"><div><b>Проверка</b></div><div>+7 дней</div><div>?</div></div>
+    <div class="break-row"><div>Публикация</div><div>по плану</div><div>—</div></div>
+  </div>
+
+  <div class="instruction">Выберите участки, которые имеет смысл декомпозировать дальше.</div>
+
+  <div class="options multi" data-q="q3">
+    <button class="option" data-correct="true">Согласование.</button>
+    <button class="option">Производство.</button>
+    <button class="option" data-correct="true">Проверка.</button>
+    <button class="option">Публикация.</button>
+  </div>
+  <div class="feedback" id="fb3"></div>
+</section>
+
+<!-- 4 -->
+<section class="screen" data-screen="4">
+  <div class="step">Шаг 4</div>
+  <h2>Разберите проблемный участок еще на один уровень</h2>
+  <p class="lead">У блока «Проверка» есть четыре крупных действия. Сначала восстановите порядок, затем посмотрите на данные.</p>
+
+  <div class="instruction">Соберите последовательность действий внутри проверки.</div>
+
+  <div class="builder">
+    <div class="pool-title">Действия</div>
+    <div class="pool" id="pool2">
+      <button class="block" data-id="expert">Экспертная проверка</button>
+      <button class="block" data-id="edit">Редактура</button>
+      <button class="block" data-id="visual">Проверка визуалов</button>
+      <button class="block" data-id="final">Финальная проверка</button>
+    </div>
+
+    <div class="slots" id="slots2">
+      <div class="slot-row"><div class="num">1</div><div class="slot subslot" data-slot2="0">...</div></div>
+      <div class="slot-row"><div class="num">2</div><div class="slot subslot" data-slot2="1">...</div></div>
+      <div class="slot-row"><div class="num">3</div><div class="slot subslot" data-slot2="2">...</div></div>
+      <div class="slot-row"><div class="num">4</div><div class="slot subslot" data-slot2="3">...</div></div>
+    </div>
+  </div>
+
+  <div class="breakdown" style="margin-top:18px">
+    <div class="break-row break-head"><div>Действие</div><div>Срок</div><div>Возвраты</div></div>
+    <div class="break-row hot"><div><b>Экспертная проверка</b></div><div>выше плана</div><div>большинство крупных</div></div>
+    <div class="break-row"><div>Редактура</div><div>по плану</div><div>единичные</div></div>
+    <div class="break-row"><div>Проверка визуалов</div><div>по плану</div><div>единичные</div></div>
+    <div class="break-row"><div>Финальная проверка</div><div>по плану</div><div>мелкие</div></div>
+  </div>
+
+  <div class="instruction">Какой участок стоит разобрать еще глубже?</div>
+  <div class="options" data-q="q4b">
+    <button class="option" data-correct="true">Экспертную проверку.</button>
+    <button class="option">Редактуру.</button>
+    <button class="option">Проверку визуалов.</button>
+    <button class="option">Финальную проверку.</button>
+  </div>
+
+  <div class="feedback" id="fb4"></div>
+</section>
+
+<!-- 5 -->
+<section class="screen" data-screen="5">
+  <div class="step">Шаг 5</div>
+  <h2>Сформулируйте сбой без обвинений</h2>
+
+  <div class="timeline">
+    <div class="item"><div class="n">1</div><div>Готовый продукт передают эксперту.</div></div>
+    <div class="item problem"><div class="n">2</div><div>Эксперт впервые проверяет логику структуры.</div></div>
+    <div class="item problem"><div class="n">3</div><div>Находит проблему в ключевом блоке.</div></div>
+    <div class="item"><div class="n">4</div><div>Материал возвращается автору.</div></div>
+    <div class="item"><div class="n">5</div><div>Автор переписывает несколько связанных частей.</div></div>
+    <div class="item"><div class="n">6</div><div>Эксперт проверяет материал повторно.</div></div>
+  </div>
+
+  <div class="instruction">Как точнее описать найденную потерю?</div>
+
+  <div class="options" data-q="q5">
+    <button class="option">Эксперт слишком требовательный.</button>
+    <button class="option">Автор плохо пишет.</button>
+    <button class="option" data-correct="true">Ключевые решения проверяются только после подготовки полного материала.</button>
+    <button class="option">Проверка занимает слишком много времени.</button>
+  </div>
+  <div class="feedback" id="fb5"></div>
+</section>
+
+<!-- 6 -->
+<section class="screen" data-screen="6">
+  <div class="step">Шаг 6</div>
+  <h2>Выберите точку вмешательства</h2>
+  <p class="lead">Оцените три варианта по двум критериям: насколько они влияют на найденную потерю и насколько ими может управлять команда.</p>
+
+  <div class="matrix" id="matrix">
+    <div class="head">Вариант</div><div class="head">Влияние</div><div class="head">Управляемость</div>
+
+    <div>1. Ускорить все этапы на 10%.</div>
+    <div><div class="rate" data-row="1" data-kind="impact"></div></div>
+    <div><div class="rate" data-row="1" data-kind="control"></div></div>
+
+    <div>2. Сократить время экспертной проверки.</div>
+    <div><div class="rate" data-row="2" data-kind="impact"></div></div>
+    <div><div class="rate" data-row="2" data-kind="control"></div></div>
+
+    <div><b>3. Перенести проверку структуры и сложных фрагментов на ранний этап.</b></div>
+    <div><div class="rate" data-row="3" data-kind="impact"></div></div>
+    <div><div class="rate" data-row="3" data-kind="control"></div></div>
+  </div>
+
+  <div class="instruction">Поставьте оценки от 1 до 5, затем выберите лучший вариант.</div>
+
+  <div class="options" data-q="q6">
+    <button class="option">Вариант 1.</button>
+    <button class="option">Вариант 2.</button>
+    <button class="option" data-correct="true">Вариант 3.</button>
+  </div>
+
+  <div class="feedback" id="fb6"></div>
+</section>
+
+<!-- 7 -->
+<section class="screen" data-screen="7">
+  <div class="step">Шаг 7</div>
+  <h2>Соберите новую конфигурацию и перенесите метод на свою задачу</h2>
+
+  <div class="instruction">Сначала соберите новый процесс из шести нужных карточек. Лишние оставьте внизу.</div>
+
+  <div class="builder">
+    <div class="pool-title">Карточки</div>
+    <div class="pool" id="pool3">
+      <button class="block" data-id="brief">Бриф</button>
+      <button class="block" data-id="structure">Согласование структуры</button>
+      <button class="block" data-id="fragment">Сложный фрагмент</button>
+      <button class="block" data-id="early">Ранняя проверка</button>
+      <button class="block" data-id="full">Полный материал</button>
+      <button class="block" data-id="finalcheck">Финальная проверка</button>
+      <button class="block" data-id="meeting">Дополнительное совещание всей команды</button>
+      <button class="block" data-id="report">Новый еженедельный отчет</button>
+      <button class="block" data-id="timecontrol">Усиленный контроль рабочего времени</button>
+    </div>
+
+    <div class="slots" id="slots3">
+      <div class="slot-row"><div class="num">1</div><div class="slot finalslot" data-slot3="0">...</div></div>
+      <div class="slot-row"><div class="num">2</div><div class="slot finalslot" data-slot3="1">...</div></div>
+      <div class="slot-row"><div class="num">3</div><div class="slot finalslot" data-slot3="2">...</div></div>
+      <div class="slot-row"><div class="num">4</div><div class="slot finalslot" data-slot3="3">...</div></div>
+      <div class="slot-row"><div class="num">5</div><div class="slot finalslot" data-slot3="4">...</div></div>
+      <div class="slot-row"><div class="num">6</div><div class="slot finalslot" data-slot3="5">...</div></div>
+    </div>
+  </div>
+
+  <div class="instruction" style="margin-top:20px">Теперь коротко перенесите логику на свою работу.</div>
+
+  <div class="final-fields">
+    <div class="field"><label for="f1">Исходная проблема</label><input id="f1" placeholder="Например: срок согласования вырос с 2 до 5 дней"></div>
+    <div class="field"><label for="f2">Первый уровень</label><textarea id="f2" placeholder="Какие крупные элементы составляют процесс?"></textarea></div>
+    <div class="field"><label for="f3">Проблемный участок</label><input id="f3" placeholder="Где основная потеря?"></div>
+    <div class="field"><label for="f4">Второй уровень</label><textarea id="f4" placeholder="На какие части вы разложили проблемный участок?"></textarea></div>
+    <div class="field"><label for="f5">Где возникает потеря</label><textarea id="f5" placeholder="Какое конкретное действие, возврат или ожидание создает потерю?"></textarea></div>
+    <div class="field"><label for="f6">Что можно изменить</label><textarea id="f6" placeholder="Какой элемент процесса вы хотите изменить или проверить?"></textarea></div>
+  </div>
+
+  <div class="checklist">
+    <div class="checkitem" data-check="levels"><div class="mark">1</div><div><b>Есть минимум два уровня</b><div>Вы не остановились на общей формулировке процесса.</div></div></div>
+    <div class="checkitem" data-check="loss"><div class="mark">2</div><div><b>Потеря описана конкретно</b><div>Понятно, где возникает задержка, возврат или повтор.</div></div></div>
+    <div class="checkitem" data-check="action"><div class="mark">3</div><div><b>Появилась точка вмешательства</b><div>Финал — это изменение в процессе, а не общее пожелание «работать быстрее».</div></div></div>
+  </div>
+
+  <div class="feedback" id="fb7"></div>
+
+  <div class="final-note hidden" id="finalNote">
+    <h3>Памятка</h3>
+    <div>Декомпозиция заканчивается не тогда, когда схема стала максимально подробной, а когда уже понятно, где возникает потеря и что именно можно изменить.</div>
+    <div class="formula">Проблема → крупные элементы → участок с наибольшей потерей → еще один уровень → конкретная точка вмешательства → новая конфигурация</div>
+  </div>
+</section>
+</main>
+
+<footer>
+  <button class="ctrl muted" id="resetBtn">Сбросить</button>
+  <div class="spacer"></div>
+  <button class="ctrl secondary" id="backBtn" disabled>Назад</button>
+  <button class="ctrl primary" id="checkBtn">Проверить</button>
+  <button class="ctrl secondary hidden" id="nextBtn">Дальше</button>
+</footer>
+</div>
+</div>
+
+<script>
+(function(){
+  let current=1, score=0;
+  const checked={1:false,2:false,3:false,4:false,5:false,6:false,7:false};
+  const awarded={1:false,2:false,3:false,4:false,5:false,6:false,7:false};
+
+  const screens=[...document.querySelectorAll('.screen')];
+  const progressText=document.getElementById('progressText');
+  const progressBar=document.getElementById('progressBar');
+  const scoreText=document.getElementById('scoreText');
+  const backBtn=document.getElementById('backBtn');
+  const nextBtn=document.getElementById('nextBtn');
+  const checkBtn=document.getElementById('checkBtn');
+  const resetBtn=document.getElementById('resetBtn');
+
+  function update(){
+    screens.forEach(s=>s.classList.toggle('active',Number(s.dataset.screen)===current));
+    progressText.textContent=`Шаг ${current} из 7`;
+    progressBar.style.width=`${current/7*100}%`;
+    scoreText.textContent=`Верных решений: ${score}`;
+    backBtn.disabled=current===1;
+    nextBtn.classList.toggle('hidden',!checked[current]||current===7);
+    checkBtn.classList.toggle('hidden',checked[current]&&current!==7);
+    checkBtn.textContent=(current===7&&checked[7])?'Проверить еще раз':'Проверить';
+  }
+
+  function feedback(id,type,html){
+    const el=document.getElementById(id);
+    el.className=`feedback show ${type}`;
+    el.innerHTML=html;
+  }
+
+  // Generic single select
+  document.querySelectorAll('.options:not(.multi)').forEach(group=>{
+    group.addEventListener('click',e=>{
+      const btn=e.target.closest('.option');
+      if(!btn || checked[current])return;
+      group.querySelectorAll('.option').forEach(o=>o.classList.remove('selected'));
+      btn.classList.add('selected');
+    });
+  });
+
+  document.querySelector('.options.multi').addEventListener('click',e=>{
+    const btn=e.target.closest('.option');
+    if(!btn || checked[3])return;
+    btn.classList.toggle('selected');
+  });
+
+  function checkSingle(q,screen,fbId,ok,bad){
+    const group=document.querySelector(`[data-q="${q}"]`);
+    const sel=group.querySelector('.option.selected');
+    if(!sel){feedback(fbId,'neutral','Сначала выберите один вариант.');return false;}
+    checked[screen]=true;
+    const good=sel.dataset.correct==='true';
+    group.querySelectorAll('.option').forEach(o=>{
+      if(o.dataset.correct==='true')o.classList.add('correct');
+      else if(o.classList.contains('selected'))o.classList.add('wrong');
+    });
+    if(good){
+      if(!awarded[screen]){score++;awarded[screen]=true;}
+      feedback(fbId,'ok',ok);
+    }else feedback(fbId,'bad',bad);
+    return true;
+  }
+
+  // Reusable sequence builders
+  function makeBuilder(poolSelector, slotSelector, state, checkedScreen){
+    const blocks=[...document.querySelectorAll(poolSelector+' .block')];
+    const slots=[...document.querySelectorAll(slotSelector)];
+    let selected=null;
+
+    blocks.forEach(b=>{
+      b.addEventListener('click',()=>{
+        if(checked[checkedScreen]||b.classList.contains('used'))return;
+        blocks.forEach(x=>x.style.outline='');
+        selected=b;
+        b.style.outline='3px solid rgba(47,93,98,.22)';
+      });
+    });
+
+    slots.forEach((s,i)=>{
+      s.addEventListener('click',()=>{
+        if(checked[checkedScreen])return;
+        if(s.dataset.item){
+          const old=blocks.find(b=>b.dataset.id===s.dataset.item);
+          if(old){old.classList.remove('used');old.style.outline='';}
+          s.dataset.item='';
+          s.textContent='...';
+          s.classList.remove('filled');
+          state[i]=null;
+          return;
+        }
+        if(!selected)return;
+        s.dataset.item=selected.dataset.id;
+        s.textContent=selected.textContent;
+        s.classList.add('filled');
+        selected.classList.add('used');
+        selected.style.outline='';
+        state[i]=selected.dataset.id;
+        selected=null;
+      });
+    });
+
+    return {blocks,slots};
+  }
+
+  const state1=[null,null,null,null];
+  const builder1=makeBuilder('#pool1','.slot[data-slot]',state1,2);
+
+  const state2=[null,null,null,null];
+  const builder2=makeBuilder('#pool2','.subslot',state2,4);
+
+  const state3=[null,null,null,null,null,null];
+  const builder3=makeBuilder('#pool3','.finalslot',state3,7);
+
+  function checkSequence(state,expected,screen,fbId,ok,bad){
+    if(state.some(x=>!x)){feedback(fbId,'neutral','Заполните все позиции.');return false;}
+    const good=state.join('|')===expected.join('|');
+    checked[screen]=true;
+    if(good){
+      if(!awarded[screen]){score++;awarded[screen]=true;}
+      feedback(fbId,'ok',ok);
+    }else feedback(fbId,'bad',bad);
+    return true;
+  }
+
+  // Screen 3 multi
+  function checkMulti(){
+    const group=document.querySelector('[data-q="q3"]');
+    const sel=[...group.querySelectorAll('.option.selected')];
+    if(sel.length!==2){feedback('fb3','neutral','Выберите ровно два участка.');return false;}
+    checked[3]=true;
+    let good=true;
+    group.querySelectorAll('.option').forEach(o=>{
+      const should=o.dataset.correct==='true';
+      const is=o.classList.contains('selected');
+      if(should!==is)good=false;
+      if(should)o.classList.add('correct');
+      else if(is)o.classList.add('wrong');
+    });
+    if(good){
+      if(!awarded[3]){score++;awarded[3]=true;}
+      feedback('fb3','ok','Верно. Продолжать стоит там, где есть заметное отклонение от плана: в согласовании и особенно в проверке. Этапы, которые идут по плану, пока углублять не нужно.');
+    }else{
+      feedback('fb3','bad','Не декомпозируйте все подряд. Ищите участки, где уже видна потеря относительно плана.');
+    }
+    return true;
+  }
+
+  // Screen 4 combined: sequence + choose expert
+  function checkScreen4(){
+    if(state2.some(x=>!x)){feedback('fb4','neutral','Сначала соберите последовательность внутри блока «Проверка».');return false;}
+    const seqGood=state2.join('|')==='expert|edit|visual|final';
+    const group=document.querySelector('[data-q="q4b"]');
+    const sel=group.querySelector('.option.selected');
+    if(!sel){feedback('fb4','neutral','Теперь выберите участок, который стоит разобрать глубже.');return false;}
+    const choiceGood=sel.dataset.correct==='true';
+    checked[4]=true;
+    group.querySelectorAll('.option').forEach(o=>{
+      if(o.dataset.correct==='true')o.classList.add('correct');
+      else if(o.classList.contains('selected'))o.classList.add('wrong');
+    });
+    if(seqGood && choiceGood){
+      if(!awarded[4]){score++;awarded[4]=true;}
+      feedback('fb4','ok','Да. Экспертная проверка выбивается сразу по двум признакам: занимает больше плана и создает большинство крупных возвратов. Именно туда стоит идти еще на один уровень.');
+    }else{
+      feedback('fb4','bad','Проверьте оба шага. Сначала восстановите порядок проверки, затем выберите участок с максимальной потерей — экспертную проверку.');
+    }
+    return true;
+  }
+
+  // Screen 6 rating matrix
+  document.querySelectorAll('.rate').forEach(rate=>{
+    for(let i=1;i<=5;i++){
+      const b=document.createElement('button');
+      b.type='button'; b.textContent=i;
+      b.addEventListener('click',()=>{
+        rate.querySelectorAll('button').forEach(x=>x.classList.remove('selected'));
+        b.classList.add('selected');
+        rate.dataset.value=String(i);
+      });
+      rate.appendChild(b);
+    }
+  });
+
+  function checkScreen6(){
+    const rates=[...document.querySelectorAll('.rate')];
+    if(rates.some(r=>!r.dataset.value)){
+      feedback('fb6','neutral','Сначала поставьте оценки всем трем вариантам по двум критериям.');
+      return false;
+    }
+    const group=document.querySelector('[data-q="q6"]');
+    const sel=group.querySelector('.option.selected');
+    if(!sel){feedback('fb6','neutral','Теперь выберите лучший вариант вмешательства.');return false;}
+
+    checked[6]=true;
+    const good=sel.dataset.correct==='true';
+
+    group.querySelectorAll('.option').forEach(o=>{
+      if(o.dataset.correct==='true')o.classList.add('correct');
+      else if(o.classList.contains('selected'))o.classList.add('wrong');
+    });
+
+    if(good){
+      if(!awarded[6]){score++;awarded[6]=true;}
+      feedback('fb6','ok','Верно. Третий вариант напрямую бьет по найденной потере: ключевые решения проверяются раньше, поэтому ошибка не успевает разрастись в большой возврат. И команда может изменить этот порядок сама.');
+    }else{
+      feedback('fb6','bad','Сравните варианты с найденной причиной потери. Ускорять все этапы слишком широко, а просто «сократить время проверки» не устраняет позднее обнаружение проблем.');
+    }
+    return true;
+  }
+
+  function setCheck(name,good,goodText,warnText){
+    const el=document.querySelector(`[data-check="${name}"]`);
+    el.classList.remove('good','warn');
+    el.classList.add(good?'good':'warn');
+    el.querySelector('.mark').textContent=good?'✓':'!';
+    el.querySelector('div>div').textContent=good?goodText:warnText;
+  }
+
+  function checkScreen7(){
+    const expected=['brief','structure','fragment','early','full','finalcheck'];
+    const seqFilled=state3.every(Boolean);
+    const seqGood=seqFilled && state3.join('|')===expected.join('|');
+
+    const vals=[1,2,3,4,5,6].map(i=>document.getElementById('f'+i).value.trim());
+    if(!seqFilled){
+      feedback('fb7','neutral','Сначала соберите новый процесс из шести карточек.');
+      return false;
+    }
+    if(vals.filter(Boolean).length<6){
+      feedback('fb7','neutral','Заполните все шесть полей своей задачи. Можно коротко.');
+      return false;
+    }
+
+    const levelsGood=vals[1].length>=10 && vals[3].length>=10;
+    const lossGood=vals[4].length>=12;
+    const actionGood=vals[5].length>=10 && !/быстрее|лучше работать|усилить контроль/i.test(vals[5]);
+
+    setCheck('levels',levelsGood,
+      'Есть два уровня: сначала крупные элементы, затем детализация проблемного участка.',
+      'Добавьте более конкретные элементы на первом и втором уровне.');
+    setCheck('loss',lossGood,
+      'Потеря описана достаточно конкретно, чтобы искать вмешательство.',
+      'Уточните, где именно возникает ожидание, возврат, переделка или повтор.');
+    setCheck('action',actionGood,
+      'Есть конкретная точка вмешательства, которую можно проверить.',
+      'Сформулируйте изменение в процессе, а не общее пожелание «работать быстрее».');
+
+    checked[7]=true;
+
+    if(seqGood && levelsGood && lossGood && actionGood){
+      if(!awarded[7]){score++;awarded[7]=true;}
+      feedback('fb7','ok','Новая конфигурация собрана, а собственная задача доведена до точки вмешательства. Дальше уже имеет смысл планировать проверку изменения.');
+    }else if(!seqGood){
+      feedback('fb7','bad','В новой схеме нарушен порядок. Нужная логика: <b>бриф → согласование структуры → сложный фрагмент → ранняя проверка → полный материал → финальная проверка</b>.');
+    }else{
+      feedback('fb7','neutral','Схема собрана верно. В своей задаче стоит чуть точнее описать один из уровней, потерю или конкретное изменение.');
+    }
+
+    document.getElementById('finalNote').classList.remove('hidden');
+    return true;
+  }
+
+  checkBtn.addEventListener('click',()=>{
+    let done=false;
+
+    if(current===1){
+      done=checkSingle(
+        'q1',1,'fb1',
+        'Верно. Сначала нужно увидеть, какой крупный участок создает потерю. И только потом решать, что именно ускорять или менять.',
+        'Это уже решение до анализа. Сначала разделите цикл на крупные этапы и найдите, где фактический срок расходится с планом.'
+      );
+    }
+
+    if(current===2){
+      done=checkSequence(
+        state1,['approval','production','review','publish'],2,'fb2',
+        'Первый уровень собран. Теперь можно сравнить крупные этапы между собой и не углубляться в те, которые идут по плану.',
+        'Проверьте порядок крупного цикла: согласование → производство → проверка → публикация.'
+      );
+    }
+
+    if(current===3)done=checkMulti();
+    if(current===4)done=checkScreen4();
+
+    if(current===5){
+      done=checkSingle(
+        'q5',5,'fb5',
+        'Да. Это описание процесса, а не характеристика людей: ключевые решения впервые проверяются слишком поздно, поэтому ошибка тянет за собой крупную переделку.',
+        'Формулировка либо обвиняет участника, либо просто повторяет симптом. Ищите, <b>какое устройство процесса</b> создает повторную работу.'
+      );
+    }
+
+    if(current===6)done=checkScreen6();
+    if(current===7)done=checkScreen7();
+
+    if(done)update();
+  });
+
+  nextBtn.addEventListener('click',()=>{
+    if(current<7){current++;update();window.scrollTo({top:0,behavior:'smooth'});}
+  });
+
+  backBtn.addEventListener('click',()=>{
+    if(current>1){current--;update();window.scrollTo({top:0,behavior:'smooth'});}
+  });
+
+  resetBtn.addEventListener('click',()=>{
+    current=1;score=0;
+    Object.keys(checked).forEach(k=>checked[k]=false);
+    Object.keys(awarded).forEach(k=>awarded[k]=false);
+
+    document.querySelectorAll('.option').forEach(o=>o.classList.remove('selected','correct','wrong'));
+    document.querySelectorAll('.feedback').forEach(f=>{f.className='feedback';f.innerHTML='';});
+
+    [builder1,builder2,builder3].forEach(builder=>{
+      builder.blocks.forEach(b=>{b.classList.remove('used');b.style.outline='';});
+      builder.slots.forEach(s=>{s.dataset.item='';s.textContent='...';s.classList.remove('filled');});
+    });
+    state1.fill(null);state2.fill(null);state3.fill(null);
+
+    document.querySelectorAll('.rate').forEach(r=>{
+      r.dataset.value='';
+      r.querySelectorAll('button').forEach(b=>b.classList.remove('selected'));
+    });
+
+    [1,2,3,4,5,6].forEach(i=>document.getElementById('f'+i).value='');
+    document.querySelectorAll('.checkitem').forEach((el,i)=>{
+      el.classList.remove('good','warn');
+      el.querySelector('.mark').textContent=String(i+1);
+    });
+    document.querySelector('[data-check="levels"] div>div').textContent='Вы не остановились на общей формулировке процесса.';
+    document.querySelector('[data-check="loss"] div>div').textContent='Понятно, где возникает задержка, возврат или повтор.';
+    document.querySelector('[data-check="action"] div>div').textContent='Финал — это изменение в процессе, а не общее пожелание «работать быстрее».';
+    document.getElementById('finalNote').classList.add('hidden');
+
+    update();
+    window.scrollTo({top:0,behavior:'smooth'});
+  });
+
+  update();
+})();
+</script>
+</body>
+</html>

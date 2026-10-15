@@ -1,0 +1,649 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Свяжите несвязанное</title>
+<style>
+:root{
+  --bg:#f4f6f8; --card:#ffffff; --text:#1f2933; --muted:#667085; --line:#d9dee7;
+  --soft:#eef2f6; --accent:#2f5d62; --accent-soft:#e7f0f1;
+  --ok:#1f6b45; --okbg:#e9f5ee; --bad:#913b35; --badbg:#faeceb;
+  --warn:#7b5719; --warnbg:#fff5dc; --shadow:0 14px 40px rgba(31,41,51,.08);
+}
+*{box-sizing:border-box}
+body{
+  margin:0;background:var(--bg);color:var(--text);
+  font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  line-height:1.55;
+}
+button,input,textarea{font:inherit}
+.app{width:min(100% - 28px,700px);margin:28px auto}
+.shell{background:var(--card);border:1px solid var(--line);border-radius:22px;box-shadow:var(--shadow);overflow:hidden}
+header{padding:22px 22px 18px;border-bottom:1px solid var(--line);background:#fff}
+.eyebrow{margin:0 0 6px;color:var(--accent);font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:.03em}
+h1{margin:0;font-size:clamp(27px,5vw,35px);line-height:1.12;letter-spacing:-.02em}
+.subtitle{margin:10px 0 0;color:var(--muted);font-size:15px}
+.progress-meta{display:flex;justify-content:space-between;gap:12px;margin:18px 0 7px;color:var(--muted);font-size:13px}
+.progress{height:8px;background:var(--soft);border-radius:999px;overflow:hidden}
+.progress span{display:block;height:100%;background:var(--accent);width:14.285%;transition:width .2s ease}
+main{padding:24px 22px 18px}
+.screen{display:none}.screen.active{display:block}
+.step{display:inline-flex;align-items:center;min-height:30px;padding:0 11px;border-radius:999px;background:var(--accent-soft);color:var(--accent);font-size:13px;font-weight:800;margin-bottom:12px}
+h2{margin:0 0 10px;font-size:23px;line-height:1.25}
+.lead{margin:0 0 18px;color:#3b4652}
+.case{margin:16px 0 18px;padding:15px 16px;background:#f8fafb;border:1px solid var(--line);border-radius:14px}
+.case strong{display:block;margin-bottom:6px}
+.quote{margin-top:8px;padding-left:14px;border-left:3px solid #b5c3c5;color:#334155;font-weight:650}
+.instruction{margin:16px 0;padding:14px 15px;background:var(--accent-soft);border-left:4px solid var(--accent);border-radius:0 12px 12px 0;font-size:14px}
+.options{display:grid;gap:10px;margin-top:14px}
+.option{
+  width:100%;text-align:left;border:1px solid var(--line);background:#fff;color:var(--text);
+  border-radius:13px;padding:14px;cursor:pointer;transition:.15s ease
+}
+.option:hover{border-color:#aeb7c4;background:#fafbfc}
+.option.selected{border-color:var(--accent);background:var(--accent-soft)}
+.option.correct{border-color:#7fb395;background:var(--okbg)}
+.option.wrong{border-color:#d29a95;background:var(--badbg)}
+.feedback{display:none;margin-top:16px;padding:15px 16px;border-radius:13px;font-size:14px}
+.feedback.show{display:block}
+.feedback.ok{background:var(--okbg);border:1px solid #b9dcc8;color:#174c33}
+.feedback.bad{background:var(--badbg);border:1px solid #edc3c0;color:#742c27}
+.feedback.neutral{background:var(--warnbg);border:1px solid #ead7a2;color:#66470e}
+
+.stimulus{
+  margin:16px 0;padding:18px;border-radius:14px;background:#fff;border:1px solid var(--line);
+  text-align:center
+}
+.stimulus .word{font-size:30px;font-weight:900;color:var(--accent);letter-spacing:-.02em}
+.stimulus .hint{margin-top:6px;color:var(--muted);font-size:13px}
+
+.feature-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
+.feature{
+  border:1px solid var(--line);border-radius:12px;background:#fff;padding:12px;cursor:pointer
+}
+.feature.selected{border-color:var(--accent);background:var(--accent-soft)}
+.feature.correct{border-color:#7fb395;background:var(--okbg)}
+.feature.wrong{border-color:#d29a95;background:var(--badbg)}
+
+.builder{margin-top:16px}
+.pool-title{font-size:13px;color:var(--muted);font-weight:800;margin-bottom:8px}
+.pool{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
+.block{
+  border:1px solid var(--line);background:#fff;border-radius:999px;padding:9px 12px;cursor:pointer;font-size:14px
+}
+.block.used{opacity:.38;cursor:default}
+.slots{display:grid;gap:10px}
+.slot-row{display:grid;grid-template-columns:30px 1fr;gap:10px;align-items:start}
+.num{
+  width:30px;height:30px;border-radius:8px;background:var(--soft);color:var(--muted);
+  display:flex;align-items:center;justify-content:center;font-weight:800;font-size:12px
+}
+.slot{
+  min-height:48px;border:1px dashed #aab4c1;border-radius:11px;background:#fafbfc;
+  display:flex;align-items:center;padding:10px 12px;color:var(--muted);cursor:pointer
+}
+.slot.filled{border-style:solid;border-color:var(--accent);background:var(--accent-soft);color:var(--text);font-weight:700}
+
+.analogy-card{
+  margin-top:14px;padding:14px 15px;border:1px solid var(--line);border-radius:13px;background:#fff
+}
+.analogy-card b{display:block;margin-bottom:5px}
+.hypotheses{display:grid;gap:10px;margin-top:14px}
+.hypothesis{
+  border:1px solid var(--line);border-radius:13px;background:#fff;padding:14px;cursor:pointer
+}
+.hypothesis.selected{border-color:var(--accent);background:var(--accent-soft)}
+.combine{
+  margin-top:16px;padding:14px;border:1px solid var(--line);border-radius:13px;background:#f8fafb
+}
+.combine strong{display:block;margin-bottom:5px}
+
+.field-grid{display:grid;gap:12px;margin-top:16px}
+.field label{display:block;font-weight:750;font-size:14px;margin-bottom:6px}
+.field input,.field textarea{
+  width:100%;border:1px solid var(--line);border-radius:12px;padding:12px 13px;background:#fff;color:var(--text)
+}
+.field textarea{min-height:86px;resize:vertical}
+.field input:focus,.field textarea:focus{outline:3px solid rgba(47,93,98,.16);border-color:var(--accent)}
+.checklist{display:grid;gap:9px;margin-top:16px}
+.checkitem{
+  display:grid;grid-template-columns:24px 1fr;gap:10px;padding:12px 13px;border:1px solid var(--line);border-radius:12px;background:#fff
+}
+.checkitem .mark{
+  width:24px;height:24px;border-radius:50%;background:var(--soft);color:var(--muted);
+  display:flex;align-items:center;justify-content:center;font-weight:800;font-size:12px
+}
+.checkitem.good{border-color:#b9dcc8;background:var(--okbg)}
+.checkitem.good .mark{background:#d6ecdf;color:var(--ok)}
+.checkitem.warn{border-color:#ead7a2;background:var(--warnbg)}
+.checkitem.warn .mark{background:#f5e8bd;color:var(--warn)}
+.small{font-size:13px;color:var(--muted)}
+
+.final-note{margin-top:16px;padding:16px;border:1px solid var(--line);border-radius:14px;background:#f8fafb}
+.final-note h3{margin:0 0 8px;font-size:17px}
+.formula{margin-top:10px;font-weight:800;color:var(--accent)}
+
+footer{padding:16px 22px 22px;border-top:1px solid var(--line);display:flex;gap:10px;flex-wrap:wrap;align-items:center;background:#fff}
+footer .spacer{flex:1}
+.ctrl{border-radius:12px;padding:11px 15px;cursor:pointer;font-weight:750;border:1px solid var(--line)}
+.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+.secondary{background:#fff;color:var(--text)}
+.muted{background:#fff;color:var(--muted)}
+button[disabled]{opacity:.42;cursor:not-allowed}
+.hidden{display:none!important}
+
+@media(max-width:560px){
+  .app{width:min(100% - 16px,700px);margin:8px auto 18px}
+  .shell{border-radius:16px}
+  header,main,footer{padding-left:16px;padding-right:16px}
+  .feature-grid{grid-template-columns:1fr}
+  footer .spacer{display:none}
+  footer button{flex:1 1 calc(50% - 6px)}
+}
+</style>
+</head>
+<body>
+<div class="app">
+<div class="shell">
+<header>
+  <p class="eyebrow">Проверочный интерактив</p>
+  <h1>Свяжите несвязанное</h1>
+  <p class="subtitle">Возьмите случайный образ, разберите его на признаки и превратите один из них в рабочую гипотезу.</p>
+  <div class="progress-meta">
+    <span id="progressText">Шаг 1 из 7</span>
+    <span id="scoreText">Верных решений: 0</span>
+  </div>
+  <div class="progress"><span id="progressBar"></span></div>
+</header>
+
+<main>
+<!-- 1 -->
+<section class="screen active" data-screen="1">
+  <div class="step">Шаг 1</div>
+  <h2>Не ищите похожую отрасль</h2>
+
+  <div class="case">
+    <strong>Рабочая проблема</strong>
+    Руководитель службы поддержки хочет сократить количество обращений, которые несколько раз переходят от одного специалиста к другому.
+  </div>
+
+  <div class="stimulus">
+    <div class="word">Эстафета</div>
+    <div class="hint">Случайный стимул никак не обязан быть связан с клиентским сервисом.</div>
+  </div>
+
+  <div class="instruction">Что делать первым?</div>
+
+  <div class="options" data-q="q1">
+    <button class="option">Искать службу поддержки, где используют эстафету как метафору.</button>
+    <button class="option">Сразу придумать новый процесс передачи обращений.</button>
+    <button class="option" data-correct="true">Выписать свойства эстафеты, пока не связывая их с поддержкой.</button>
+    <button class="option">Выбрать другой объект, потому что эстафета не связана с клиентским сервисом.</button>
+  </div>
+  <div class="feedback" id="fb1"></div>
+</section>
+
+<!-- 2 -->
+<section class="screen" data-screen="2">
+  <div class="step">Шаг 2</div>
+  <h2>Разберите стимул на признаки</h2>
+  <p class="lead">Сначала работайте с самим объектом. Не пытайтесь заранее решить, какие признаки «пригодятся».</p>
+
+  <div class="instruction">Отметьте признаки, которые действительно относятся к эстафете. После проверки выберите два из них для дальнейшей работы.</div>
+
+  <div class="feature-grid" id="featureGrid">
+    <div class="feature" data-correct="true" data-id="baton">Передача палочки.</div>
+    <div class="feature" data-correct="true" data-id="zone">Четкая зона передачи.</div>
+    <div class="feature" data-correct="true" data-id="role">Каждый участник отвечает за свой этап.</div>
+    <div class="feature" data-correct="true" data-id="shared">Общий результат зависит от нескольких участников.</div>
+    <div class="feature" data-correct="true" data-id="route">Движение идет по маршруту.</div>
+    <div class="feature" data-correct="false" data-id="same">Все участники стартуют одновременно.</div>
+    <div class="feature" data-correct="true" data-id="finish">Финиш фиксируется.</div>
+  </div>
+
+  <div class="feedback" id="fb2"></div>
+</section>
+
+<!-- 3 -->
+<section class="screen" data-screen="3">
+  <div class="step">Шаг 3</div>
+  <h2>Переведите образ в принцип</h2>
+
+  <div class="analogy-card">
+    <b>Выбранный признак</b>
+    «Четкая зона передачи».
+  </div>
+
+  <div class="instruction">Какой вопрос лучше всего заставляет перенести признак в рабочую задачу?</div>
+
+  <div class="options" data-q="q3">
+    <button class="option">Где проводить спортивные тренировки для команды?</button>
+    <button class="option">Как сделать передачу обращения похожей на передачу палочки?</button>
+    <button class="option" data-correct="true">Что, если передача обращения считается завершенной только при выполнении четких условий приема?</button>
+    <button class="option">Как запретить сотрудникам передавать заявки?</button>
+  </div>
+  <div class="feedback" id="fb3"></div>
+</section>
+
+<!-- 4 -->
+<section class="screen" data-screen="4">
+  <div class="step">Шаг 4</div>
+  <h2>Соберите проверяемую идею</h2>
+  <p class="lead">Теперь принцип нужно превратить в конкретный процесс передачи обращения.</p>
+
+  <div class="instruction">Нажмите на нужные блоки в правильном порядке. Лишние блоки оставьте внизу.</div>
+
+  <div class="builder">
+    <div class="pool-title">Блоки</div>
+    <div class="pool" id="pool">
+      <button class="block" data-id="reason">Специалист указывает причину передачи</button>
+      <button class="block" data-id="role">Выбирает следующую роль</button>
+      <button class="block" data-id="data">Прикладывает обязательные данные</button>
+      <button class="block" data-id="accept">Новый исполнитель подтверждает прием</button>
+      <button class="block" data-id="close">Только после подтверждения предыдущий исполнитель снимает задачу со своей очереди</button>
+      <button class="block" data-id="sport">Создать отдельный спортивный чат</button>
+      <button class="block" data-id="oral">Передавать задачи только устно</button>
+      <button class="block" data-id="ban">Запрещать повторную передачу</button>
+    </div>
+
+    <div class="slots">
+      <div class="slot-row"><div class="num">1</div><div class="slot" data-slot="0">...</div></div>
+      <div class="slot-row"><div class="num">2</div><div class="slot" data-slot="1">...</div></div>
+      <div class="slot-row"><div class="num">3</div><div class="slot" data-slot="2">...</div></div>
+      <div class="slot-row"><div class="num">4</div><div class="slot" data-slot="3">...</div></div>
+      <div class="slot-row"><div class="num">5</div><div class="slot" data-slot="4">...</div></div>
+    </div>
+  </div>
+  <div class="feedback" id="fb4"></div>
+</section>
+
+<!-- 5 -->
+<section class="screen" data-screen="5">
+  <div class="step">Шаг 5</div>
+  <h2>Повторите прием с новым стимулом</h2>
+
+  <div class="stimulus">
+    <div class="word">Меню</div>
+    <div class="hint">Еще один случайный объект для той же рабочей задачи.</div>
+  </div>
+
+  <div class="case">
+    <strong>Признаки</strong>
+    ограниченный набор вариантов · категории · описание каждого варианта · выбор делает клиент · часть позиций временно недоступна
+  </div>
+
+  <div class="instruction">Какой принцип из этого объекта полезнее всего перенести в задачу с передачами обращений?</div>
+
+  <div class="options" data-q="q5">
+    <button class="option">Сделать интерфейс службы поддержки похожим на ресторан.</button>
+    <button class="option" data-correct="true">Ограничить количество допустимых причин передачи и заранее описать, куда ведет каждая из них.</button>
+    <button class="option">Пусть клиент сам выбирает специалиста из полного списка.</button>
+    <button class="option">Временно запретить часть обращений.</button>
+  </div>
+  <div class="feedback" id="fb5"></div>
+</section>
+
+<!-- 6 -->
+<section class="screen" data-screen="6">
+  <div class="step">Шаг 6</div>
+  <h2>Соедините две гипотезы</h2>
+
+  <div class="hypotheses">
+    <div class="hypothesis" data-id="relay">
+      <b>Эстафета</b><br>
+      Четкие условия передачи + подтверждение приема.
+    </div>
+    <div class="hypothesis" data-id="menu">
+      <b>Меню</b><br>
+      Ограниченный список причин передачи + заданный маршрут.
+    </div>
+  </div>
+
+  <div class="instruction">Можно ли объединить их в одну более цельную схему?</div>
+
+  <div class="options" data-q="q6">
+    <button class="option">Нет, идеи из разных стимулов лучше не смешивать.</button>
+    <button class="option" data-correct="true">Да. Сотрудник выбирает одну из нескольких причин передачи, система определяет следующую роль, а новый исполнитель подтверждает прием.</button>
+    <button class="option">Да. Нужно добавить еще больше причин передачи и убрать подтверждение.</button>
+    <button class="option">Нет. Лучше оставить только подтверждение приема.</button>
+  </div>
+  <div class="feedback" id="fb6"></div>
+</section>
+
+<!-- 7 -->
+<section class="screen" data-screen="7">
+  <div class="step">Шаг 7</div>
+  <h2>Сделайте перенос на свою задачу</h2>
+  <p class="lead">Здесь важна не красота ассоциации, а новый рабочий вариант, который до упражнения не был очевиден.</p>
+
+  <div class="stimulus">
+    <div class="word" id="randomWord">Маяк</div>
+    <div class="hint">Случайный объект можно заменить кнопкой ниже.</div>
+    <button class="ctrl secondary" id="randomizeBtn" style="margin-top:10px">Другой объект</button>
+  </div>
+
+  <div class="field-grid">
+    <div class="field"><label for="f1">Моя задача</label><textarea id="f1" placeholder="Какую рабочую проблему вы хотите сдвинуть?"></textarea></div>
+    <div class="field"><label for="f2">Случайный объект</label><input id="f2" value="Маяк"></div>
+    <div class="field"><label for="f3">5 его признаков</label><textarea id="f3" placeholder="Перечислите пять свойств объекта, пока не связывая их с задачей"></textarea></div>
+    <div class="field"><label for="f4">Признак, который я переношу</label><input id="f4" placeholder="Один признак"></div>
+    <div class="field"><label for="f5">Принцип</label><textarea id="f5" placeholder="Что этот признак означает на уровне механизма?"></textarea></div>
+    <div class="field"><label for="f6">Идея</label><textarea id="f6" placeholder="Как этот принцип может изменить вашу рабочую задачу?"></textarea></div>
+    <div class="field"><label for="f7">Как проверить</label><textarea id="f7" placeholder="Какой небольшой тест покажет, есть ли смысл развивать идею?"></textarea></div>
+  </div>
+
+  <div class="checklist">
+    <div class="checkitem" data-check="features"><div class="mark">1</div><div><b>Есть несколько признаков объекта</b><div class="small">Вы не перескочили сразу к первой ассоциации.</div></div></div>
+    <div class="checkitem" data-check="principle"><div class="mark">2</div><div><b>Признак переведен в принцип</b><div class="small">Видно, какой механизм вы переносите.</div></div></div>
+    <div class="checkitem" data-check="idea"><div class="mark">3</div><div><b>Получилась новая рабочая идея</b><div class="small">Это не просто метафора, а изменение, которое можно попробовать.</div></div></div>
+    <div class="checkitem" data-check="test"><div class="mark">4</div><div><b>Есть способ проверки</b><div class="small">Понятно, как быстро проверить ценность идеи.</div></div></div>
+  </div>
+
+  <div class="feedback" id="fb7"></div>
+
+  <div class="final-note hidden" id="finalNote">
+    <h3>Памятка</h3>
+    <div>Случайный стимул нужен не для красивой метафоры. Он должен вытолкнуть мышление в сторону, куда команда сама бы не пошла.</div>
+    <div class="formula">Задача → случайный стимул → признаки → принудительная связь → принцип → проверяемая идея</div>
+  </div>
+</section>
+</main>
+
+<footer>
+  <button class="ctrl muted" id="resetBtn">Сбросить</button>
+  <div class="spacer"></div>
+  <button class="ctrl secondary" id="backBtn" disabled>Назад</button>
+  <button class="ctrl primary" id="checkBtn">Проверить</button>
+  <button class="ctrl secondary hidden" id="nextBtn">Дальше</button>
+</footer>
+</div>
+</div>
+
+<script>
+(function(){
+  let current=1, score=0;
+  const checked={1:false,2:false,3:false,4:false,5:false,6:false,7:false};
+  const awarded={1:false,2:false,3:false,4:false,5:false,6:false,7:false};
+
+  const screens=[...document.querySelectorAll('.screen')];
+  const progressText=document.getElementById('progressText');
+  const progressBar=document.getElementById('progressBar');
+  const scoreText=document.getElementById('scoreText');
+  const backBtn=document.getElementById('backBtn');
+  const nextBtn=document.getElementById('nextBtn');
+  const checkBtn=document.getElementById('checkBtn');
+  const resetBtn=document.getElementById('resetBtn');
+
+  function update(){
+    screens.forEach(s=>s.classList.toggle('active',Number(s.dataset.screen)===current));
+    progressText.textContent=`Шаг ${current} из 7`;
+    progressBar.style.width=`${current/7*100}%`;
+    scoreText.textContent=`Верных решений: ${score}`;
+    backBtn.disabled=current===1;
+    nextBtn.classList.toggle('hidden',!checked[current]||current===7);
+    checkBtn.classList.toggle('hidden',checked[current]&&current!==7);
+    checkBtn.textContent=(current===7&&checked[7])?'Проверить еще раз':'Проверить';
+  }
+
+  function feedback(id,type,html){
+    const el=document.getElementById(id);
+    el.className=`feedback show ${type}`;
+    el.innerHTML=html;
+  }
+
+  document.querySelectorAll('.options').forEach(group=>{
+    group.addEventListener('click',e=>{
+      const btn=e.target.closest('.option');
+      if(!btn || checked[current])return;
+      group.querySelectorAll('.option').forEach(o=>o.classList.remove('selected'));
+      btn.classList.add('selected');
+    });
+  });
+
+  function checkSingle(q,screen,fbId,ok,bad){
+    const group=document.querySelector(`[data-q="${q}"]`);
+    const sel=group.querySelector('.option.selected');
+    if(!sel){feedback(fbId,'neutral','Сначала выберите один вариант.');return false;}
+    checked[screen]=true;
+    const good=sel.dataset.correct==='true';
+    group.querySelectorAll('.option').forEach(o=>{
+      if(o.dataset.correct==='true')o.classList.add('correct');
+      else if(o.classList.contains('selected'))o.classList.add('wrong');
+    });
+    if(good){
+      if(!awarded[screen]){score++;awarded[screen]=true;}
+      feedback(fbId,'ok',ok);
+    }else feedback(fbId,'bad',bad);
+    return true;
+  }
+
+  // Screen 2
+  const features=[...document.querySelectorAll('.feature')];
+  features.forEach(f=>{
+    f.addEventListener('click',()=>{
+      if(checked[2])return;
+      f.classList.toggle('selected');
+    });
+  });
+
+  function checkFeatures(){
+    const selected=features.filter(f=>f.classList.contains('selected'));
+    if(selected.length<4){
+      feedback('fb2','neutral','Отметьте признаки эстафеты. Их здесь несколько.');
+      return false;
+    }
+    checked[2]=true;
+    let good=true;
+    features.forEach(f=>{
+      const should=f.dataset.correct==='true';
+      const is=f.classList.contains('selected');
+      if(should!==is)good=false;
+      if(should)f.classList.add('correct');
+      else if(is)f.classList.add('wrong');
+    });
+    if(good){
+      if(!awarded[2]){score++;awarded[2]=true;}
+      feedback('fb2','ok','Верно. У вас получился набор свойств, из которого можно выбирать разные направления переноса. Особенно полезны здесь зона передачи, распределение этапов и фиксированный финиш.');
+    }else{
+      feedback('fb2','bad','Проверьте спорный пункт: в эстафете участники обычно стартуют не одновременно, а последовательно. Остальные признаки действительно относятся к объекту.');
+    }
+    return true;
+  }
+
+  // Screen 4 builder
+  const blocks=[...document.querySelectorAll('.block')];
+  const slots=[...document.querySelectorAll('.slot')];
+  let selectedBlock=null;
+  const state=[null,null,null,null,null];
+
+  blocks.forEach(b=>{
+    b.addEventListener('click',()=>{
+      if(checked[4]||b.classList.contains('used'))return;
+      blocks.forEach(x=>x.style.outline='');
+      selectedBlock=b;
+      b.style.outline='3px solid rgba(47,93,98,.22)';
+    });
+  });
+
+  slots.forEach((s,i)=>{
+    s.addEventListener('click',()=>{
+      if(checked[4])return;
+      if(s.dataset.item){
+        const old=blocks.find(b=>b.dataset.id===s.dataset.item);
+        if(old){old.classList.remove('used');old.style.outline='';}
+        s.dataset.item='';
+        s.textContent='...';
+        s.classList.remove('filled');
+        state[i]=null;
+        return;
+      }
+      if(!selectedBlock)return;
+      s.dataset.item=selectedBlock.dataset.id;
+      s.textContent=selectedBlock.textContent;
+      s.classList.add('filled');
+      selectedBlock.classList.add('used');
+      selectedBlock.style.outline='';
+      state[i]=selectedBlock.dataset.id;
+      selectedBlock=null;
+    });
+  });
+
+  function checkBuilder(){
+    if(state.some(x=>!x)){feedback('fb4','neutral','Заполните все пять позиций.');return false;}
+    const expected=['reason','role','data','accept','close'];
+    const good=state.join('|')===expected.join('|');
+    checked[4]=true;
+    if(good){
+      if(!awarded[4]){score++;awarded[4]=true;}
+      feedback('fb4','ok','Получилась проверяемая схема передачи: причина → следующая роль → обязательные данные → подтверждение приема → завершение передачи. Здесь уже можно измерять повторные переадресации и возвраты.');
+    }else{
+      feedback('fb4','bad','Посмотрите на границу передачи. Сначала нужно понять, <b>почему</b> обращение передается и <b>кому</b>, затем приложить данные, получить подтверждение и только после этого закрывать передачу у предыдущего исполнителя.');
+    }
+    return true;
+  }
+
+  // Screen 7 random stimulus
+  const randomWords=['Маяк','Лифт','Термостат','Фильтр','Почтовый ящик','Конвейер','Паспорт','Очередь','Будильник','Карта метро'];
+  let randomIndex=0;
+  const randomWord=document.getElementById('randomWord');
+  const f2=document.getElementById('f2');
+
+  document.getElementById('randomizeBtn').addEventListener('click',()=>{
+    randomIndex=(randomIndex+1)%randomWords.length;
+    randomWord.textContent=randomWords[randomIndex];
+    f2.value=randomWords[randomIndex];
+  });
+
+  function setCheck(name,good,goodText,warnText){
+    const el=document.querySelector(`[data-check="${name}"]`);
+    el.classList.remove('good','warn');
+    el.classList.add(good?'good':'warn');
+    el.querySelector('.mark').textContent=good?'✓':'!';
+    el.querySelector('.small').textContent=good?goodText:warnText;
+  }
+
+  function checkFinal(){
+    const vals=[1,2,3,4,5,6,7].map(i=>document.getElementById('f'+i).value.trim());
+    if(vals.filter(Boolean).length<7){
+      feedback('fb7','neutral','Заполните все семь полей. Можно коротко.');
+      return false;
+    }
+
+    const featureCount=vals[2].split(/[,;\n•]+/).map(x=>x.trim()).filter(Boolean).length;
+    const featuresGood=featureCount>=5;
+    const principleGood=vals[4].length>=15;
+    const ideaGood=vals[5].length>=15 && !/как у|сделать похож|метафор/i.test(vals[5]);
+    const testGood=vals[6].length>=12;
+
+    setCheck('features',featuresGood,
+      'Есть минимум пять признаков — вы не застряли на первой ассоциации.',
+      'Добавьте еще признаки объекта. Чем шире список, тем больше шансов получить неожиданный ход.');
+    setCheck('principle',principleGood,
+      'Признак переведен на уровень механизма.',
+      'Уточните, что именно делает выбранный признак полезным. Почему он работает?');
+    setCheck('idea',ideaGood,
+      'Получилась рабочая идея, а не просто красивое сравнение.',
+      'Переведите ассоциацию в изменение процесса, поведения системы или правила.');
+    setCheck('test',testGood,
+      'Есть понятный способ быстро проверить идею.',
+      'Добавьте небольшой тест: на каком участке и по какому признаку вы поймете, что идея полезна?');
+
+    checked[7]=true;
+    const passed=[featuresGood,principleGood,ideaGood,testGood].filter(Boolean).length;
+
+    if(passed===4){
+      if(!awarded[7]){score++;awarded[7]=true;}
+      feedback('fb7','ok','Связь доведена до рабочей гипотезы. Теперь случайный объект выполнил свою задачу: вывел вас к варианту, который можно проверить.');
+    }else if(passed>=2){
+      feedback('fb7','neutral','Основа есть, но один-два элемента стоит усилить. Посмотрите подсказки под полями.');
+    }else{
+      feedback('fb7','bad','Пока связь остается на уровне ассоциации. Вернитесь к цепочке: <b>признак → принцип → изменение в работе → проверка</b>.');
+    }
+
+    document.getElementById('finalNote').classList.remove('hidden');
+    return true;
+  }
+
+  checkBtn.addEventListener('click',()=>{
+    let done=false;
+
+    if(current===1){
+      done=checkSingle(
+        'q1',1,'fb1',
+        'Верно. Сначала нужно «разобрать» случайный объект и только потом насильно связать один из его признаков с рабочей задачей.',
+        'Вы либо слишком рано пытаетесь придумать решение, либо отбрасываете стимул именно потому, что он случайный. Сначала выпишите его признаки.'
+      );
+    }
+    if(current===2)done=checkFeatures();
+    if(current===3){
+      done=checkSingle(
+        'q3',3,'fb3',
+        'Да. Здесь образ превращается в принцип: передача считается завершенной только при выполнении понятных условий приема. Это уже можно перевести в рабочий процесс.',
+        'Нужен не спортивный образ сам по себе, а механизм. «Четкая зона передачи» полезна, если превратить ее в ясный критерий завершения передачи.'
+      );
+    }
+    if(current===4)done=checkBuilder();
+    if(current===5){
+      done=checkSingle(
+        'q5',5,'fb5',
+        'Верно. «Меню» подсказывает не внешний вид, а принцип ограниченного выбора: несколько допустимых причин передачи, каждая ведет по заранее понятному маршруту.',
+        'Смотрите на функцию признака. Полезно не оформление меню, а ограниченный набор понятных вариантов с заданным результатом выбора.'
+      );
+    }
+    if(current===6){
+      done=checkSingle(
+        'q6',6,'fb6',
+        'Да. Две идеи усиливают друг друга: причина определяет маршрут, а подтверждение приема делает границу передачи явной.',
+        'Идеи из разных случайных стимулов можно комбинировать, если их механизмы не противоречат друг другу и вместе лучше решают исходную задачу.'
+      );
+    }
+    if(current===7)done=checkFinal();
+
+    if(done)update();
+  });
+
+  nextBtn.addEventListener('click',()=>{
+    if(current<7){current++;update();window.scrollTo({top:0,behavior:'smooth'});}
+  });
+
+  backBtn.addEventListener('click',()=>{
+    if(current>1){current--;update();window.scrollTo({top:0,behavior:'smooth'});}
+  });
+
+  resetBtn.addEventListener('click',()=>{
+    current=1;score=0;selectedBlock=null;randomIndex=0;
+    Object.keys(checked).forEach(k=>checked[k]=false);
+    Object.keys(awarded).forEach(k=>awarded[k]=false);
+
+    document.querySelectorAll('.option').forEach(o=>o.classList.remove('selected','correct','wrong'));
+    features.forEach(f=>f.classList.remove('selected','correct','wrong'));
+    document.querySelectorAll('.feedback').forEach(f=>{f.className='feedback';f.innerHTML='';});
+
+    blocks.forEach(b=>{b.classList.remove('used');b.style.outline='';});
+    slots.forEach(s=>{s.dataset.item='';s.textContent='...';s.classList.remove('filled');});
+    state.fill(null);
+
+    randomWord.textContent='Маяк';
+    f2.value='Маяк';
+    [1,3,4,5,6,7].forEach(i=>document.getElementById('f'+i).value='');
+
+    document.querySelectorAll('.checkitem').forEach((el,i)=>{
+      el.classList.remove('good','warn');
+      el.querySelector('.mark').textContent=String(i+1);
+    });
+    document.querySelector('[data-check="features"] .small').textContent='Вы не перескочили сразу к первой ассоциации.';
+    document.querySelector('[data-check="principle"] .small').textContent='Видно, какой механизм вы переносите.';
+    document.querySelector('[data-check="idea"] .small').textContent='Это не просто метафора, а изменение, которое можно попробовать.';
+    document.querySelector('[data-check="test"] .small').textContent='Понятно, как быстро проверить ценность идеи.';
+    document.getElementById('finalNote').classList.add('hidden');
+
+    update();
+    window.scrollTo({top:0,behavior:'smooth'});
+  });
+
+  update();
+})();
+</script>
+</body>
+</html>

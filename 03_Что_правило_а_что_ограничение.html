@@ -1,0 +1,588 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Что здесь правило, а что — реальное ограничение?</title>
+<style>
+:root{
+  --bg:#f4f6f8; --card:#fff; --text:#1f2933; --muted:#667085; --line:#d9dee7;
+  --soft:#eef2f6; --accent:#2f5d62; --accent-soft:#e8f0f1;
+  --ok:#1f6b45; --okbg:#eaf5ee; --bad:#933a34; --badbg:#fbeceb;
+  --warn:#7c5817; --warnbg:#fff5dc; --shadow:0 14px 38px rgba(31,41,51,.08);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;line-height:1.5}
+button{font:inherit}
+.app{width:min(100% - 28px,620px);margin:28px auto}
+.shell{background:var(--card);border:1px solid var(--line);border-radius:22px;box-shadow:var(--shadow);overflow:hidden}
+header{padding:22px 22px 18px;border-bottom:1px solid var(--line)}
+.eyebrow{margin:0 0 6px;color:var(--accent);font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:.03em}
+h1{margin:0;font-size:clamp(27px,5vw,35px);line-height:1.12;letter-spacing:-.02em}
+.subtitle{margin:10px 0 0;color:var(--muted);font-size:15px}
+.progress-meta{display:flex;justify-content:space-between;gap:12px;margin:18px 0 7px;color:var(--muted);font-size:13px}
+.progress{height:8px;background:var(--soft);border-radius:999px;overflow:hidden}
+.progress span{display:block;height:100%;background:var(--accent);width:16.66%;transition:width .2s ease}
+main{padding:24px 22px 18px}
+.screen{display:none}.screen.active{display:block}
+.step{display:inline-flex;align-items:center;min-height:30px;padding:0 11px;border-radius:999px;background:var(--accent-soft);color:var(--accent);font-size:13px;font-weight:800;margin-bottom:12px}
+h2{margin:0 0 10px;font-size:23px;line-height:1.25}
+.lead{margin:0 0 18px;color:#3b4652}
+.case{margin:16px 0 18px;padding:15px 16px;background:#f8fafb;border:1px solid var(--line);border-radius:14px}
+.case strong{display:block;margin-bottom:6px}
+.process{margin:10px 0 0;padding-left:22px}
+.instruction{margin:16px 0;padding:14px 15px;background:var(--accent-soft);border-left:4px solid var(--accent);border-radius:0 12px 12px 0;font-size:14px}
+.options{display:grid;gap:10px;margin-top:14px}
+.option{width:100%;text-align:left;border:1px solid var(--line);background:#fff;color:var(--text);border-radius:13px;padding:14px;cursor:pointer;transition:.15s ease}
+.option:hover{border-color:#aeb7c4;background:#fafbfc}
+.option.selected{border-color:var(--accent);background:var(--accent-soft)}
+.option.correct{border-color:#7fb395;background:var(--okbg)}
+.option.wrong{border-color:#d39a94;background:var(--badbg)}
+.feedback{display:none;margin-top:16px;padding:15px 16px;border-radius:13px;font-size:14px}
+.feedback.show{display:block}
+.feedback.ok{background:var(--okbg);border:1px solid #b9dcc8;color:#174c33}
+.feedback.bad{background:var(--badbg);border:1px solid #edc3c0;color:#742c27}
+.feedback.neutral{background:var(--warnbg);border:1px solid #ead7a2;color:#66470e}
+
+.piles{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px}
+.pile{min-height:210px;border:1px solid var(--line);border-radius:14px;background:#fafbfc;padding:12px}
+.pile h3{margin:0 0 10px;font-size:15px}
+.card{border:1px solid var(--line);background:#fff;border-radius:11px;padding:11px;margin:8px 0;cursor:pointer;font-size:14px}
+.card:hover{border-color:#aeb7c4}
+.card.assigned{background:var(--accent-soft);border-color:var(--accent)}
+.card.correct{background:var(--okbg);border-color:#7fb395}
+.card.wrong{background:var(--badbg);border-color:#d39a94}
+.pool{margin-top:14px}
+.pool-title{font-size:13px;color:var(--muted);font-weight:700;margin-bottom:8px}
+
+.rulebox{padding:14px 15px;border:1px solid var(--line);border-radius:13px;background:#f8fafb;margin:14px 0}
+.rulebox b{display:block;margin-bottom:4px}
+.small{font-size:13px;color:var(--muted)}
+
+.multi-grid{display:grid;gap:10px;margin-top:14px}
+.choice{border:1px solid var(--line);background:#fff;border-radius:12px;padding:13px;cursor:pointer}
+.choice.selected{border-color:var(--accent);background:var(--accent-soft)}
+.choice.correct{border-color:#7fb395;background:var(--okbg)}
+.choice.wrong{border-color:#d39a94;background:var(--badbg)}
+
+.columns3{display:grid;grid-template-columns:1fr;gap:12px;margin-top:16px}
+.bucket{border:1px solid var(--line);border-radius:14px;background:#fafbfc;padding:12px}
+.bucket h3{margin:0 0 8px;font-size:15px}
+.bucket .bucket-list{min-height:72px}
+.final-card{margin-top:18px;padding:16px;border:1px solid var(--line);border-radius:14px;background:#f8fafb}
+.final-card h3{margin:0 0 8px;font-size:17px}
+.formula{margin-top:10px;font-weight:800;color:var(--accent)}
+
+footer{padding:16px 22px 22px;border-top:1px solid var(--line);display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+footer .spacer{flex:1}
+.ctrl{border-radius:12px;padding:11px 15px;cursor:pointer;font-weight:750;border:1px solid var(--line)}
+.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+.secondary{background:#fff;color:var(--text)}
+.muted{background:#fff;color:var(--muted)}
+button[disabled]{opacity:.42;cursor:not-allowed}
+.hidden{display:none!important}
+
+@media (max-width:560px){
+  .app{width:min(100% - 16px,620px);margin:8px auto 18px}
+  .shell{border-radius:16px}
+  header,main,footer{padding-left:16px;padding-right:16px}
+  .piles{grid-template-columns:1fr}
+  footer .spacer{display:none}
+  footer button{flex:1 1 calc(50% - 6px)}
+}
+</style>
+</head>
+<body>
+<div class="app">
+<div class="shell">
+<header>
+  <p class="eyebrow">Проверочный интерактив</p>
+  <h1>Что здесь правило, а что — реальное ограничение?</h1>
+  <p class="subtitle">Разберите процесс по частям, найдите спорные правила и освободите место для новых решений.</p>
+  <div class="progress-meta"><span id="progressText">Шаг 1 из 6</span><span id="scoreText">Верных решений: 0</span></div>
+  <div class="progress"><span id="progressBar"></span></div>
+</header>
+
+<main>
+<!-- 1 -->
+<section class="screen active" data-screen="1">
+  <div class="step">Шаг 1</div>
+  <h2>Сначала найдите правила, которые стоит проверить</h2>
+  <p class="lead">Не каждый шаг текущего процесса является обязательным. Часть действий могла закрепиться просто потому, что «так принято».</p>
+
+  <div class="case">
+    <strong>Ситуация</strong>
+    Коммерческое предложение готовится в среднем пять рабочих дней. Руководитель хочет сократить срок до трех дней без увеличения штата.
+    <ol class="process">
+      <li>менеджер заполняет форму;</li>
+      <li>аналитик проверяет данные;</li>
+      <li>руководитель отдела проверяет весь документ;</li>
+      <li>юрист согласует текст;</li>
+      <li>дизайнер приводит файл к шаблону;</li>
+      <li>директор направления подтверждает отправку.</li>
+    </ol>
+  </div>
+
+  <div class="instruction">Отметьте шаги, которые <b>могли быть приняты за обязательные без проверки основания</b>. Здесь можно выбрать несколько пунктов.</div>
+
+  <div class="options multi" data-q="q1">
+    <button class="option" data-id="a">Менеджер заполняет форму.</button>
+    <button class="option" data-id="b">Аналитик проверяет данные.</button>
+    <button class="option" data-id="c" data-correct="true">Руководитель отдела проверяет весь документ.</button>
+    <button class="option" data-id="d" data-correct="true">Юрист согласует каждый текст без исключений.</button>
+    <button class="option" data-id="e" data-correct="true">Дизайнер вручную приводит каждый файл к шаблону.</button>
+    <button class="option" data-id="f" data-correct="true">Директор направления подтверждает каждую отправку.</button>
+  </div>
+  <div class="feedback" id="fb1"></div>
+</section>
+
+<!-- 2 -->
+<section class="screen" data-screen="2">
+  <div class="step">Шаг 2</div>
+  <h2>Разложите условия на две стопки</h2>
+  <p class="lead">Теперь есть дополнительные факты. Ваша задача — отделить реальные рамки от правил, которые можно пересмотреть.</p>
+
+  <div class="instruction">
+    Нажимайте на карточку, чтобы отправить ее в левую стопку «Жесткое ограничение». Повторное нажатие перенесет ее вправо — в «Условное правило».
+  </div>
+
+  <div class="pool">
+    <div class="pool-title">Карточки</div>
+    <div id="pileCards">
+      <div class="card" data-kind="hard" data-id="p1">Финальная цена должна быть подтверждена руководителем.</div>
+      <div class="card" data-kind="soft" data-id="p2">Юридическая проверка обязательна только при изменении типовых условий.</div>
+      <div class="card" data-kind="soft" data-id="p3">Директор раньше просил видеть все предложения, но сейчас этого требования нет.</div>
+      <div class="card" data-kind="hard" data-id="p4">Фирменный шаблон обязателен.</div>
+      <div class="card" data-kind="soft" data-id="p5">Дизайн вручную собирает один специалист.</div>
+      <div class="card" data-kind="hard" data-id="p6">Срок ответа клиенту — три рабочих дня.</div>
+    </div>
+  </div>
+
+  <div class="piles">
+    <div class="pile">
+      <h3>Жесткое ограничение</h3>
+      <div id="hardPile"></div>
+    </div>
+    <div class="pile">
+      <h3>Условное правило</h3>
+      <div id="softPile"></div>
+    </div>
+  </div>
+  <div class="feedback" id="fb2"></div>
+</section>
+
+<!-- 3 -->
+<section class="screen" data-screen="3">
+  <div class="step">Шаг 3</div>
+  <h2>Проверьте, откуда взялось правило</h2>
+
+  <div class="rulebox">
+    <b>Спорное условие</b>
+    «Директор должен подтвердить каждое предложение».
+  </div>
+
+  <div class="instruction">Выберите вопрос, который помогает сначала установить <b>источник и функцию</b> правила, а уже потом решать, можно ли его менять.</div>
+
+  <div class="options" data-q="q3">
+    <button class="option">Почему директор так долго согласует?</button>
+    <button class="option">Можно ли перестать ему отправлять предложения?</button>
+    <button class="option" data-correct="true">Где закреплено это требование и какое решение директор принимает при согласовании?</button>
+    <button class="option">Кто может согласовывать вместо него?</button>
+  </div>
+  <div class="feedback" id="fb3"></div>
+</section>
+
+<!-- 4 -->
+<section class="screen" data-screen="4">
+  <div class="step">Шаг 4</div>
+  <h2>Снимите одно правило мысленно</h2>
+  <p class="lead">Сейчас ничего не отменяем в реальности. Мы временно убираем одно условное правило и смотрим, какие новые схемы становятся возможны.</p>
+
+  <div class="instruction">Сначала выберите правило, которое будете мысленно снимать.</div>
+  <div class="options" id="ruleSelect">
+    <button class="option" data-rule="manager">Каждый документ полностью проверяет руководитель.</button>
+    <button class="option" data-rule="legal">Все предложения проходят юридическую проверку.</button>
+    <button class="option" data-rule="director">Директор подтверждает каждую отправку.</button>
+    <button class="option" data-rule="design">Оформление каждого предложения делается вручную.</button>
+  </div>
+
+  <div id="possibilitiesWrap" class="hidden">
+    <div class="instruction">Теперь выберите <b>2–3 изменения</b>, которые стали бы возможны и при этом не нарушали бы жесткие условия.</div>
+    <div class="multi-grid" id="possibilities"></div>
+  </div>
+  <div class="feedback" id="fb4"></div>
+</section>
+
+<!-- 5 -->
+<section class="screen" data-screen="5">
+  <div class="step">Шаг 5</div>
+  <h2>Переверните порядок</h2>
+  <p class="lead">Иногда новое решение появляется не после отмены правила, а после перестановки этапов.</p>
+
+  <div class="rulebox">
+    <b>Исходное правило</b>
+    Сначала готовим полностью оформленное предложение, затем проверяем содержание.
+  </div>
+
+  <div class="instruction">Выберите инверсию, которая меняет порядок работы, но сохраняет проверку содержания и обязательное оформление.</div>
+
+  <div class="options" data-q="q5">
+    <button class="option">Не проверять содержание.</button>
+    <button class="option" data-correct="true">Сначала согласовать содержание, затем тратить время на финальное оформление.</button>
+    <button class="option">Отправлять клиенту черновик без проверки.</button>
+    <button class="option">Убрать оформление полностью.</button>
+  </div>
+  <div class="feedback" id="fb5"></div>
+</section>
+
+<!-- 6 -->
+<section class="screen" data-screen="6">
+  <div class="step">Шаг 6</div>
+  <h2>Соберите новую карту</h2>
+  <p class="lead">В финале у вас должны остаться три разных типа решений: что нельзя нарушать, что еще нужно проверить и что можно безопасно протестировать.</p>
+
+  <div class="instruction">Распределите карточки по трем группам. Нажимайте на карточку: первое нажатие — «Сохраняем», второе — «Проверяем», третье — «Экспериментируем».</div>
+
+  <div id="finalCards">
+    <div class="card" data-final="keep" data-id="f1">Финальная цена подтверждается руководителем.</div>
+    <div class="card" data-final="check" data-id="f2">Каждый документ целиком проверяет руководитель отдела.</div>
+    <div class="card" data-final="check" data-id="f3">Юрист проверяет все предложения без исключений.</div>
+    <div class="card" data-final="keep" data-id="f4">Фирменный шаблон должен соблюдаться.</div>
+    <div class="card" data-final="experiment" data-id="f5">Содержание согласуется до финального дизайна на пилоте.</div>
+  </div>
+
+  <div class="columns3">
+    <div class="bucket"><h3>Сохраняем</h3><div class="bucket-list" id="keepBucket"></div></div>
+    <div class="bucket"><h3>Проверяем</h3><div class="bucket-list" id="checkBucket"></div></div>
+    <div class="bucket"><h3>Экспериментируем</h3><div class="bucket-list" id="experimentBucket"></div></div>
+  </div>
+
+  <div class="feedback" id="fb6"></div>
+
+  <div class="final-card hidden" id="finalMemo">
+    <h3>Карта готова</h3>
+    <div>Хорошая работа с ограничениями не заканчивается фразой «все можно отменить». Наоборот: команда понимает, какие рамки реальны, какие правила держатся на привычке и где можно провести безопасный пилот.</div>
+    <div class="formula">Выписать правила → найти источник → разделить на жесткие и условные → снять или перевернуть одно правило → сохранить реальные рамки → проверить новую схему на небольшом участке</div>
+  </div>
+</section>
+</main>
+
+<footer>
+  <button class="ctrl muted" id="resetBtn">Сбросить</button>
+  <div class="spacer"></div>
+  <button class="ctrl secondary" id="backBtn" disabled>Назад</button>
+  <button class="ctrl primary" id="checkBtn">Проверить</button>
+  <button class="ctrl secondary hidden" id="nextBtn">Дальше</button>
+</footer>
+</div>
+</div>
+
+<script>
+(function(){
+  let current=1, score=0;
+  const checked={1:false,2:false,3:false,4:false,5:false,6:false};
+  const awarded={1:false,2:false,3:false,4:false,5:false,6:false};
+
+  const screens=[...document.querySelectorAll('.screen')];
+  const progressText=document.getElementById('progressText');
+  const progressBar=document.getElementById('progressBar');
+  const scoreText=document.getElementById('scoreText');
+  const backBtn=document.getElementById('backBtn');
+  const nextBtn=document.getElementById('nextBtn');
+  const checkBtn=document.getElementById('checkBtn');
+  const resetBtn=document.getElementById('resetBtn');
+
+  function updateUI(){
+    screens.forEach(s=>s.classList.toggle('active',Number(s.dataset.screen)===current));
+    progressText.textContent=`Шаг ${current} из 6`;
+    progressBar.style.width=`${current/6*100}%`;
+    scoreText.textContent=`Верных решений: ${score}`;
+    backBtn.disabled=current===1;
+    nextBtn.classList.toggle('hidden',!checked[current]||current===6);
+    checkBtn.classList.toggle('hidden',checked[current]&&current!==6);
+    if(current===6 && checked[6]) checkBtn.textContent='Проверить еще раз'; else checkBtn.textContent='Проверить';
+  }
+
+  function fb(id,type,html){
+    const e=document.getElementById(id);
+    e.className=`feedback show ${type}`;
+    e.innerHTML=html;
+  }
+
+  // generic single select
+  document.querySelectorAll('.options:not(.multi)').forEach(group=>{
+    group.addEventListener('click',e=>{
+      const b=e.target.closest('.option');
+      if(!b || checked[current]) return;
+      group.querySelectorAll('.option').forEach(x=>x.classList.remove('selected'));
+      b.classList.add('selected');
+    });
+  });
+
+  // screen1 multi
+  document.querySelector('[data-q="q1"]').addEventListener('click',e=>{
+    const b=e.target.closest('.option');
+    if(!b || checked[1]) return;
+    b.classList.toggle('selected');
+  });
+
+  function checkMultiExact(q,screen,feedbackId,ok,bad){
+    const group=document.querySelector(`[data-q="${q}"]`);
+    const selected=[...group.querySelectorAll('.option.selected')];
+    if(!selected.length){fb(feedbackId,'neutral','Отметьте хотя бы один пункт.');return false;}
+    checked[screen]=true;
+    let good=true;
+    group.querySelectorAll('.option').forEach(o=>{
+      const should=o.dataset.correct==='true';
+      const is=o.classList.contains('selected');
+      if(should!==is) good=false;
+      if(should) o.classList.add('correct');
+      else if(is) o.classList.add('wrong');
+    });
+    if(good){if(!awarded[screen]){score++;awarded[screen]=true;}fb(feedbackId,'ok',ok);}
+    else fb(feedbackId,'bad',bad);
+    return true;
+  }
+
+  function checkSingle(q,screen,feedbackId,ok,bad){
+    const group=document.querySelector(`[data-q="${q}"]`);
+    const sel=group.querySelector('.option.selected');
+    if(!sel){fb(feedbackId,'neutral','Сначала выберите один вариант.');return false;}
+    checked[screen]=true;
+    const good=sel.dataset.correct==='true';
+    group.querySelectorAll('.option').forEach(o=>{
+      if(o.dataset.correct==='true')o.classList.add('correct');
+      else if(o.classList.contains('selected'))o.classList.add('wrong');
+    });
+    if(good){if(!awarded[screen]){score++;awarded[screen]=true;}fb(feedbackId,'ok',ok);}
+    else fb(feedbackId,'bad',bad);
+    return true;
+  }
+
+  // screen2 piles
+  const pileCards=[...document.querySelectorAll('#pileCards .card')];
+  const pileState={};
+  pileCards.forEach(card=>{
+    pileState[card.dataset.id]=null;
+    card.addEventListener('click',()=>{
+      if(checked[2]) return;
+      const id=card.dataset.id;
+      pileState[id]=pileState[id]===null?'hard':pileState[id]==='hard'?'soft':'hard';
+      renderPiles();
+    });
+  });
+
+  function renderPiles(){
+    const hard=document.getElementById('hardPile');
+    const soft=document.getElementById('softPile');
+    hard.innerHTML=''; soft.innerHTML='';
+    pileCards.forEach(card=>{
+      card.classList.remove('assigned');
+      if(pileState[card.dataset.id]){
+        card.classList.add('assigned');
+        const clone=card.cloneNode(true);
+        clone.classList.remove('assigned','correct','wrong');
+        clone.style.cursor='default';
+        (pileState[card.dataset.id]==='hard'?hard:soft).appendChild(clone);
+      }
+    });
+  }
+
+  function checkPiles(){
+    if(Object.values(pileState).some(v=>!v)){fb('fb2','neutral','Распределите все шесть карточек.');return false;}
+    checked[2]=true;
+    let good=true;
+    pileCards.forEach(card=>{
+      const right=card.dataset.kind===pileState[card.dataset.id];
+      if(!right) good=false;
+      card.classList.add(right?'correct':'wrong');
+    });
+    if(good){
+      if(!awarded[2]){score++;awarded[2]=true;}
+      fb('fb2','ok','Верно. Жесткие ограничения связаны с обязательным результатом или требованием. Остальные пункты описывают текущую организацию работы и могут быть пересмотрены.');
+    }else{
+      fb('fb2','bad','Проверьте спорные карточки. <b>«Так сейчас устроено» не равно «так обязательно должно быть».</b> Особенно внимательно посмотрите на юридическую проверку, ручной дизайн и старое требование директора.');
+    }
+    return true;
+  }
+
+  // screen4
+  const ruleSelect=document.getElementById('ruleSelect');
+  let selectedRule=null;
+  ruleSelect.addEventListener('click',e=>{
+    const b=e.target.closest('.option');
+    if(!b || checked[4]) return;
+    ruleSelect.querySelectorAll('.option').forEach(x=>x.classList.remove('selected'));
+    b.classList.add('selected');
+    selectedRule=b.dataset.rule;
+    renderPossibilities();
+  });
+
+  const possData={
+    manager:[
+      ['Оставить полную проверку только для нетиповых предложений',true],
+      ['Для типовых предложений использовать чек-лист критичных пунктов',true],
+      ['Убрать подтверждение финальной цены',false],
+      ['Передать право проверки любого предложения клиенту',false]
+    ],
+    legal:[
+      ['Направлять юристу только предложения с измененными типовыми условиями',true],
+      ['Использовать заранее согласованные формулировки для стандартных условий',true],
+      ['Не проверять изменения существенных условий',false],
+      ['Убрать фирменный шаблон',false]
+    ],
+    director:[
+      ['Оставить директору только предложения выше заданного порога или с исключениями',true],
+      ['Отправлять стандартные предложения после выполнения обязательных проверок без отдельного подтверждения директора',true],
+      ['Убрать подтверждение финальной цены руководителем',false],
+      ['Отказаться от юридической проверки спорных условий',false]
+    ],
+    design:[
+      ['Сначала согласовывать содержание, а затем оформлять финальную версию',true],
+      ['Собрать типовой шаблон, который менеджер заполняет без ручной верстки с нуля',true],
+      ['Отправлять клиенту документы без фирменного оформления',false],
+      ['Убрать проверку содержания',false]
+    ]
+  };
+
+  function renderPossibilities(){
+    const wrap=document.getElementById('possibilitiesWrap');
+    const cont=document.getElementById('possibilities');
+    wrap.classList.remove('hidden');
+    cont.innerHTML='';
+    possData[selectedRule].forEach((x,i)=>{
+      const d=document.createElement('div');
+      d.className='choice'; d.textContent=x[0];
+      d.dataset.correct=x[1]?'true':'false';
+      d.dataset.id=String(i);
+      d.addEventListener('click',()=>{ if(!checked[4]) d.classList.toggle('selected');});
+      cont.appendChild(d);
+    });
+  }
+
+  function checkPoss(){
+    if(!selectedRule){fb('fb4','neutral','Сначала выберите правило, которое хотите мысленно снять.');return false;}
+    const selected=[...document.querySelectorAll('#possibilities .choice.selected')];
+    if(selected.length<2 || selected.length>3){fb('fb4','neutral','Выберите 2–3 изменения.');return false;}
+    checked[4]=true;
+    let good=true;
+    document.querySelectorAll('#possibilities .choice').forEach(c=>{
+      if(c.classList.contains('selected')){
+        const ok=c.dataset.correct==='true';
+        c.classList.add(ok?'correct':'wrong');
+        if(!ok) good=false;
+      }
+    });
+    if(good){
+      if(!awarded[4]){score++;awarded[4]=true;}
+      fb('fb4','ok','Хорошо. Вы сняли правило так, чтобы <b>не разрушить реальные рамки</b>. Именно поэтому мысленный эксперимент полезнее простого «давайте отменим согласование».');
+    }else{
+      fb('fb4','bad','Один из выбранных вариантов нарушает жесткое условие. Снятие условного правила не дает права отменять обязательную проверку, цену или фирменные требования.');
+    }
+    return true;
+  }
+
+  // screen6 final buckets
+  const finalCards=[...document.querySelectorAll('#finalCards .card')];
+  const finalState={};
+  finalCards.forEach(c=>{
+    finalState[c.dataset.id]=null;
+    c.addEventListener('click',()=>{
+      const id=c.dataset.id;
+      finalState[id]=finalState[id]===null?'keep':finalState[id]==='keep'?'check':finalState[id]==='check'?'experiment':'keep';
+      renderFinalBuckets();
+    });
+  });
+
+  function renderFinalBuckets(){
+    const map={keep:document.getElementById('keepBucket'),check:document.getElementById('checkBucket'),experiment:document.getElementById('experimentBucket')};
+    Object.values(map).forEach(x=>x.innerHTML='');
+    finalCards.forEach(c=>{
+      c.classList.remove('assigned');
+      const st=finalState[c.dataset.id];
+      if(st){
+        c.classList.add('assigned');
+        const clone=c.cloneNode(true);
+        clone.classList.remove('assigned','correct','wrong');
+        clone.style.cursor='default';
+        map[st].appendChild(clone);
+      }
+    });
+  }
+
+  function checkFinal(){
+    if(Object.values(finalState).some(v=>!v)){fb('fb6','neutral','Распределите все карточки по трем группам.');return false;}
+    checked[6]=true;
+    let good=true;
+    finalCards.forEach(c=>{
+      const ok=finalState[c.dataset.id]===c.dataset.final;
+      if(!ok) good=false;
+      c.classList.add(ok?'correct':'wrong');
+    });
+    if(good){
+      if(!awarded[6]){score++;awarded[6]=true;}
+      fb('fb6','ok','Карта собрана верно: обязательные рамки остались, спорные правила вынесены на проверку, а безопасное изменение превращено в пилот.');
+    }else{
+      fb('fb6','bad','Проверьте логику: обязательные требования должны остаться в «Сохраняем», спорные привычные правила — в «Проверяем», а пилотная перестановка этапов — в «Экспериментируем».');
+    }
+    document.getElementById('finalMemo').classList.remove('hidden');
+    return true;
+  }
+
+  checkBtn.addEventListener('click',()=>{
+    let done=false;
+    if(current===1){
+      done=checkMultiExact(
+        'q1',1,'fb1',
+        'Да. Эти этапы выглядят как правила текущего процесса, но пока неизвестно, <b>почему именно они обязательны</b>. Их и стоит проверить до перестройки процесса.',
+        'Часть выбранных пунктов еще рано считать спорными, а часть спорных правил осталась незамеченной. Ищите шаги, где порядок мог закрепиться исторически: полная проверка руководителем, сплошная юридическая проверка, ручное оформление и подтверждение каждой отправки директором.'
+      );
+    }
+    if(current===2) done=checkPiles();
+    if(current===3){
+      done=checkSingle(
+        'q3',3,'fb3',
+        'Верно. Сначала нужно понять, <b>где закреплено правило и какую функцию оно выполняет</b>. Только после этого решать, можно ли его убрать, передать другому или заменить.',
+        'Вы уже пытаетесь отменить правило или найти замену. Сначала установите его источник и смысл: возможно, требование давно исчезло или решает совсем другую задачу.'
+      );
+    }
+    if(current===4) done=checkPoss();
+    if(current===5){
+      done=checkSingle(
+        'q5',5,'fb5',
+        'Да. Такая перестановка сохраняет и проверку содержания, и обязательное оформление, но не тратит время дизайнера на документ, который еще может вернуться на доработку.',
+        'Инверсия должна менять порядок, а не отменять обязательное условие. Здесь полезный ход — <b>сначала согласовать содержание, потом оформлять финальную версию</b>.'
+      );
+    }
+    if(current===6) done=checkFinal();
+    if(done) updateUI();
+  });
+
+  nextBtn.addEventListener('click',()=>{
+    if(current<6){current++;updateUI();window.scrollTo({top:0,behavior:'smooth'});}
+  });
+  backBtn.addEventListener('click',()=>{
+    if(current>1){current--;updateUI();window.scrollTo({top:0,behavior:'smooth'});}
+  });
+
+  resetBtn.addEventListener('click',()=>{
+    current=1;score=0;
+    Object.keys(checked).forEach(k=>checked[k]=false);
+    Object.keys(awarded).forEach(k=>awarded[k]=false);
+    document.querySelectorAll('.option,.choice,.card').forEach(x=>x.classList.remove('selected','correct','wrong','assigned'));
+    document.querySelectorAll('.feedback').forEach(x=>{x.className='feedback';x.innerHTML='';});
+    Object.keys(pileState).forEach(k=>pileState[k]=null); renderPiles();
+    selectedRule=null; document.getElementById('possibilitiesWrap').classList.add('hidden'); document.getElementById('possibilities').innerHTML='';
+    Object.keys(finalState).forEach(k=>finalState[k]=null); renderFinalBuckets();
+    document.getElementById('finalMemo').classList.add('hidden');
+    updateUI();
+    window.scrollTo({top:0,behavior:'smooth'});
+  });
+
+  renderPiles();
+  renderFinalBuckets();
+  updateUI();
+})();
+</script>
+</body>
+</html>

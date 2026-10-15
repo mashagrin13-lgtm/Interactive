@@ -1,0 +1,688 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Посмотрите на процесс иначе</title>
+<style>
+:root{
+  --bg:#f4f6f8; --card:#fff; --text:#1f2933; --muted:#667085; --line:#d9dee7;
+  --soft:#eef2f6; --accent:#2f5d62; --accent-soft:#e7f0f1;
+  --ok:#1f6b45; --okbg:#e9f5ee; --bad:#913b35; --badbg:#faeceb;
+  --warn:#7b5719; --warnbg:#fff5dc; --shadow:0 14px 40px rgba(31,41,51,.08);
+}
+*{box-sizing:border-box}
+body{
+  margin:0;background:var(--bg);color:var(--text);
+  font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  line-height:1.55;
+}
+button{font:inherit}
+.app{width:min(100% - 28px,680px);margin:28px auto}
+.shell{background:var(--card);border:1px solid var(--line);border-radius:22px;box-shadow:var(--shadow);overflow:hidden}
+header{padding:22px 22px 18px;border-bottom:1px solid var(--line);background:#fff}
+.eyebrow{margin:0 0 6px;color:var(--accent);font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:.03em}
+h1{margin:0;font-size:clamp(27px,5vw,35px);line-height:1.12;letter-spacing:-.02em}
+.subtitle{margin:10px 0 0;color:var(--muted);font-size:15px}
+.progress-meta{display:flex;justify-content:space-between;gap:12px;margin:18px 0 7px;color:var(--muted);font-size:13px}
+.progress{height:8px;background:var(--soft);border-radius:999px;overflow:hidden}
+.progress span{display:block;height:100%;background:var(--accent);width:16.66%;transition:width .2s ease}
+main{padding:24px 22px 18px}
+.screen{display:none}.screen.active{display:block}
+.step{display:inline-flex;align-items:center;min-height:30px;padding:0 11px;border-radius:999px;background:var(--accent-soft);color:var(--accent);font-size:13px;font-weight:800;margin-bottom:12px}
+h2{margin:0 0 10px;font-size:23px;line-height:1.25}
+.lead{margin:0 0 18px;color:#3b4652}
+.case{margin:16px 0 18px;padding:15px 16px;background:#f8fafb;border:1px solid var(--line);border-radius:14px}
+.case strong{display:block;margin-bottom:6px}
+.quote{margin-top:8px;padding-left:14px;border-left:3px solid #b5c3c5;color:#334155}
+.bullets{margin:10px 0 0;padding-left:20px}
+.instruction{margin:16px 0;padding:14px 15px;background:var(--accent-soft);border-left:4px solid var(--accent);border-radius:0 12px 12px 0;font-size:14px}
+.options{display:grid;gap:10px;margin-top:14px}
+.option{
+  width:100%;text-align:left;border:1px solid var(--line);background:#fff;color:var(--text);
+  border-radius:13px;padding:14px;cursor:pointer;transition:.15s ease
+}
+.option:hover{border-color:#aeb7c4;background:#fafbfc}
+.option.selected{border-color:var(--accent);background:var(--accent-soft)}
+.option.correct{border-color:#7fb395;background:var(--okbg)}
+.option.wrong{border-color:#d29a95;background:var(--badbg)}
+.feedback{display:none;margin-top:16px;padding:15px 16px;border-radius:13px;font-size:14px}
+.feedback.show{display:block}
+.feedback.ok{background:var(--okbg);border:1px solid #b9dcc8;color:#174c33}
+.feedback.bad{background:var(--badbg);border:1px solid #edc3c0;color:#742c27}
+.feedback.neutral{background:var(--warnbg);border:1px solid #ead7a2;color:#66470e}
+.small{font-size:13px;color:var(--muted)}
+
+.route-wrap{margin-top:16px}
+.pool-title{font-size:13px;font-weight:800;color:var(--muted);margin-bottom:8px}
+.drag-pool{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px}
+.drag-item{
+  border:1px solid var(--line);background:#fff;border-radius:999px;padding:9px 12px;
+  cursor:grab;font-size:14px;user-select:none
+}
+.drag-item.used{opacity:.38;cursor:default}
+.drag-item:active{cursor:grabbing}
+.route-board{
+  border:1px solid var(--line);border-radius:14px;background:#f8fafb;padding:14px;
+}
+.route-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:9px 0}
+.drop{
+  min-width:118px;min-height:44px;padding:9px 10px;border:1px dashed #aab4c1;border-radius:10px;
+  background:#fff;color:var(--muted);display:flex;align-items:center;justify-content:center;text-align:center;
+  cursor:pointer;font-size:13px
+}
+.drop.filled{border-style:solid;border-color:var(--accent);background:var(--accent-soft);color:var(--text);font-weight:700}
+.arrow{color:var(--muted);font-weight:900}
+.return{margin:6px 0 10px;padding:9px 10px;background:#fff3db;border:1px solid #ead7a2;border-radius:10px;color:#6b4b12;font-size:13px}
+.reveal{margin-top:14px;padding:14px;border:1px solid var(--line);border-radius:12px;background:#fff}
+.reveal b{display:block;margin-bottom:5px}
+
+.table-builder{margin-top:16px;overflow:auto}
+table{width:100%;border-collapse:collapse;min-width:620px}
+th,td{border:1px solid var(--line);padding:10px;vertical-align:top;text-align:left}
+th{background:#5f7474;color:#fff;font-size:13px}
+td{background:#fff;font-size:14px}
+.table-pool{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.table-card{border:1px solid var(--line);background:#fff;border-radius:999px;padding:8px 11px;cursor:pointer;font-size:13px}
+.table-card.used{opacity:.38;cursor:default}
+.table-drop{min-height:40px;border:1px dashed #aab4c1;border-radius:8px;padding:7px;color:var(--muted);cursor:pointer}
+.table-drop.filled{border-style:solid;border-color:var(--accent);background:var(--accent-soft);color:var(--text)}
+
+.transfer-grid{display:grid;gap:10px;margin-top:16px}
+.transfer{
+  border:1px solid var(--line);border-radius:13px;background:#fff;padding:14px;cursor:pointer
+}
+.transfer.selected{border-color:var(--accent);background:var(--accent-soft)}
+.transfer b{display:block;margin-bottom:3px}
+.recommendation{margin-top:14px;padding:14px 15px;border:1px solid var(--line);border-radius:13px;background:#f8fafb}
+.recommendation strong{display:block;margin-bottom:5px}
+.final-note{margin-top:16px;padding:16px;border:1px solid var(--line);border-radius:14px;background:#f8fafb}
+.final-note h3{margin:0 0 8px;font-size:17px}
+.formula{margin-top:10px;font-weight:800;color:var(--accent)}
+footer{padding:16px 22px 22px;border-top:1px solid var(--line);display:flex;gap:10px;flex-wrap:wrap;align-items:center;background:#fff}
+footer .spacer{flex:1}
+.ctrl{border-radius:12px;padding:11px 15px;cursor:pointer;font-weight:750;border:1px solid var(--line)}
+.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+.secondary{background:#fff;color:var(--text)}
+.muted{background:#fff;color:var(--muted)}
+button[disabled]{opacity:.42;cursor:not-allowed}
+.hidden{display:none!important}
+
+@media(max-width:560px){
+  .app{width:min(100% - 16px,680px);margin:8px auto 18px}
+  .shell{border-radius:16px}
+  header,main,footer{padding-left:16px;padding-right:16px}
+  footer .spacer{display:none}
+  footer button{flex:1 1 calc(50% - 6px)}
+  .route-row{gap:6px}
+  .drop{min-width:96px;flex:1}
+}
+</style>
+</head>
+<body>
+<div class="app">
+<div class="shell">
+<header>
+  <p class="eyebrow">Проверочный интерактив</p>
+  <h1>Посмотрите на процесс иначе</h1>
+  <p class="subtitle">Смените формат представления задачи и найдите связь, которую не было видно в обычном списке.</p>
+  <div class="progress-meta">
+    <span id="progressText">Шаг 1 из 6</span>
+    <span id="scoreText">Верных решений: 0</span>
+  </div>
+  <div class="progress"><span id="progressBar"></span></div>
+</header>
+
+<main>
+<!-- 1 -->
+<section class="screen active" data-screen="1">
+  <div class="step">Шаг 1</div>
+  <h2>Выберите новый код</h2>
+  <div class="case">
+    <strong>Рабочая ситуация</strong>
+    Менеджер собирает требования и передает их аналитику. Аналитик готовит расчет. Если данных не хватает, запрос возвращается менеджеру. После расчета документ идет руководителю отдела. Руководитель проверяет условия и иногда возвращает документ менеджеру, если часть требований клиента не подтверждена. После уточнения аналитик пересчитывает предложение, а руководитель проверяет его повторно.
+  </div>
+
+  <p class="lead">Команда уже несколько раз обсуждала эту проблему как список:</p>
+  <ul class="bullets">
+    <li>менеджеры ошибаются;</li>
+    <li>аналитики долго считают;</li>
+    <li>руководитель слишком поздно получает документ;</li>
+    <li>клиенты меняют требования.</li>
+  </ul>
+
+  <div class="instruction">Какой формат стоит попробовать следующим, чтобы увидеть не мнения о людях, а связи внутри процесса?</div>
+
+  <div class="options" data-q="q1">
+    <button class="option">Еще один список причин.</button>
+    <button class="option">Рейтинг сотрудников по числу ошибок.</button>
+    <button class="option" data-correct="true">Схему движения документа между участниками.</button>
+    <button class="option">Таблицу с фамилиями ответственных.</button>
+  </div>
+  <div class="feedback" id="fb1"></div>
+</section>
+
+<!-- 2 -->
+<section class="screen" data-screen="2">
+  <div class="step">Шаг 2</div>
+  <h2>Соберите маршрут документа</h2>
+  <p class="lead">Теперь задача представлена не текстом, а последовательностью действий и возвратов.</p>
+
+  <div class="instruction">
+    Перетащите карточки в пустые поля маршрута. На телефоне можно просто нажимать сначала на карточку, затем на нужное поле.
+  </div>
+
+  <div class="route-wrap">
+    <div class="pool-title">Карточки участников и действий</div>
+    <div class="drag-pool" id="dragPool">
+      <div class="drag-item" draggable="true" data-id="manager">Менеджер</div>
+      <div class="drag-item" draggable="true" data-id="analyst">Аналитик</div>
+      <div class="drag-item" draggable="true" data-id="boss">Руководитель</div>
+      <div class="drag-item" draggable="true" data-id="client">Клиент</div>
+      <div class="drag-item" draggable="true" data-id="collect">Сбор требований</div>
+      <div class="drag-item" draggable="true" data-id="calc">Расчет</div>
+      <div class="drag-item" draggable="true" data-id="check">Проверка</div>
+      <div class="drag-item" draggable="true" data-id="clarify">Уточнение</div>
+      <div class="drag-item" draggable="true" data-id="recalc">Повторный расчет</div>
+    </div>
+
+    <div class="route-board">
+      <div class="route-row">
+        <div class="drop" data-expect="manager">Участник</div><span class="arrow">→</span>
+        <div class="drop" data-expect="collect">Действие</div><span class="arrow">→</span>
+        <div class="drop" data-expect="analyst">Участник</div><span class="arrow">→</span>
+        <div class="drop" data-expect="calc">Действие</div>
+      </div>
+
+      <div class="return">Если данных не хватает: возврат к менеджеру → уточнение → расчет начинается заново.</div>
+
+      <div class="route-row">
+        <div class="drop" data-expect="boss">Участник</div><span class="arrow">→</span>
+        <div class="drop" data-expect="check">Действие</div><span class="arrow">→</span>
+        <div class="drop" data-expect="clarify">Уточнение</div><span class="arrow">→</span>
+        <div class="drop" data-expect="recalc">Повторный расчет</div>
+      </div>
+
+      <div class="return">Если требования клиента подтверждены не полностью: второй возврат назад → новое уточнение → повторный расчет → повторная проверка.</div>
+    </div>
+  </div>
+
+  <div class="feedback" id="fb2"></div>
+</section>
+
+<!-- 3 -->
+<section class="screen" data-screen="3">
+  <div class="step">Шаг 3</div>
+  <h2>Отделите наблюдение от догадки</h2>
+  <p class="lead">Схема показывает повторные действия и возвраты. Она не объясняет характер сотрудников и не доказывает, кто «плохо работает».</p>
+
+  <div class="instruction">Выберите <b>два наблюдения</b>, которые действительно можно сделать по маршруту.</div>
+
+  <div class="options multi" data-q="q3">
+    <button class="option">Аналитик недостаточно мотивирован.</button>
+    <button class="option" data-correct="true">Данные проверяются на полноту уже после передачи работы аналитику.</button>
+    <button class="option">Руководителю нужно усилить контроль.</button>
+    <button class="option" data-correct="true">После позднего уточнения условий расчет приходится выполнять повторно.</button>
+    <button class="option">Менеджеру не хватает ответственности.</button>
+  </div>
+  <div class="feedback" id="fb3"></div>
+</section>
+
+<!-- 4 -->
+<section class="screen" data-screen="4">
+  <div class="step">Шаг 4</div>
+  <h2>Смените код еще раз</h2>
+  <p class="lead">Маршрут показал возвраты. Таблица поможет сравнить, какие данные нужны на каждом этапе и кто проверяет их полноту.</p>
+
+  <div class="instruction">
+    Заполните четыре строки таблицы. Выберите карточку внизу, затем нажмите на подходящую пустую ячейку.
+  </div>
+
+  <div class="table-builder">
+    <table>
+      <thead>
+        <tr>
+          <th>Этап</th>
+          <th>Какие данные нужны</th>
+          <th>Кто проверяет</th>
+          <th>Что происходит при ошибке</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Сбор требований</td>
+          <td><div class="table-drop" data-expect="needs1">...</div></td>
+          <td><div class="table-drop" data-expect="who1">...</div></td>
+          <td><div class="table-drop" data-expect="error1">...</div></td>
+        </tr>
+        <tr>
+          <td>Расчет</td>
+          <td><div class="table-drop" data-expect="needs2">...</div></td>
+          <td><div class="table-drop" data-expect="who2">...</div></td>
+          <td><div class="table-drop" data-expect="error2">...</div></td>
+        </tr>
+        <tr>
+          <td>Проверка условий</td>
+          <td><div class="table-drop" data-expect="needs3">...</div></td>
+          <td><div class="table-drop" data-expect="who3">...</div></td>
+          <td><div class="table-drop" data-expect="error3">...</div></td>
+        </tr>
+        <tr>
+          <td>Повторный расчет</td>
+          <td><div class="table-drop" data-expect="needs4">...</div></td>
+          <td><div class="table-drop" data-expect="who4">...</div></td>
+          <td><div class="table-drop" data-expect="error4">...</div></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="table-pool" id="tablePool">
+    <button class="table-card" data-id="needs1">Требования клиента и исходные параметры</button>
+    <button class="table-card" data-id="who1">Менеджер</button>
+    <button class="table-card" data-id="error1">Неполные данные уходят дальше незамеченными</button>
+
+    <button class="table-card" data-id="needs2">Полный набор данных для расчета</button>
+    <button class="table-card" data-id="who2">Аналитик</button>
+    <button class="table-card" data-id="error2">Запрос возвращается менеджеру</button>
+
+    <button class="table-card" data-id="needs3">Подтвержденные условия клиента</button>
+    <button class="table-card" data-id="who3">Руководитель</button>
+    <button class="table-card" data-id="error3">Документ снова возвращается на уточнение</button>
+
+    <button class="table-card" data-id="needs4">Уточненные данные</button>
+    <button class="table-card" data-id="who4">Аналитик</button>
+    <button class="table-card" data-id="error4">Расчет выполняется повторно</button>
+  </div>
+
+  <div class="feedback" id="fb4"></div>
+</section>
+
+<!-- 5 -->
+<section class="screen" data-screen="5">
+  <div class="step">Шаг 5</div>
+  <h2>Переформулируйте задачу по новому наблюдению</h2>
+  <p class="lead">После двух смен формата видно не только то, что процесс долгий, но и где именно возникает повторная работа.</p>
+
+  <div class="instruction">Выберите вопрос, который опирается на связь, обнаруженную в схеме и таблице.</div>
+
+  <div class="options" data-q="q5">
+    <button class="option">Как заставить менеджеров внимательнее собирать требования?</button>
+    <button class="option">Как ускорить работу аналитиков?</button>
+    <button class="option">Как сократить количество проверок руководителя?</button>
+    <button class="option" data-correct="true">Как проверить полноту критических требований до передачи предложения на расчет?</button>
+  </div>
+  <div class="feedback" id="fb5"></div>
+</section>
+
+<!-- 6 -->
+<section class="screen" data-screen="6">
+  <div class="step">Шаг 6</div>
+  <h2>Выберите код для своей задачи</h2>
+  <p class="lead">Не любой формат подходит любой проблеме. Сначала решите, что именно вы хотите увидеть лучше.</p>
+
+  <div class="instruction">Выберите тип задачи. Интерактив предложит формат, который стоит попробовать вместо привычного текста.</div>
+
+  <div class="transfer-grid" id="transferGrid">
+    <div class="transfer" data-type="process"><b>Процесс</b><span>Нужно увидеть этапы, возвраты и повторную работу.</span></div>
+    <div class="transfer" data-type="departments"><b>Взаимодействие подразделений</b><span>Нужно понять передачи, ожидания и пересечения ответственности.</span></div>
+    <div class="transfer" data-type="events"><b>Последовательность событий</b><span>Нужно увидеть, где возникает задержка или разрыв во времени.</span></div>
+    <div class="transfer" data-type="document"><b>Сложный документ</b><span>Нужно разобраться, как устроены блоки и зависимости между ними.</span></div>
+    <div class="transfer" data-type="customer"><b>Путь клиента</b><span>Нужно увидеть действия, точки контакта и переходы.</span></div>
+  </div>
+
+  <div class="recommendation hidden" id="recommendation"></div>
+  <div class="final-note hidden" id="finalNote">
+    <h3>Памятка</h3>
+    <div>Смена кода полезна, если после нее появляется новая наблюдаемая связь: возврат, повтор, разрыв, зависимость или лишняя передача работы.</div>
+    <div class="formula">Зафиксировать задачу → определить текущий код → выбрать другой формат → найти новые связи → вернуть наблюдения в рабочий вопрос</div>
+  </div>
+</section>
+</main>
+
+<footer>
+  <button class="ctrl muted" id="resetBtn">Сбросить</button>
+  <div class="spacer"></div>
+  <button class="ctrl secondary" id="backBtn" disabled>Назад</button>
+  <button class="ctrl primary" id="checkBtn">Проверить</button>
+  <button class="ctrl secondary hidden" id="nextBtn">Дальше</button>
+</footer>
+</div>
+</div>
+
+<script>
+(function(){
+  let current=1, score=0;
+  const checked={1:false,2:false,3:false,4:false,5:false,6:false};
+  const awarded={1:false,2:false,3:false,4:false,5:false,6:false};
+
+  const screens=[...document.querySelectorAll('.screen')];
+  const progressText=document.getElementById('progressText');
+  const progressBar=document.getElementById('progressBar');
+  const scoreText=document.getElementById('scoreText');
+  const backBtn=document.getElementById('backBtn');
+  const nextBtn=document.getElementById('nextBtn');
+  const checkBtn=document.getElementById('checkBtn');
+  const resetBtn=document.getElementById('resetBtn');
+
+  function update(){
+    screens.forEach(s=>s.classList.toggle('active',Number(s.dataset.screen)===current));
+    progressText.textContent=`Шаг ${current} из 6`;
+    progressBar.style.width=`${current/6*100}%`;
+    scoreText.textContent=`Верных решений: ${score}`;
+    backBtn.disabled=current===1;
+    nextBtn.classList.toggle('hidden',!checked[current]||current===6);
+    checkBtn.classList.toggle('hidden',checked[current]&&current!==6);
+    checkBtn.textContent=(current===6&&checked[6])?'Проверить выбор еще раз':'Проверить';
+  }
+
+  function feedback(id,type,html){
+    const el=document.getElementById(id);
+    el.className=`feedback show ${type}`;
+    el.innerHTML=html;
+  }
+
+  // generic option selecting
+  document.querySelectorAll('.options:not(.multi)').forEach(group=>{
+    group.addEventListener('click',e=>{
+      const btn=e.target.closest('.option');
+      if(!btn || checked[current]) return;
+      group.querySelectorAll('.option').forEach(o=>o.classList.remove('selected'));
+      btn.classList.add('selected');
+    });
+  });
+
+  document.querySelector('.options.multi').addEventListener('click',e=>{
+    const btn=e.target.closest('.option');
+    if(!btn || checked[3]) return;
+    btn.classList.toggle('selected');
+  });
+
+  function checkSingle(q,screen,fbId,ok,bad){
+    const group=document.querySelector(`[data-q="${q}"]`);
+    const sel=group.querySelector('.option.selected');
+    if(!sel){feedback(fbId,'neutral','Сначала выберите один вариант.');return false;}
+    checked[screen]=true;
+    const good=sel.dataset.correct==='true';
+
+    group.querySelectorAll('.option').forEach(o=>{
+      if(o.dataset.correct==='true')o.classList.add('correct');
+      else if(o.classList.contains('selected'))o.classList.add('wrong');
+    });
+
+    if(good){
+      if(!awarded[screen]){score++;awarded[screen]=true;}
+      feedback(fbId,'ok',ok);
+    }else feedback(fbId,'bad',bad);
+
+    return true;
+  }
+
+  // route builder
+  const dragItems=[...document.querySelectorAll('.drag-item')];
+  const drops=[...document.querySelectorAll('.drop')];
+  let selectedDrag=null;
+  const routeState={};
+
+  dragItems.forEach(item=>{
+    routeState[item.dataset.id]=null;
+    item.addEventListener('dragstart',e=>{
+      if(checked[2]){e.preventDefault();return;}
+      selectedDrag=item;
+      e.dataTransfer.setData('text/plain',item.dataset.id);
+    });
+    item.addEventListener('click',()=>{
+      if(checked[2]||item.classList.contains('used'))return;
+      dragItems.forEach(x=>x.style.outline='');
+      selectedDrag=item;
+      item.style.outline='3px solid rgba(47,93,98,.22)';
+    });
+  });
+
+  drops.forEach(drop=>{
+    drop.addEventListener('dragover',e=>{if(!checked[2])e.preventDefault();});
+    drop.addEventListener('drop',e=>{
+      if(checked[2])return;
+      e.preventDefault();
+      const id=e.dataTransfer.getData('text/plain');
+      const item=dragItems.find(x=>x.dataset.id===id);
+      placeRoute(item,drop);
+    });
+    drop.addEventListener('click',()=>{
+      if(checked[2])return;
+      if(drop.dataset.item){
+        const old=dragItems.find(x=>x.dataset.id===drop.dataset.item);
+        if(old){old.classList.remove('used');routeState[old.dataset.id]=null;}
+        drop.dataset.item='';
+        drop.textContent=drop.dataset.expect.includes('manager')||drop.dataset.expect.includes('analyst')||drop.dataset.expect.includes('boss')?'Участник':'Действие';
+        drop.classList.remove('filled');
+        return;
+      }
+      if(selectedDrag)placeRoute(selectedDrag,drop);
+    });
+  });
+
+  function placeRoute(item,drop){
+    if(!item || item.classList.contains('used'))return;
+    if(drop.dataset.item){
+      const old=dragItems.find(x=>x.dataset.id===drop.dataset.item);
+      if(old){old.classList.remove('used');routeState[old.dataset.id]=null;}
+    }
+    drop.dataset.item=item.dataset.id;
+    drop.textContent=item.textContent;
+    drop.classList.add('filled');
+    item.classList.add('used');
+    item.style.outline='';
+    routeState[item.dataset.id]=drop.dataset.expect;
+    selectedDrag=null;
+  }
+
+  function checkRoute(){
+    if(drops.some(d=>!d.dataset.item)){
+      feedback('fb2','neutral','Заполните все поля маршрута.');
+      return false;
+    }
+    checked[2]=true;
+    let good=true;
+    drops.forEach(d=>{
+      if(d.dataset.item!==d.dataset.expect)good=false;
+      d.style.borderColor=d.dataset.item===d.dataset.expect?'#7fb395':'#d29a95';
+      d.style.background=d.dataset.item===d.dataset.expect?'#e9f5ee':'#faeceb';
+    });
+    if(good){
+      if(!awarded[2]){score++;awarded[2]=true;}
+      feedback('fb2','ok','Маршрут собран. Теперь видно главное: работа <b>дважды возвращается назад</b>, а после позднего уточнения расчет выполняется повторно.');
+    }else{
+      feedback('fb2','bad','Часть карточек стоит не на своем месте. Посмотрите на логику процесса: менеджер собирает требования → аналитик считает → руководитель проверяет → после уточнения аналитик пересчитывает.');
+    }
+    return true;
+  }
+
+  // screen3 multi exact
+  function checkObservations(){
+    const group=document.querySelector('[data-q="q3"]');
+    const sel=[...group.querySelectorAll('.option.selected')];
+    if(sel.length!==2){
+      feedback('fb3','neutral','Выберите ровно два наблюдения.');
+      return false;
+    }
+    checked[3]=true;
+    let good=true;
+    group.querySelectorAll('.option').forEach(o=>{
+      const should=o.dataset.correct==='true';
+      const is=o.classList.contains('selected');
+      if(should!==is)good=false;
+      if(should)o.classList.add('correct');
+      else if(is)o.classList.add('wrong');
+    });
+    if(good){
+      if(!awarded[3]){score++;awarded[3]=true;}
+      feedback('fb3','ok','Верно. Схема показывает <b>позднюю проверку полноты данных и повторный расчет</b>. Мотивацию, ответственность и необходимость «усилить контроль» по ней доказать нельзя.');
+    }else{
+      feedback('fb3','bad','Выберите только то, что действительно видно в маршруте. Формулировки про мотивацию, ответственность и контроль — это уже интерпретации причин.');
+    }
+    return true;
+  }
+
+  // table builder
+  const tableCards=[...document.querySelectorAll('.table-card')];
+  const tableDrops=[...document.querySelectorAll('.table-drop')];
+  let selectedTableCard=null;
+
+  tableCards.forEach(card=>{
+    card.addEventListener('click',()=>{
+      if(checked[4]||card.classList.contains('used'))return;
+      tableCards.forEach(c=>c.style.outline='');
+      selectedTableCard=card;
+      card.style.outline='3px solid rgba(47,93,98,.22)';
+    });
+  });
+
+  tableDrops.forEach(drop=>{
+    drop.addEventListener('click',()=>{
+      if(checked[4])return;
+
+      if(drop.dataset.item){
+        const old=tableCards.find(c=>c.dataset.id===drop.dataset.item);
+        if(old){old.classList.remove('used');old.style.outline='';}
+        drop.dataset.item='';
+        drop.textContent='...';
+        drop.classList.remove('filled');
+        return;
+      }
+
+      if(!selectedTableCard)return;
+      drop.dataset.item=selectedTableCard.dataset.id;
+      drop.textContent=selectedTableCard.textContent;
+      drop.classList.add('filled');
+      selectedTableCard.classList.add('used');
+      selectedTableCard.style.outline='';
+      selectedTableCard=null;
+    });
+  });
+
+  function checkTable(){
+    if(tableDrops.some(d=>!d.dataset.item)){
+      feedback('fb4','neutral','Заполните все ячейки таблицы.');
+      return false;
+    }
+    checked[4]=true;
+    let good=true;
+    tableDrops.forEach(d=>{
+      const ok=d.dataset.item===d.dataset.expect;
+      if(!ok)good=false;
+      d.style.borderColor=ok?'#7fb395':'#d29a95';
+      d.style.background=ok?'#e9f5ee':'#faeceb';
+    });
+
+    if(good){
+      if(!awarded[4]){score++;awarded[4]=true;}
+      feedback('fb4','ok','Таблица добавила новое наблюдение: <b>полнота требований проверяется не в одной точке</b>. Аналитик обнаруживает нехватку данных уже после передачи работы, а руководитель позже снова проверяет подтвержденность условий.');
+    }else{
+      feedback('fb4','bad','Некоторые карточки стоят не на своем этапе. Ориентируйтесь на фактическую последовательность: менеджер собирает → аналитик проверяет достаточность для расчета → руководитель проверяет подтвержденность условий → аналитик пересчитывает.');
+    }
+    return true;
+  }
+
+  // screen6
+  const transferCards=[...document.querySelectorAll('.transfer')];
+  let selectedTransfer=null;
+  const recs={
+    process:['Схема этапов','Разложите процесс по шагам и отметьте возвраты, повторы, ожидания и точки передачи.'],
+    departments:['Карта взаимодействия','Покажите подразделения, что они передают друг другу, где ждут ответ и где возникает двойная ответственность.'],
+    events:['Временная шкала','Разместите события по времени, чтобы увидеть задержки, зависимые шаги и моменты, когда решение принимается слишком поздно.'],
+    document:['Структура блоков','Разберите документ на части и отметьте, какие блоки от чего зависят, что заполняется повторно и где появляются лишние согласования.'],
+    customer:['Маршрут действий и точек контакта','Покажите шаги клиента, каналы, ожидания и переходы между точками контакта.']
+  };
+
+  transferCards.forEach(c=>{
+    c.addEventListener('click',()=>{
+      transferCards.forEach(x=>x.classList.remove('selected'));
+      c.classList.add('selected');
+      selectedTransfer=c.dataset.type;
+      const r=recs[selectedTransfer];
+      const box=document.getElementById('recommendation');
+      box.innerHTML=`<strong>${r[0]}</strong>${r[1]}`;
+      box.classList.remove('hidden');
+    });
+  });
+
+  function checkTransfer(){
+    if(!selectedTransfer){
+      feedback('fb6','neutral','Сначала выберите тип задачи.');
+      return false;
+    }
+    checked[6]=true;
+    if(!awarded[6]){score++;awarded[6]=true;}
+    feedback('fb6','ok','Подходящий формат выбран. На своей задаче проверьте результат одним вопросом: <b>«Что я увидел в новом представлении, чего не замечал в старом?»</b>');
+    document.getElementById('finalNote').classList.remove('hidden');
+    return true;
+  }
+
+  checkBtn.addEventListener('click',()=>{
+    let done=false;
+    if(current===1){
+      done=checkSingle(
+        'q1',1,'fb1',
+        'Верно. Схема движения позволяет увидеть передачи работы, возвраты и повторные действия — то, что в списке причин легко теряется.',
+        'Этот формат почти не меняет способ смотреть на задачу. Нужен другой код — тот, который покажет <b>движение работы между участниками</b>.'
+      );
+    }
+    if(current===2)done=checkRoute();
+    if(current===3)done=checkObservations();
+    if(current===4)done=checkTable();
+    if(current===5){
+      done=checkSingle(
+        'q5',5,'fb5',
+        'Да. Новый вопрос опирается на обнаруженную связь: данные начинают проверять слишком поздно, из-за чего появляются возвраты и повторный расчет.',
+        'Эта формулировка снова объясняет проблему через человека или отдельную функцию. Смена кода показала другое: <b>критические требования проверяются слишком поздно</b>.'
+      );
+    }
+    if(current===6)done=checkTransfer();
+    if(done)update();
+  });
+
+  nextBtn.addEventListener('click',()=>{
+    if(current<6){
+      current++;update();window.scrollTo({top:0,behavior:'smooth'});
+    }
+  });
+
+  backBtn.addEventListener('click',()=>{
+    if(current>1){
+      current--;update();window.scrollTo({top:0,behavior:'smooth'});
+    }
+  });
+
+  resetBtn.addEventListener('click',()=>{
+    current=1;score=0;selectedDrag=null;selectedTableCard=null;selectedTransfer=null;
+    Object.keys(checked).forEach(k=>checked[k]=false);
+    Object.keys(awarded).forEach(k=>awarded[k]=false);
+
+    document.querySelectorAll('.option').forEach(o=>o.classList.remove('selected','correct','wrong'));
+    document.querySelectorAll('.feedback').forEach(f=>{f.className='feedback';f.innerHTML='';});
+
+    dragItems.forEach(i=>{i.classList.remove('used');i.style.outline='';});
+    drops.forEach(d=>{
+      d.dataset.item='';
+      d.classList.remove('filled');
+      d.style.borderColor='';d.style.background='';
+      d.textContent=d.dataset.expect==='manager'||d.dataset.expect==='analyst'||d.dataset.expect==='boss'?'Участник':
+        (d.dataset.expect==='clarify'?'Уточнение':d.dataset.expect==='recalc'?'Повторный расчет':'Действие');
+    });
+
+    tableCards.forEach(c=>{c.classList.remove('used');c.style.outline='';});
+    tableDrops.forEach(d=>{d.dataset.item='';d.textContent='...';d.classList.remove('filled');d.style.borderColor='';d.style.background='';});
+
+    transferCards.forEach(c=>c.classList.remove('selected'));
+    document.getElementById('recommendation').classList.add('hidden');
+    document.getElementById('finalNote').classList.add('hidden');
+    update();
+    window.scrollTo({top:0,behavior:'smooth'});
+  });
+
+  update();
+})();
+</script>
+</body>
+</html>

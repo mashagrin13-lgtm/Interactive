@@ -1,0 +1,815 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Что на самом деле нужно решить?</title>
+  <style>
+    :root{
+      --bg:#f4f6f8;
+      --card:#ffffff;
+      --text:#1f2933;
+      --muted:#667085;
+      --line:#d9dee7;
+      --soft:#eef2f6;
+      --accent:#2f5d62;
+      --accent-soft:#e7f0f1;
+      --ok:#1f6b45;
+      --ok-bg:#e9f5ee;
+      --bad:#913b35;
+      --bad-bg:#faeceb;
+      --warn:#7b5719;
+      --warn-bg:#fff5dc;
+      --shadow:0 14px 40px rgba(31,41,51,.08);
+    }
+
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      background:var(--bg);
+      color:var(--text);
+      font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+      line-height:1.55;
+    }
+
+    button{font:inherit}
+
+    .app{
+      width:min(100% - 28px, 620px);
+      margin:28px auto;
+    }
+
+    .shell{
+      background:var(--card);
+      border:1px solid var(--line);
+      border-radius:22px;
+      box-shadow:var(--shadow);
+      overflow:hidden;
+    }
+
+    header{
+      padding:22px 22px 18px;
+      border-bottom:1px solid var(--line);
+      background:#fff;
+    }
+
+    .eyebrow{
+      margin:0 0 6px;
+      color:var(--accent);
+      font-size:13px;
+      font-weight:800;
+      letter-spacing:.02em;
+      text-transform:uppercase;
+    }
+
+    h1{
+      margin:0;
+      font-size:clamp(27px,5vw,35px);
+      line-height:1.12;
+      letter-spacing:-.02em;
+    }
+
+    .subtitle{
+      margin:10px 0 0;
+      color:var(--muted);
+      font-size:15px;
+    }
+
+    .progress-meta{
+      display:flex;
+      justify-content:space-between;
+      gap:12px;
+      margin-top:18px;
+      margin-bottom:7px;
+      color:var(--muted);
+      font-size:13px;
+    }
+
+    .progress{
+      height:8px;
+      background:var(--soft);
+      border-radius:999px;
+      overflow:hidden;
+    }
+
+    .progress span{
+      display:block;
+      height:100%;
+      background:var(--accent);
+      width:20%;
+      transition:width .2s ease;
+    }
+
+    main{
+      padding:24px 22px 18px;
+    }
+
+    .screen{display:none}
+    .screen.active{display:block}
+
+    .step{
+      display:inline-flex;
+      align-items:center;
+      min-height:30px;
+      padding:0 11px;
+      border-radius:999px;
+      background:var(--accent-soft);
+      color:var(--accent);
+      font-size:13px;
+      font-weight:800;
+      margin-bottom:12px;
+    }
+
+    h2{
+      margin:0 0 10px;
+      font-size:23px;
+      line-height:1.25;
+      letter-spacing:-.01em;
+    }
+
+    .lead{
+      margin:0 0 18px;
+      color:#3b4652;
+    }
+
+    .case{
+      margin:16px 0 18px;
+      padding:15px 16px;
+      background:#f8fafb;
+      border:1px solid var(--line);
+      border-radius:14px;
+    }
+
+    .case strong{
+      display:block;
+      margin-bottom:5px;
+    }
+
+    .quote{
+      margin-top:8px;
+      padding-left:14px;
+      border-left:3px solid #b5c3c5;
+      color:#334155;
+      font-weight:650;
+    }
+
+    .instruction{
+      margin:16px 0;
+      padding:14px 15px;
+      background:var(--accent-soft);
+      border-left:4px solid var(--accent);
+      border-radius:0 12px 12px 0;
+      font-size:14px;
+    }
+
+    .options{
+      display:grid;
+      gap:10px;
+      margin-top:14px;
+    }
+
+    .option{
+      width:100%;
+      text-align:left;
+      border:1px solid var(--line);
+      background:#fff;
+      color:var(--text);
+      border-radius:13px;
+      padding:14px;
+      cursor:pointer;
+      transition:.15s ease;
+    }
+
+    .option:hover{
+      border-color:#aeb7c4;
+      background:#fafbfc;
+    }
+
+    .option.selected{
+      border-color:var(--accent);
+      background:var(--accent-soft);
+    }
+
+    .option.correct{
+      border-color:#7fb395;
+      background:var(--ok-bg);
+    }
+
+    .option.wrong{
+      border-color:#d29a95;
+      background:var(--bad-bg);
+    }
+
+    .feedback{
+      display:none;
+      margin-top:16px;
+      padding:15px 16px;
+      border-radius:13px;
+      font-size:14px;
+    }
+
+    .feedback.show{display:block}
+    .feedback.ok{
+      background:var(--ok-bg);
+      border:1px solid #b9dcc8;
+      color:#174c33;
+    }
+
+    .feedback.bad{
+      background:var(--bad-bg);
+      border:1px solid #edc3c0;
+      color:#742c27;
+    }
+
+    .feedback.neutral{
+      background:var(--warn-bg);
+      border:1px solid #ead7a2;
+      color:#66470e;
+    }
+
+    .answer-card{
+      margin:16px 0;
+      padding:14px 15px;
+      border:1px solid var(--line);
+      border-radius:13px;
+      background:#fafbfc;
+    }
+
+    .answer-card .label{
+      color:var(--muted);
+      font-size:12px;
+      font-weight:800;
+      text-transform:uppercase;
+      letter-spacing:.03em;
+      margin-bottom:4px;
+    }
+
+    .builder{
+      display:grid;
+      gap:12px;
+      margin-top:18px;
+    }
+
+    .slot-row{
+      display:grid;
+      grid-template-columns:34px 1fr;
+      gap:10px;
+      align-items:start;
+    }
+
+    .slot-num{
+      width:34px;
+      height:34px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      border-radius:10px;
+      background:var(--soft);
+      color:var(--muted);
+      font-size:13px;
+      font-weight:800;
+    }
+
+    .slot{
+      min-height:52px;
+      border:1px dashed #adb7c4;
+      border-radius:12px;
+      background:#fafbfc;
+      padding:10px 12px;
+      display:flex;
+      align-items:center;
+      color:var(--muted);
+      cursor:pointer;
+    }
+
+    .slot.filled{
+      border-style:solid;
+      border-color:var(--accent);
+      background:var(--accent-soft);
+      color:var(--text);
+    }
+
+    .pool{
+      display:flex;
+      flex-wrap:wrap;
+      gap:9px;
+      margin-top:16px;
+    }
+
+    .block{
+      border:1px solid var(--line);
+      background:#fff;
+      border-radius:999px;
+      padding:9px 12px;
+      color:var(--text);
+      cursor:pointer;
+      font-size:14px;
+    }
+
+    .block:hover{border-color:#aeb7c4}
+    .block.used{
+      opacity:.42;
+      cursor:default;
+    }
+
+    .assembled{
+      margin-top:16px;
+      min-height:58px;
+      padding:14px 15px;
+      border:1px solid var(--line);
+      border-radius:12px;
+      background:#f8fafb;
+      color:#31404d;
+    }
+
+    .choice-note{
+      margin-top:8px;
+      color:var(--muted);
+      font-size:13px;
+    }
+
+    .final{
+      margin-top:18px;
+      padding:17px;
+      background:#f8fafb;
+      border:1px solid var(--line);
+      border-radius:14px;
+    }
+
+    .final h3{
+      margin:0 0 8px;
+      font-size:17px;
+    }
+
+    .chain{
+      margin-top:10px;
+      font-weight:800;
+      color:var(--accent);
+    }
+
+    footer{
+      padding:16px 22px 22px;
+      border-top:1px solid var(--line);
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      align-items:center;
+      background:#fff;
+    }
+
+    footer .spacer{flex:1}
+
+    button.ctrl{
+      border-radius:12px;
+      padding:11px 15px;
+      cursor:pointer;
+      font-weight:750;
+      border:1px solid var(--line);
+    }
+
+    .secondary{background:#fff;color:var(--text)}
+    .muted-btn{background:#fff;color:var(--muted)}
+    .primary{background:var(--accent);color:#fff;border-color:var(--accent)!important}
+    button[disabled]{opacity:.42;cursor:not-allowed}
+    .hidden{display:none!important}
+
+    button:focus-visible,.slot:focus-visible{
+      outline:3px solid rgba(47,93,98,.22);
+      outline-offset:2px;
+    }
+
+    @media (max-width:520px){
+      .app{width:min(100% - 16px,620px);margin:8px auto 18px}
+      .shell{border-radius:16px}
+      header,main,footer{padding-left:16px;padding-right:16px}
+      footer .spacer{display:none}
+      footer button{flex:1 1 calc(50% - 6px)}
+      .slot-row{grid-template-columns:30px 1fr}
+      .slot-num{width:30px;height:30px}
+    }
+  </style>
+</head>
+<body>
+<div class="app">
+  <div class="shell">
+    <header>
+      <p class="eyebrow">Проверочный интерактив</p>
+      <h1>Что на самом деле нужно решить?</h1>
+      <p class="subtitle">Пройдите цепочку от готового действия к рабочей задаче, для которой уже можно искать разные решения.</p>
+
+      <div class="progress-meta">
+        <span id="progressText">Шаг 1 из 5</span>
+        <span id="scoreText">Верных решений: 0</span>
+      </div>
+      <div class="progress"><span id="progressBar"></span></div>
+    </header>
+
+    <main>
+      <!-- 1 -->
+      <section class="screen active" data-screen="1">
+        <div class="step">Шаг 1</div>
+        <h2>Не организуйте решение раньше времени</h2>
+        <p class="lead">В начале руководитель уже предлагает действие. Ваша задача — не обсуждать детали планерки, а понять, для чего она вообще понадобилась.</p>
+
+        <div class="case">
+          <strong>Исходная ситуация</strong>
+          Руководитель отдела продаж говорит:
+          <div class="quote">«Нужно добавить обязательную ежедневную планерку. Менеджеры слишком поздно сообщают о проблемах со сделками».</div>
+        </div>
+
+        <div class="instruction">
+          Выберите следующий вопрос. Ищите тот, который помогает подняться от способа к нужному результату.
+        </div>
+
+        <div class="options" data-q="q1">
+          <button class="option">Во сколько проводить планерку?</button>
+          <button class="option">Кто должен на ней присутствовать?</button>
+          <button class="option" data-correct="true">Почему нам важно раньше узнавать о проблемах со сделками?</button>
+          <button class="option">Как контролировать посещаемость?</button>
+        </div>
+
+        <div class="feedback" id="fb1"></div>
+      </section>
+
+      <!-- 2 -->
+      <section class="screen" data-screen="2">
+        <div class="step">Шаг 2</div>
+        <h2>Спросите о следующем результате</h2>
+
+        <div class="answer-card">
+          <div class="label">Ответ команды</div>
+          «Чтобы руководитель мог вмешаться до того, как сделка сорвется».
+        </div>
+
+        <p class="lead">Ответ уже объясняет ценность раннего сигнала, но в нем по-прежнему есть конкретный способ — вмешательство руководителя.</p>
+
+        <div class="instruction">
+          Выберите вопрос, который поможет продвинуться еще на один уровень к рабочему результату.
+        </div>
+
+        <div class="options" data-q="q2">
+          <button class="option">Как руководителю вмешиваться?</button>
+          <button class="option">Почему менеджеры плохо работают?</button>
+          <button class="option" data-correct="true">Что должно измениться благодаря более раннему вмешательству?</button>
+          <button class="option">Какой отчет добавить к планерке?</button>
+        </div>
+
+        <div class="feedback" id="fb2"></div>
+      </section>
+
+      <!-- 3 -->
+      <section class="screen" data-screen="3">
+        <div class="step">Шаг 3</div>
+        <h2>Поймите, когда пора остановиться</h2>
+
+        <div class="answer-card">
+          <div class="label">Следующий ответ</div>
+          «Мы хотим успевать снимать препятствия, пока еще можно сохранить следующий шаг с клиентом».
+        </div>
+
+        <p class="lead">Цепочку «зачем?» не нужно продолжать бесконечно. В какой-то момент уже появляется достаточно конкретная рабочая цель.</p>
+
+        <div class="instruction">
+          Решите, достигли ли вы уровня, на котором можно снова открывать поиск решений.
+        </div>
+
+        <div class="options" data-q="q3">
+          <button class="option">Нет, нужно продолжать спрашивать до миссии компании.</button>
+          <button class="option" data-correct="true">Да, уже понятен конкретный результат, для которого можно искать разные решения.</button>
+          <button class="option">Нет, пока не выбран инструмент.</button>
+          <button class="option">Да, значит ежедневная планерка точно нужна.</button>
+        </div>
+
+        <div class="feedback" id="fb3"></div>
+      </section>
+
+      <!-- 4 -->
+      <section class="screen" data-screen="4">
+        <div class="step">Шаг 4</div>
+        <h2>Соберите настоящую задачу</h2>
+        <p class="lead">Теперь переведите найденную цель в открытый вопрос. В нем должен остаться результат, но не исходная планерка и не оценка дисциплины сотрудников.</p>
+
+        <div class="instruction">
+          Нажмите на нужные блоки в правильном порядке. Используйте только те, которые помогают сформулировать задачу. Нажатие на заполненный слот возвращает блок обратно.
+        </div>
+
+        <div class="builder">
+          <div class="slot-row">
+            <div class="slot-num">1</div>
+            <div class="slot" data-slot="0">Начало вопроса</div>
+          </div>
+          <div class="slot-row">
+            <div class="slot-num">2</div>
+            <div class="slot" data-slot="1">Что нужно замечать</div>
+          </div>
+          <div class="slot-row">
+            <div class="slot-num">3</div>
+            <div class="slot" data-slot="2">Какой результат нужно успеть сохранить</div>
+          </div>
+        </div>
+
+        <div class="pool">
+          <button class="block" data-id="start" data-text="Как">Как</button>
+          <button class="block" data-id="notice" data-text="раньше замечать препятствия по ключевым сделкам">раньше замечать препятствия по ключевым сделкам</button>
+          <button class="block" data-id="result" data-text="и успевать снимать их до срыва следующего шага с клиентом?">и успевать снимать их до срыва следующего шага с клиентом?</button>
+
+          <button class="block" data-id="meeting" data-text="проводить ежедневную планерку">проводить ежедневную планерку</button>
+          <button class="block" data-id="discipline" data-text="усилить дисциплину менеджеров">усилить дисциплину менеджеров</button>
+          <button class="block" data-id="report" data-text="ввести дополнительный отчет">ввести дополнительный отчет</button>
+        </div>
+
+        <div class="assembled" id="assembled">Ваш вопрос появится здесь.</div>
+        <div class="feedback" id="fb4"></div>
+      </section>
+
+      <!-- 5 -->
+      <section class="screen" data-screen="5">
+        <div class="step">Шаг 5</div>
+        <h2>Проверьте, стало ли решений больше</h2>
+        <p class="lead">После уточнения задачи исходная планерка не исчезает. Она просто перестает быть единственным вариантом.</p>
+
+        <div class="case">
+          <strong>Найденная задача</strong>
+          Как раньше замечать препятствия по ключевым сделкам и успевать снимать их до срыва следующего шага с клиентом?
+        </div>
+
+        <div class="instruction">
+          Отметьте минимум два варианта, которые потенциально могут решать эту задачу. Здесь нет одного «правильного» способа: важно показать, что пространство решений расширилось.
+        </div>
+
+        <div class="options multi" data-q="q5">
+          <button class="option" data-id="m1">Ежедневная встреча всей команды.</button>
+          <button class="option" data-id="m2">Автоматический сигнал по сделке, в которой нет следующего шага.</button>
+          <button class="option" data-id="m3">Короткий разбор только проблемных сделок дважды в неделю.</button>
+          <button class="option" data-id="m4">Обязательное поле с препятствием и сроком следующего действия.</button>
+        </div>
+        <div class="choice-note">Подсказка: каждый вариант можно обсуждать как гипотезу. Вопрос в том, осталась ли команда привязана только к первоначальной планерке.</div>
+
+        <div class="feedback" id="fb5"></div>
+
+        <div class="final hidden" id="finalBox">
+          <h3>Цепочка завершена</h3>
+          <div>Хороший результат такого разбора — не «доказать», что первоначальная идея плохая, а выйти на уровень, где у руководителя появляется несколько рабочих способов добиться нужного результата.</div>
+          <div class="chain">Исходное действие → «Зачем?» → следующий результат → «Почему это важно?» → рабочая цель → новый открытый вопрос</div>
+          <div style="margin-top:10px;color:#475569;">
+            Проверка для себя: если в конце вы получили только более длинное объяснение, почему первая идея хороша, значит цепочка пока не дошла до настоящей задачи.
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <button class="ctrl muted-btn" id="resetBtn">Сбросить</button>
+      <div class="spacer"></div>
+      <button class="ctrl secondary" id="backBtn" disabled>Назад</button>
+      <button class="ctrl primary" id="checkBtn">Проверить</button>
+      <button class="ctrl secondary hidden" id="nextBtn">Дальше</button>
+    </footer>
+  </div>
+</div>
+
+<script>
+(function(){
+  const screens = [...document.querySelectorAll('.screen')];
+  const progressText = document.getElementById('progressText');
+  const scoreText = document.getElementById('scoreText');
+  const progressBar = document.getElementById('progressBar');
+  const backBtn = document.getElementById('backBtn');
+  const checkBtn = document.getElementById('checkBtn');
+  const nextBtn = document.getElementById('nextBtn');
+  const resetBtn = document.getElementById('resetBtn');
+
+  let current = 1;
+  let score = 0;
+  const checked = {1:false,2:false,3:false,4:false,5:false};
+  const awarded = {1:false,2:false,3:false,4:false,5:false};
+
+  function updateUI(){
+    screens.forEach(s => s.classList.toggle('active', Number(s.dataset.screen) === current));
+    progressText.textContent = `Шаг ${current} из 5`;
+    scoreText.textContent = `Верных решений: ${score}`;
+    progressBar.style.width = `${current*20}%`;
+    backBtn.disabled = current === 1;
+
+    const done = checked[current];
+    checkBtn.classList.toggle('hidden', done && current !== 5);
+    nextBtn.classList.toggle('hidden', !done || current === 5);
+    checkBtn.textContent = current === 5 && done ? 'Проверить выбор еще раз' : 'Проверить';
+  }
+
+  function feedback(id,type,html){
+    const el = document.getElementById(id);
+    el.className = `feedback show ${type}`;
+    el.innerHTML = html;
+  }
+
+  // single choices
+  document.querySelectorAll('.options:not(.multi)').forEach(group => {
+    group.addEventListener('click', e => {
+      const btn = e.target.closest('.option');
+      if(!btn || checked[current]) return;
+      group.querySelectorAll('.option').forEach(o => o.classList.remove('selected'));
+      btn.classList.add('selected');
+    });
+  });
+
+  // multi choices
+  document.querySelector('.options.multi').addEventListener('click', e => {
+    const btn = e.target.closest('.option');
+    if(!btn) return;
+    btn.classList.toggle('selected');
+  });
+
+  function checkSingle(screen, q, fb, okText, badText){
+    const group = document.querySelector(`[data-q="${q}"]`);
+    const selected = group.querySelector('.option.selected');
+    if(!selected){
+      feedback(fb,'neutral','Сначала выберите один вариант.');
+      return false;
+    }
+    checked[screen] = true;
+    const correct = selected.dataset.correct === 'true';
+    group.querySelectorAll('.option').forEach(o => {
+      if(o.dataset.correct === 'true') o.classList.add('correct');
+      else if(o.classList.contains('selected')) o.classList.add('wrong');
+    });
+
+    if(correct){
+      if(!awarded[screen]){score++; awarded[screen]=true;}
+      feedback(fb,'ok',okText);
+    } else {
+      feedback(fb,'bad',badText);
+    }
+    return true;
+  }
+
+  // builder
+  const slots = [...document.querySelectorAll('.slot')];
+  const blocks = [...document.querySelectorAll('.block')];
+  const chosen = [null,null,null];
+
+  function refreshBuilder(){
+    const placeholders = ['Начало вопроса','Что нужно замечать','Какой результат нужно успеть сохранить'];
+    slots.forEach((slot,i) => {
+      if(chosen[i]){
+        slot.textContent = chosen[i].dataset.text;
+        slot.classList.add('filled');
+      } else {
+        slot.textContent = placeholders[i];
+        slot.classList.remove('filled');
+      }
+    });
+    blocks.forEach(b => b.classList.toggle('used', chosen.includes(b)));
+    const parts = chosen.filter(Boolean).map(b => b.dataset.text);
+    document.getElementById('assembled').textContent = parts.length ? parts.join(' ') : 'Ваш вопрос появится здесь.';
+  }
+
+  blocks.forEach(block => {
+    block.addEventListener('click', () => {
+      if(checked[4] || block.classList.contains('used')) return;
+      const i = chosen.findIndex(x => x === null);
+      if(i === -1) return;
+      chosen[i] = block;
+      refreshBuilder();
+    });
+  });
+
+  slots.forEach((slot,i) => {
+    slot.addEventListener('click', () => {
+      if(checked[4]) return;
+      chosen[i] = null;
+      const rest = chosen.filter(Boolean);
+      chosen[0] = rest[0] || null;
+      chosen[1] = rest[1] || null;
+      chosen[2] = rest[2] || null;
+      refreshBuilder();
+    });
+  });
+
+  function checkBuilder(){
+    if(chosen.some(x => x === null)){
+      feedback('fb4','neutral','Заполните все три позиции. Лишние блоки использовать не нужно.');
+      return false;
+    }
+    checked[4] = true;
+    const ids = chosen.map(x => x.dataset.id).join('|');
+    const correct = ids === 'start|notice|result';
+    blocks.forEach(b => b.disabled = true);
+
+    if(correct){
+      if(!awarded[4]){score++; awarded[4]=true;}
+      feedback('fb4','ok','Получилась рабочая задача: <b>«Как раньше замечать препятствия по ключевым сделкам и успевать снимать их до срыва следующего шага с клиентом?»</b> В ней уже нет обязательной планерки, отчета или оценки дисциплины.');
+    } else {
+      feedback('fb4','bad','В формулировку снова попал готовый способ или оценка людей. Настоящая задача должна описывать <b>что нужно замечать и какой результат успеть сохранить</b>, не назначая инструмент заранее.');
+    }
+    return true;
+  }
+
+  function checkMulti(){
+    const selected = [...document.querySelectorAll('[data-q="q5"] .option.selected')];
+    if(selected.length < 2){
+      feedback('fb5','neutral','Отметьте хотя бы два варианта. Смысл шага — проверить, появились ли после уточнения задачи альтернативы первоначальной идее.');
+      return false;
+    }
+
+    checked[5] = true;
+
+    const includesOriginalOnly = selected.length === 1 && selected[0].dataset.id === 'm1';
+    const includesAlternative = selected.some(x => x.dataset.id !== 'm1');
+
+    if(includesAlternative){
+      if(!awarded[5]){score++; awarded[5]=true;}
+      feedback(
+        'fb5',
+        'ok',
+        `Вы выбрали ${selected.length} варианта. Это и есть важный результат: <b>ежедневная планерка остается возможной гипотезой, но больше не выглядит единственным ответом</b>. Автоматический сигнал, выборочный разбор проблемных сделок и изменение карточки сделки тоже могут решать найденную задачу. Их уже можно сравнивать по эффекту, затратам и ограничениям.`
+      );
+    } else if(includesOriginalOnly){
+      feedback('fb5','bad','Вы снова оставили только исходное решение. Вернитесь к найденной задаче и попробуйте выбрать еще хотя бы один способ, который помогает раньше увидеть препятствие.');
+    } else {
+      feedback('fb5','ok','Хорошо. После уточнения цели у вас появились альтернативы. Теперь их можно сравнивать, а не защищать первое решение по привычке.');
+    }
+
+    document.getElementById('finalBox').classList.remove('hidden');
+    return true;
+  }
+
+  checkBtn.addEventListener('click', () => {
+    let done = false;
+
+    if(current === 1){
+      done = checkSingle(
+        1,'q1','fb1',
+        'Верно. Этот вопрос возвращает обсуждение к цели. Все остальные варианты уже предполагают, что ежедневная планерка нужна, и обсуждают только ее устройство.',
+        'Вы уже начали организовывать выбранное решение. Пока рано решать, кто придет и во сколько. Сначала выясните, <b>зачем команде раньше узнавать о проблемах со сделками</b>.'
+      );
+    }
+
+    if(current === 2){
+      done = checkSingle(
+        2,'q2','fb2',
+        'Да. Вопрос переводит разговор от вмешательства руководителя к результату: что именно должно успеть измениться в сделке, если проблему заметили раньше.',
+        'Этот вопрос снова уводит либо в способ, либо в оценку сотрудников. Нужен следующий результат: <b>что должно стать возможным благодаря раннему сигналу?</b>'
+      );
+    }
+
+    if(current === 3){
+      done = checkSingle(
+        3,'q3','fb3',
+        'Верно. Теперь уже есть конкретная рабочая цель: раньше увидеть препятствие и сохранить следующий шаг с клиентом. Этого достаточно, чтобы снова открыть поиск вариантов.',
+        'Цепочку не нужно тянуть до абстрактной миссии и не нужно ждать выбора инструмента. Остановитесь, когда появляется <b>конкретный результат, для которого можно придумать несколько способов</b>.'
+      );
+    }
+
+    if(current === 4) done = checkBuilder();
+    if(current === 5) done = checkMulti();
+
+    if(done) updateUI();
+  });
+
+  nextBtn.addEventListener('click', () => {
+    if(current < 5){
+      current++;
+      updateUI();
+      window.scrollTo({top:0,behavior:'smooth'});
+    }
+  });
+
+  backBtn.addEventListener('click', () => {
+    if(current > 1){
+      current--;
+      updateUI();
+      window.scrollTo({top:0,behavior:'smooth'});
+    }
+  });
+
+  resetBtn.addEventListener('click', () => {
+    current = 1;
+    score = 0;
+    Object.keys(checked).forEach(k => checked[k] = false);
+    Object.keys(awarded).forEach(k => awarded[k] = false);
+
+    document.querySelectorAll('.option').forEach(o => {
+      o.classList.remove('selected','correct','wrong');
+      o.disabled = false;
+    });
+    document.querySelectorAll('.feedback').forEach(f => {
+      f.className = 'feedback';
+      f.innerHTML = '';
+    });
+
+    chosen[0]=null;chosen[1]=null;chosen[2]=null;
+    blocks.forEach(b => b.disabled = false);
+    refreshBuilder();
+
+    document.getElementById('finalBox').classList.add('hidden');
+    updateUI();
+    window.scrollTo({top:0,behavior:'smooth'});
+  });
+
+  refreshBuilder();
+  updateUI();
+})();
+</script>
+</body>
+</html>

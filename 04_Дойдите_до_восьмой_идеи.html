@@ -1,0 +1,427 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Дойдите до восьмой идеи</title>
+<style>
+:root{
+  --bg:#f4f6f8; --card:#ffffff; --text:#1f2933; --muted:#667085; --line:#d9dee7;
+  --soft:#eef2f6; --accent:#2f5d62; --accent-soft:#e7f0f1;
+  --ok:#1f6b45; --okbg:#e9f5ee; --bad:#913b35; --badbg:#faeceb;
+  --warn:#7b5719; --warnbg:#fff5dc; --shadow:0 14px 40px rgba(31,41,51,.08);
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--bg); color:var(--text);
+  font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  line-height:1.55;
+}
+button{font:inherit}
+.app{width:min(100% - 28px,620px);margin:28px auto}
+.shell{background:var(--card);border:1px solid var(--line);border-radius:22px;box-shadow:var(--shadow);overflow:hidden}
+header{padding:22px 22px 18px;border-bottom:1px solid var(--line);background:#fff}
+.eyebrow{margin:0 0 6px;color:var(--accent);font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:.03em}
+h1{margin:0;font-size:clamp(27px,5vw,35px);line-height:1.12;letter-spacing:-.02em}
+.subtitle{margin:10px 0 0;color:var(--muted);font-size:15px}
+.progress-meta{display:flex;justify-content:space-between;gap:12px;margin:18px 0 7px;color:var(--muted);font-size:13px}
+.progress{height:8px;background:var(--soft);border-radius:999px;overflow:hidden}
+.progress span{display:block;height:100%;background:var(--accent);width:20%;transition:width .2s ease}
+main{padding:24px 22px 18px}
+.screen{display:none}.screen.active{display:block}
+.step{display:inline-flex;align-items:center;min-height:30px;padding:0 11px;border-radius:999px;background:var(--accent-soft);color:var(--accent);font-size:13px;font-weight:800;margin-bottom:12px}
+h2{margin:0 0 10px;font-size:23px;line-height:1.25}
+.lead{margin:0 0 18px;color:#3b4652}
+.case{margin:16px 0 18px;padding:15px 16px;background:#f8fafb;border:1px solid var(--line);border-radius:14px}
+.case strong{display:block;margin-bottom:6px}
+.idea-list{margin:10px 0 0;padding-left:22px}
+.instruction{margin:16px 0;padding:14px 15px;background:var(--accent-soft);border-left:4px solid var(--accent);border-radius:0 12px 12px 0;font-size:14px}
+.options{display:grid;gap:10px;margin-top:14px}
+.option{width:100%;text-align:left;border:1px solid var(--line);background:#fff;color:var(--text);border-radius:13px;padding:14px;cursor:pointer;transition:.15s ease}
+.option:hover{border-color:#aeb7c4;background:#fafbfc}
+.option.selected{border-color:var(--accent);background:var(--accent-soft)}
+.option.correct{border-color:#7fb395;background:var(--okbg)}
+.option.wrong{border-color:#d29a95;background:var(--badbg)}
+.feedback{display:none;margin-top:16px;padding:15px 16px;border-radius:13px;font-size:14px}
+.feedback.show{display:block}
+.feedback.ok{background:var(--okbg);border:1px solid #b9dcc8;color:#174c33}
+.feedback.bad{background:var(--badbg);border:1px solid #edc3c0;color:#742c27}
+.feedback.neutral{background:var(--warnbg);border:1px solid #ead7a2;color:#66470e}
+.consequence{margin-top:12px;padding:13px 14px;border-radius:12px;background:#fff;border:1px solid var(--line);color:#3f4b56}
+.consequence b{display:block;margin-bottom:4px}
+.quote{margin-top:8px;padding-left:14px;border-left:3px solid #b5c3c5;color:#334155;font-weight:650}
+.counter{
+  display:flex;align-items:center;gap:10px;margin:16px 0;padding:13px 14px;border:1px solid var(--line);
+  border-radius:13px;background:#f8fafb
+}
+.counter strong{font-size:22px;color:var(--accent)}
+.tags{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.tag{padding:7px 10px;border-radius:999px;background:var(--soft);font-size:13px;color:#42505d}
+.compare{display:grid;gap:12px;margin-top:16px}
+.version{border:1px solid var(--line);border-radius:14px;padding:15px;background:#fff}
+.version h3{margin:0 0 10px;font-size:17px}
+.version.good{border-color:#b9dcc8;background:var(--okbg)}
+.flow{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.node{padding:8px 10px;border-radius:10px;background:#f8fafb;border:1px solid var(--line);font-size:14px}
+.arrow{color:var(--muted);font-weight:800}
+.marker{margin-top:14px;padding:13px 14px;border-radius:12px;background:#f8fafb;border:1px solid var(--line)}
+.marker b{display:block;margin-bottom:5px}
+.final-note{margin-top:16px;padding:16px;border-radius:14px;background:#f8fafb;border:1px solid var(--line)}
+.final-note h3{margin:0 0 8px;font-size:17px}
+.formula{margin-top:10px;font-weight:800;color:var(--accent)}
+footer{padding:16px 22px 22px;border-top:1px solid var(--line);display:flex;gap:10px;flex-wrap:wrap;align-items:center;background:#fff}
+footer .spacer{flex:1}
+.ctrl{border-radius:12px;padding:11px 15px;cursor:pointer;font-weight:750;border:1px solid var(--line)}
+.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+.secondary{background:#fff;color:var(--text)}
+.muted{background:#fff;color:var(--muted)}
+button[disabled]{opacity:.42;cursor:not-allowed}
+.hidden{display:none!important}
+button:focus-visible{outline:3px solid rgba(47,93,98,.22);outline-offset:2px}
+
+@media(max-width:520px){
+  .app{width:min(100% - 16px,620px);margin:8px auto 18px}
+  .shell{border-radius:16px}
+  header,main,footer{padding-left:16px;padding-right:16px}
+  footer .spacer{display:none}
+  footer button{flex:1 1 calc(50% - 6px)}
+}
+</style>
+</head>
+<body>
+<div class="app">
+<div class="shell">
+<header>
+  <p class="eyebrow">Проверочный интерактив</p>
+  <h1>Дойдите до восьмой идеи</h1>
+  <p class="subtitle">Мини-симуляция о том, как не схлопнуть поиск после первого удачного варианта.</p>
+  <div class="progress-meta">
+    <span id="progressText">Шаг 1 из 5</span>
+    <span id="scoreText">Верных решений: 0</span>
+  </div>
+  <div class="progress"><span id="progressBar"></span></div>
+</header>
+
+<main>
+  <!-- 1 -->
+  <section class="screen active" data-screen="1">
+    <div class="step">Шаг 1</div>
+    <h2>Не выбирайте слишком рано</h2>
+    <p class="lead">Квота нужна именно для момента, когда одна идея уже кажется достаточно хорошей и хочется перейти к обсуждению.</p>
+
+    <div class="case">
+      <strong>Задача</strong>
+      Руководитель хочет сократить время подготовки коммерческого предложения с четырех часов до двух без снижения качества.
+      <div class="counter"><strong>3 / 8</strong><span>Идей уже собрано</span></div>
+      <ol class="idea-list">
+        <li>создать новый шаблон;</li>
+        <li>использовать готовые текстовые блоки;</li>
+        <li>автоматизировать часть расчетов.</li>
+      </ol>
+    </div>
+
+    <div class="instruction">Третий вариант выглядит перспективно. Что делает руководитель?</div>
+
+    <div class="options" data-q="q1">
+      <button class="option">Начинает обсуждать, что именно автоматизировать.</button>
+      <button class="option">Предлагает команде проголосовать между тремя идеями.</button>
+      <button class="option" data-correct="true">Фиксирует все три идеи и продолжает поиск до восьми вариантов.</button>
+      <button class="option">Отказывается от квоты: сильная идея уже найдена.</button>
+    </div>
+    <div class="feedback" id="fb1"></div>
+  </section>
+
+  <!-- 2 -->
+  <section class="screen" data-screen="2">
+    <div class="step">Шаг 2</div>
+    <h2>Не пускайте критику внутрь генерации</h2>
+
+    <div class="case">
+      <strong>Четвертая идея</strong>
+      «Убрать из предложения часть стандартной информации и давать ее отдельным приложением».
+      <div class="quote">Участник: «Клиенты привыкли к текущему формату. Это не пройдет».</div>
+    </div>
+
+    <div class="instruction">Выберите реакцию руководителя, которая сохраняет темп генерации.</div>
+
+    <div class="options" data-q="q2">
+      <button class="option">Просит участника доказать свою позицию.</button>
+      <button class="option">Удаляет идею из списка.</button>
+      <button class="option" data-correct="true">Фиксирует идею и переносит проверку риска на этап отбора.</button>
+      <button class="option">Начинает обсуждение клиентских предпочтений.</button>
+    </div>
+    <div class="feedback" id="fb2"></div>
+  </section>
+
+  <!-- 3 -->
+  <section class="screen" data-screen="3">
+    <div class="step">Шаг 3</div>
+    <h2>Следите не только за количеством, но и за направлением</h2>
+
+    <div class="case">
+      <strong>У команды уже семь идей</strong>
+      Четыре из них — разные версии изменения шаблона.
+      <div class="tags">
+        <span class="tag">новый шаблон</span>
+        <span class="tag">короткий шаблон</span>
+        <span class="tag">шаблон по сегментам</span>
+        <span class="tag">шаблон с подсказками</span>
+        <span class="tag">готовые текстовые блоки</span>
+        <span class="tag">автоматизация расчетов</span>
+        <span class="tag">предзаполнение данных</span>
+      </div>
+    </div>
+
+    <div class="instruction">Какая реплика руководителя лучше помогает выйти из повторяющегося направления?</div>
+
+    <div class="options" data-q="q3">
+      <button class="option">«Нам осталось придумать еще одну».</button>
+      <button class="option">«Шаблон явно победил, можно заканчивать».</button>
+      <button class="option" data-correct="true">«Следующий вариант придумываем без изменения шаблона. Что еще съедает эти четыре часа?»</button>
+      <button class="option">«Давайте добавим еще три версии шаблона».</button>
+    </div>
+    <div class="feedback" id="fb3"></div>
+  </section>
+
+  <!-- 4 -->
+  <section class="screen" data-screen="4">
+    <div class="step">Шаг 4</div>
+    <h2>Квота выполнена. Теперь меняется режим работы</h2>
+
+    <div class="case">
+      <strong>Команда дошла до восьми вариантов</strong>
+      Идеи охватывают несколько направлений: шаблон, данные, расчеты, согласование и порядок сборки предложения.
+    </div>
+
+    <div class="instruction">Что делать дальше?</div>
+
+    <div class="options" data-q="q4">
+      <button class="option">Придумать еще восемь независимо от качества списка.</button>
+      <button class="option">Сразу внедрить самый необычный вариант.</button>
+      <button class="option" data-correct="true">Завершить генерацию, объединить явные повторы и перейти к анализу вариантов.</button>
+      <button class="option">Удалить все слабые идеи без обсуждения.</button>
+    </div>
+    <div class="feedback" id="fb4"></div>
+  </section>
+
+  <!-- 5 -->
+  <section class="screen" data-screen="5">
+    <div class="step">Шаг 5</div>
+    <h2>Где поле решений сузилось бы раньше времени?</h2>
+    <p class="lead">Сравните две версии одной встречи. Посмотрите не только на количество идей, но и на число разных направлений.</p>
+
+    <div class="compare">
+      <div class="version">
+        <h3>Версия 1. Ранний выбор</h3>
+        <div class="flow">
+          <span class="node">3 идеи</span><span class="arrow">→</span>
+          <span class="node">обсуждение автоматизации</span><span class="arrow">→</span>
+          <span class="node">1 выбранная гипотеза</span>
+        </div>
+        <div class="marker">
+          <b>Что произошло</b>
+          Команда перестала искать новые направления в тот момент, когда одна идея показалась перспективной.
+        </div>
+      </div>
+
+      <div class="version good">
+        <h3>Версия 2. Квота</h3>
+        <div class="flow">
+          <span class="node">8 идей</span><span class="arrow">→</span>
+          <span class="node">5 направлений</span><span class="arrow">→</span>
+          <span class="node">3 варианта для проверки</span>
+        </div>
+        <div class="marker">
+          <b>Что изменилось</b>
+          Квота заставила команду пройти мимо первых очевидных ответов и расширить поле до отбора.
+        </div>
+      </div>
+    </div>
+
+    <div class="instruction">Выберите момент, в котором руководитель сильнее всего рисковал преждевременно сузить поле решений.</div>
+
+    <div class="options" data-q="q5">
+      <button class="option">Когда команда сформулировала исходную задачу.</button>
+      <button class="option" data-correct="true">Когда третья идея показалась достаточно сильной и появилось желание начать ее обсуждать.</button>
+      <button class="option">Когда восьмая идея была записана.</button>
+      <button class="option">Когда после генерации начался анализ.</button>
+    </div>
+    <div class="feedback" id="fb5"></div>
+
+    <div class="final-note hidden" id="finalNote">
+      <h3>Памятка</h3>
+      <div>Квота не требует бесконечно генерировать идеи. Она защищает этап поиска от слишком раннего выбора.</div>
+      <div class="formula">Задать квоту → не оценивать до ее выполнения → следить за разнообразием направлений → закончить генерацию → объединить повторы → перейти к отбору</div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <button class="ctrl muted" id="resetBtn">Сбросить</button>
+  <div class="spacer"></div>
+  <button class="ctrl secondary" id="backBtn" disabled>Назад</button>
+  <button class="ctrl primary" id="checkBtn">Проверить</button>
+  <button class="ctrl secondary hidden" id="nextBtn">Дальше</button>
+</footer>
+</div>
+</div>
+
+<script>
+(function(){
+  let current=1, score=0;
+  const checked={1:false,2:false,3:false,4:false,5:false};
+  const awarded={1:false,2:false,3:false,4:false,5:false};
+
+  const screens=[...document.querySelectorAll('.screen')];
+  const progressText=document.getElementById('progressText');
+  const progressBar=document.getElementById('progressBar');
+  const scoreText=document.getElementById('scoreText');
+  const backBtn=document.getElementById('backBtn');
+  const nextBtn=document.getElementById('nextBtn');
+  const checkBtn=document.getElementById('checkBtn');
+  const resetBtn=document.getElementById('resetBtn');
+
+  function update(){
+    screens.forEach(s=>s.classList.toggle('active',Number(s.dataset.screen)===current));
+    progressText.textContent=`Шаг ${current} из 5`;
+    progressBar.style.width=`${current*20}%`;
+    scoreText.textContent=`Верных решений: ${score}`;
+    backBtn.disabled=current===1;
+    nextBtn.classList.toggle('hidden',!checked[current]||current===5);
+    checkBtn.classList.toggle('hidden',checked[current]&&current!==5);
+    checkBtn.textContent=(current===5&&checked[5])?'Проверить еще раз':'Проверить';
+  }
+
+  function feedback(id,type,html){
+    const el=document.getElementById(id);
+    el.className=`feedback show ${type}`;
+    el.innerHTML=html;
+  }
+
+  document.querySelectorAll('.options').forEach(group=>{
+    group.addEventListener('click',e=>{
+      const btn=e.target.closest('.option');
+      if(!btn || checked[current]) return;
+      group.querySelectorAll('.option').forEach(o=>o.classList.remove('selected'));
+      btn.classList.add('selected');
+    });
+  });
+
+  function checkSingle(q,screen,fbId,okText,badText,consequenceOk='',consequenceBad=''){
+    const group=document.querySelector(`[data-q="${q}"]`);
+    const sel=group.querySelector('.option.selected');
+    if(!sel){
+      feedback(fbId,'neutral','Сначала выберите один вариант.');
+      return false;
+    }
+
+    checked[screen]=true;
+    const good=sel.dataset.correct==='true';
+
+    group.querySelectorAll('.option').forEach(o=>{
+      if(o.dataset.correct==='true') o.classList.add('correct');
+      else if(o.classList.contains('selected')) o.classList.add('wrong');
+    });
+
+    if(good){
+      if(!awarded[screen]){score++;awarded[screen]=true;}
+      feedback(
+        fbId,'ok',
+        okText + (consequenceOk ? `<div class="consequence"><b>Что происходит дальше</b>${consequenceOk}</div>` : '')
+      );
+    }else{
+      feedback(
+        fbId,'bad',
+        badText + (consequenceBad ? `<div class="consequence"><b>Что происходит дальше</b>${consequenceBad}</div>` : '')
+      );
+    }
+    return true;
+  }
+
+  checkBtn.addEventListener('click',()=>{
+    let done=false;
+
+    if(current===1){
+      done=checkSingle(
+        'q1',1,'fb1',
+        'Верно. Пока квота не выполнена, сильная идея остается просто одной из идей. Ее стоит сохранить, но не превращать в центр обсуждения.',
+        'Вы уже переходите к отбору, хотя генерация еще не закончена. В этот момент вся дальнейшая работа почти неизбежно начнет крутиться вокруг третьего варианта.',
+        'Команда продолжает искать и получает шанс выйти в другие направления: не только шаблон и автоматизация, но и данные, согласование, порядок сборки.',
+        'Вместо восьми вариантов встреча заканчивается обсуждением одной идеи. Поле решений схлопнулось на третьем шаге.'
+      );
+    }
+
+    if(current===2){
+      done=checkSingle(
+        'q2',2,'fb2',
+        'Да. Риск не игнорируется — его просто переносят туда, где ему место: на этап отбора. Пока задача группы — расширить список.',
+        'Критика уже запустила режим оценки. После такой реплики участники начинают заранее фильтровать идеи и реже предлагают спорные варианты.',
+        'Идея остается в списке, а команда не теряет темп генерации.',
+        'Вместо нового варианта группа начинает спорить о клиентах и фактически прекращает генерацию.'
+      );
+    }
+
+    if(current===3){
+      done=checkSingle(
+        'q3',3,'fb3',
+        'Верно. Формально семь идей уже есть, но четыре — вариации одного хода. Руководитель меняет направление поиска, а не просто добивает счетчик.',
+        'Квота превращается в формальность, если идеи отличаются только деталями одного решения. Смысл — расширить поле, а не набрать восемь строк.',
+        'Восьмой вариант должен прийти из другой части процесса: данных, расчетов, согласования, сборки или взаимодействия.',
+        'Команда набирает нужное число, но фактически остается внутри одного и того же решения.'
+      );
+    }
+
+    if(current===4){
+      done=checkSingle(
+        'q4',4,'fb4',
+        'Да. Квота выполнила свою задачу. Теперь можно убрать явные дубли, сравнить направления и решить, какие варианты стоит проверять дальше.',
+        'После выполнения квоты режим работы должен измениться. Бесконечная генерация так же бесполезна, как и слишком ранний отбор.',
+        'Команда явно переключается из генерации в анализ.',
+        'Либо поиск продолжается без причины, либо решение принимается без нормального сравнения вариантов.'
+      );
+    }
+
+    if(current===5){
+      done=checkSingle(
+        'q5',5,'fb5',
+        'Верно. Самая опасная точка — момент, когда ранняя идея кажется «уже достаточно хорошей». Именно здесь квота удерживает команду от преждевременного выбора.',
+        'Посмотрите на первую развилку встречи. Поле решений сузилось бы не в конце, а тогда, когда третья идея перехватила внимание команды.'
+      );
+      if(done) document.getElementById('finalNote').classList.remove('hidden');
+    }
+
+    if(done) update();
+  });
+
+  nextBtn.addEventListener('click',()=>{
+    if(current<5){
+      current++;
+      update();
+      window.scrollTo({top:0,behavior:'smooth'});
+    }
+  });
+
+  backBtn.addEventListener('click',()=>{
+    if(current>1){
+      current--;
+      update();
+      window.scrollTo({top:0,behavior:'smooth'});
+    }
+  });
+
+  resetBtn.addEventListener('click',()=>{
+    current=1;score=0;
+    Object.keys(checked).forEach(k=>checked[k]=false);
+    Object.keys(awarded).forEach(k=>awarded[k]=false);
+    document.querySelectorAll('.option').forEach(o=>o.classList.remove('selected','correct','wrong'));
+    document.querySelectorAll('.feedback').forEach(f=>{f.className='feedback';f.innerHTML='';});
+    document.getElementById('finalNote').classList.add('hidden');
+    update();
+    window.scrollTo({top:0,behavior:'smooth'});
+  });
+
+  update();
+})();
+</script>
+</body>
+</html>

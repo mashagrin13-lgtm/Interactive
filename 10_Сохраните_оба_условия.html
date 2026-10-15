@@ -1,0 +1,627 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Сохраните оба условия</title>
+<style>
+:root{
+  --bg:#f4f6f8; --card:#ffffff; --text:#1f2933; --muted:#667085; --line:#d9dee7;
+  --soft:#eef2f6; --accent:#2f5d62; --accent-soft:#e7f0f1;
+  --ok:#1f6b45; --okbg:#e9f5ee; --bad:#913b35; --badbg:#faeceb;
+  --warn:#7b5719; --warnbg:#fff5dc; --shadow:0 14px 40px rgba(31,41,51,.08);
+}
+*{box-sizing:border-box}
+body{
+  margin:0;background:var(--bg);color:var(--text);
+  font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  line-height:1.55;
+}
+button,input,textarea{font:inherit}
+.app{width:min(100% - 28px,700px);margin:28px auto}
+.shell{background:var(--card);border:1px solid var(--line);border-radius:22px;box-shadow:var(--shadow);overflow:hidden}
+header{padding:22px 22px 18px;border-bottom:1px solid var(--line);background:#fff}
+.eyebrow{margin:0 0 6px;color:var(--accent);font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:.03em}
+h1{margin:0;font-size:clamp(27px,5vw,35px);line-height:1.12;letter-spacing:-.02em}
+.subtitle{margin:10px 0 0;color:var(--muted);font-size:15px}
+.progress-meta{display:flex;justify-content:space-between;gap:12px;margin:18px 0 7px;color:var(--muted);font-size:13px}
+.progress{height:8px;background:var(--soft);border-radius:999px;overflow:hidden}
+.progress span{display:block;height:100%;background:var(--accent);width:14.285%;transition:width .2s ease}
+main{padding:24px 22px 18px}
+.screen{display:none}.screen.active{display:block}
+.step{display:inline-flex;align-items:center;min-height:30px;padding:0 11px;border-radius:999px;background:var(--accent-soft);color:var(--accent);font-size:13px;font-weight:800;margin-bottom:12px}
+h2{margin:0 0 10px;font-size:23px;line-height:1.25}
+.lead{margin:0 0 18px;color:#3b4652}
+.case{margin:16px 0 18px;padding:15px 16px;background:#f8fafb;border:1px solid var(--line);border-radius:14px}
+.case strong{display:block;margin-bottom:6px}
+.instruction{margin:16px 0;padding:14px 15px;background:var(--accent-soft);border-left:4px solid var(--accent);border-radius:0 12px 12px 0;font-size:14px}
+.options{display:grid;gap:10px;margin-top:14px}
+.option{
+  width:100%;text-align:left;border:1px solid var(--line);background:#fff;color:var(--text);
+  border-radius:13px;padding:14px;cursor:pointer;transition:.15s ease
+}
+.option:hover{border-color:#aeb7c4;background:#fafbfc}
+.option.selected{border-color:var(--accent);background:var(--accent-soft)}
+.option.correct{border-color:#7fb395;background:var(--okbg)}
+.option.wrong{border-color:#d29a95;background:var(--badbg)}
+.feedback{display:none;margin-top:16px;padding:15px 16px;border-radius:13px;font-size:14px}
+.feedback.show{display:block}
+.feedback.ok{background:var(--okbg);border:1px solid #b9dcc8;color:#174c33}
+.feedback.bad{background:var(--badbg);border:1px solid #edc3c0;color:#742c27}
+.feedback.neutral{background:var(--warnbg);border:1px solid #ead7a2;color:#66470e}
+
+.paradox-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
+.paradox-box{padding:14px;border:1px solid var(--line);border-radius:13px;background:#fff}
+.paradox-box b{display:block;margin-bottom:5px;color:var(--accent)}
+.formula{margin-top:14px;padding:13px 14px;border:1px solid var(--line);border-radius:12px;background:#f8fafb;font-weight:750}
+
+.analogy-grid{display:grid;gap:10px;margin-top:14px}
+.analogy{
+  border:1px solid var(--line);border-radius:13px;background:#fff;padding:14px;cursor:pointer
+}
+.analogy.selected{border-color:var(--accent);background:var(--accent-soft)}
+.analogy.correct{border-color:#7fb395;background:var(--okbg)}
+.analogy.wrong{border-color:#d29a95;background:var(--badbg)}
+.analogy b{display:block;margin-bottom:4px}
+
+.builder{margin-top:16px}
+.pool-title{font-size:13px;color:var(--muted);font-weight:800;margin-bottom:8px}
+.pool{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
+.block{
+  border:1px solid var(--line);background:#fff;border-radius:999px;padding:9px 12px;cursor:pointer;font-size:14px
+}
+.block.used{opacity:.38;cursor:default}
+.slots{display:grid;gap:10px}
+.slot-row{display:grid;grid-template-columns:30px 1fr;gap:10px;align-items:start}
+.num{
+  width:30px;height:30px;border-radius:8px;background:var(--soft);color:var(--muted);
+  display:flex;align-items:center;justify-content:center;font-weight:800;font-size:12px
+}
+.slot{
+  min-height:48px;border:1px dashed #aab4c1;border-radius:11px;background:#fafbfc;
+  display:flex;align-items:center;padding:10px 12px;color:var(--muted);cursor:pointer
+}
+.slot.filled{border-style:solid;border-color:var(--accent);background:var(--accent-soft);color:var(--text);font-weight:700}
+
+.boundary{
+  margin-top:16px;padding:14px 15px;border:1px solid var(--line);border-radius:13px;background:#f8fafb
+}
+.boundary label{display:block;font-weight:800;margin-bottom:7px}
+.boundary textarea{
+  width:100%;min-height:100px;resize:vertical;border:1px solid var(--line);border-radius:11px;padding:12px 13px;background:#fff;color:var(--text)
+}
+.boundary textarea:focus{outline:3px solid rgba(47,93,98,.16);border-color:var(--accent)}
+
+.mapping{display:grid;gap:10px;margin-top:16px}
+.map-row{
+  display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:stretch
+}
+.map-left,.map-right{
+  padding:12px;border:1px solid var(--line);border-radius:12px;background:#fff
+}
+.map-left{font-weight:750}
+.map-right{cursor:pointer}
+.map-right.selected{border-color:var(--accent);background:var(--accent-soft)}
+.map-right.correct{border-color:#7fb395;background:var(--okbg)}
+.map-right.wrong{border-color:#d29a95;background:var(--badbg)}
+
+.field-grid{display:grid;gap:12px;margin-top:16px}
+.field label{display:block;font-weight:750;font-size:14px;margin-bottom:6px}
+.field input,.field textarea{
+  width:100%;border:1px solid var(--line);border-radius:12px;padding:12px 13px;background:#fff;color:var(--text)
+}
+.field textarea{min-height:86px;resize:vertical}
+.field input:focus,.field textarea:focus{outline:3px solid rgba(47,93,98,.16);border-color:var(--accent)}
+.checklist{display:grid;gap:9px;margin-top:16px}
+.checkitem{
+  display:grid;grid-template-columns:24px 1fr;gap:10px;padding:12px 13px;border:1px solid var(--line);border-radius:12px;background:#fff
+}
+.checkitem .mark{
+  width:24px;height:24px;border-radius:50%;background:var(--soft);color:var(--muted);
+  display:flex;align-items:center;justify-content:center;font-weight:800;font-size:12px
+}
+.checkitem.good{border-color:#b9dcc8;background:var(--okbg)}
+.checkitem.good .mark{background:#d6ecdf;color:var(--ok)}
+.checkitem.warn{border-color:#ead7a2;background:var(--warnbg)}
+.checkitem.warn .mark{background:#f5e8bd;color:var(--warn)}
+.small{font-size:13px;color:var(--muted)}
+
+.final-note{margin-top:16px;padding:16px;border:1px solid var(--line);border-radius:14px;background:#f8fafb}
+.final-note h3{margin:0 0 8px;font-size:17px}
+.final-formula{margin-top:10px;font-weight:800;color:var(--accent)}
+
+footer{padding:16px 22px 22px;border-top:1px solid var(--line);display:flex;gap:10px;flex-wrap:wrap;align-items:center;background:#fff}
+footer .spacer{flex:1}
+.ctrl{border-radius:12px;padding:11px 15px;cursor:pointer;font-weight:750;border:1px solid var(--line)}
+.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+.secondary{background:#fff;color:var(--text)}
+.muted{background:#fff;color:var(--muted)}
+button[disabled]{opacity:.42;cursor:not-allowed}
+.hidden{display:none!important}
+
+@media(max-width:560px){
+  .app{width:min(100% - 16px,700px);margin:8px auto 18px}
+  .shell{border-radius:16px}
+  header,main,footer{padding-left:16px;padding-right:16px}
+  .paradox-grid,.map-row{grid-template-columns:1fr}
+  footer .spacer{display:none}
+  footer button{flex:1 1 calc(50% - 6px)}
+}
+</style>
+</head>
+<body>
+<div class="app">
+<div class="shell">
+<header>
+  <p class="eyebrow">Проверочный интерактив</p>
+  <h1>Сохраните оба условия</h1>
+  <p class="subtitle">Найдите механизм, который позволяет не выбирать между двумя важными требованиями.</p>
+  <div class="progress-meta">
+    <span id="progressText">Шаг 1 из 7</span>
+    <span id="scoreText">Верных решений: 0</span>
+  </div>
+  <div class="progress"><span id="progressBar"></span></div>
+</header>
+
+<main>
+<!-- 1 -->
+<section class="screen active" data-screen="1">
+  <div class="step">Шаг 1</div>
+  <h2>Сформулируйте противоречие</h2>
+
+  <div class="case">
+    <strong>Задача</strong>
+    Руководителю нужно сократить число ошибок в документах, но при этом не увеличить срок согласования.
+  </div>
+
+  <div class="paradox-grid">
+    <div class="paradox-box"><b>Нужно А</b>Снизить число ошибок.</div>
+    <div class="paradox-box"><b>Нужно Б</b>Не увеличивать срок согласования.</div>
+  </div>
+
+  <div class="formula">Противоречие возникает не потому, что цели «плохие», а потому, что в текущем процессе одно улучшение тянет за собой ухудшение другого.</div>
+
+  <div class="instruction">Почему эти требования конфликтуют именно сейчас?</div>
+
+  <div class="options" data-q="q1">
+    <button class="option">Сотрудники не любят проверки.</button>
+    <button class="option" data-correct="true">Дополнительная проверка автоматически добавляет еще один этап и время ожидания.</button>
+    <button class="option">Документы слишком сложные.</button>
+    <button class="option">Руководитель недостаточно контролирует команду.</button>
+  </div>
+  <div class="feedback" id="fb1"></div>
+</section>
+
+<!-- 2 -->
+<section class="screen" data-screen="2">
+  <div class="step">Шаг 2</div>
+  <h2>Найдите систему, где оба требования уже уживаются</h2>
+  <p class="lead">Ищите не похожую отрасль, а ситуацию, где качество поддерживают без отдельной длинной проверки в самом конце.</p>
+
+  <div class="instruction">Выберите аналогию, которая лучше всего помогает совместить качество и скорость.</div>
+
+  <div class="analogy-grid" id="analogyGrid">
+    <div class="analogy" data-correct="true">
+      <b>Производственная линия</b>
+      Критичные параметры проверяются прямо в ходе операции, а не только после ее завершения.
+    </div>
+    <div class="analogy" data-correct="false">
+      <b>Архив</b>
+      Каждый документ получает регистрационный номер.
+    </div>
+    <div class="analogy" data-correct="false">
+      <b>Сервис доставки</b>
+      Клиент видит маршрут заказа.
+    </div>
+  </div>
+  <div class="feedback" id="fb2"></div>
+</section>
+
+<!-- 3 -->
+<section class="screen" data-screen="3">
+  <div class="step">Шаг 3</div>
+  <h2>Вытащите механизм из аналогии</h2>
+
+  <div class="case">
+    <strong>Что важно в примере</strong>
+    Контроль не откладывается до конца. Критичная ошибка ловится в момент, когда еще не успела перейти на следующий этап.
+  </div>
+
+  <div class="instruction">Какой принцип стоит за этой аналогией?</div>
+
+  <div class="options" data-q="q3">
+    <button class="option">Проверять работу чаще.</button>
+    <button class="option">Увеличить число контролеров.</button>
+    <button class="option" data-correct="true">Перенести часть проверки в момент выполнения действия, чтобы ошибку ловить до следующего этапа.</button>
+    <button class="option">Ввести больше отчетов.</button>
+  </div>
+  <div class="feedback" id="fb3"></div>
+</section>
+
+<!-- 4 -->
+<section class="screen" data-screen="4">
+  <div class="step">Шаг 4</div>
+  <h2>Перенесите механизм в рабочий процесс</h2>
+
+  <div class="instruction">Какой вариант сохраняет обе стороны задачи: качество и срок?</div>
+
+  <div class="options" data-q="q4">
+    <button class="option">Добавить еще одного согласующего.</button>
+    <button class="option">Проводить полную повторную проверку в конце.</button>
+    <button class="option" data-correct="true">Встроить проверку обязательных полей и типовых ошибок до отправки документа на согласование.</button>
+    <button class="option">Сократить список требований к документу.</button>
+  </div>
+  <div class="feedback" id="fb4"></div>
+</section>
+
+<!-- 5 -->
+<section class="screen" data-screen="5">
+  <div class="step">Шаг 5</div>
+  <h2>Проверьте метод на другом противоречии</h2>
+
+  <div class="case">
+    <strong>Второй парадокс</strong>
+    Руководитель хочет дать сотрудникам больше самостоятельности, но не может допустить, чтобы критичные решения принимались без контроля.
+  </div>
+
+  <div class="instruction">Какой механизм помогает сохранить обе стороны?</div>
+
+  <div class="options" data-q="q5">
+    <button class="option">Согласовывать каждое действие.</button>
+    <button class="option">Полностью убрать согласования.</button>
+    <button class="option" data-correct="true">Разделить решения по уровню риска и согласовывать только высокорисковые.</button>
+    <button class="option">Увеличить число отчетов.</button>
+  </div>
+
+  <div class="boundary">
+    <label for="boundaryInput">Где бы вы провели границу самостоятельности?</label>
+    <textarea id="boundaryInput" placeholder="Например: сотрудник действует сам в пределах бюджета и типовых условий; решения с юридическим риском или отклонением от стандартов идут на согласование."></textarea>
+  </div>
+
+  <div class="feedback" id="fb5"></div>
+</section>
+
+<!-- 6 -->
+<section class="screen" data-screen="6">
+  <div class="step">Шаг 6</div>
+  <h2>Разделите типовые и сложные случаи</h2>
+
+  <div class="case">
+    <strong>Третий парадокс</strong>
+    Нужно сократить длительность совещаний и при этом сохранить качество решений.
+  </div>
+
+  <p class="lead">Внешняя система подсказывает прием: поток делится на типовые случаи и исключения. Теперь перенесите эту логику.</p>
+
+  <div class="instruction">Сопоставьте элементы процесса. Нажмите на вариант справа в каждой строке.</div>
+
+  <div class="mapping" id="mapping">
+    <div class="map-row">
+      <div class="map-left">Статусная информация</div>
+      <div class="map-right" data-row="1" data-value="before">Заранее</div>
+    </div>
+    <div class="map-row">
+      <div class="map-left">Вопросы, где нужно решение команды</div>
+      <div class="map-right" data-row="2" data-value="discussion">Общее обсуждение</div>
+    </div>
+    <div class="map-row">
+      <div class="map-left">Простые вопросы</div>
+      <div class="map-right" data-row="3" data-value="short">Короткий маршрут</div>
+    </div>
+    <div class="map-row">
+      <div class="map-left">Сложные вопросы</div>
+      <div class="map-right" data-row="4" data-value="moretime">Больше времени</div>
+    </div>
+  </div>
+
+  <div class="feedback" id="fb6"></div>
+</section>
+
+<!-- 7 -->
+<section class="screen" data-screen="7">
+  <div class="step">Шаг 7</div>
+  <h2>Разберите свое противоречие</h2>
+  <p class="lead">Если решение улучшает только одну сторону, а вторую жертвует, парадокс еще не разрешен.</p>
+
+  <div class="field-grid">
+    <div class="field"><label for="f1">Нужно А</label><input id="f1" placeholder="Что нужно улучшить?"></div>
+    <div class="field"><label for="f2">Нужно Б</label><input id="f2" placeholder="Что нельзя ухудшить?"></div>
+    <div class="field"><label for="f3">Почему они конфликтуют</label><textarea id="f3" placeholder="Как текущая система связывает улучшение А с ухудшением Б?"></textarea></div>
+    <div class="field"><label for="f4">Где оба условия уже сосуществуют</label><input id="f4" placeholder="Другая система, процесс или область"></div>
+    <div class="field"><label for="f5">Какой механизм там работает</label><textarea id="f5" placeholder="Что именно позволяет удерживать оба требования?"></textarea></div>
+    <div class="field"><label for="f6">Что переносим</label><textarea id="f6" placeholder="Как адаптировать этот механизм к вашей задаче?"></textarea></div>
+    <div class="field"><label for="f7">Как проверим А</label><textarea id="f7" placeholder="По какому показателю поймем, что первое требование действительно улучшилось?"></textarea></div>
+    <div class="field"><label for="f8">Как проверим Б</label><textarea id="f8" placeholder="Как убедимся, что второе требование не ухудшилось?"></textarea></div>
+  </div>
+
+  <div class="checklist">
+    <div class="checkitem" data-check="pair"><div class="mark">1</div><div><b>Сохранены оба требования</b><div class="small">Одна сторона не замаскирована под «неважную».</div></div></div>
+    <div class="checkitem" data-check="conflict"><div class="mark">2</div><div><b>Понятна причина конфликта</b><div class="small">Описан механизм, из-за которого сейчас А ухудшает Б.</div></div></div>
+    <div class="checkitem" data-check="mechanism"><div class="mark">3</div><div><b>Найден переносимый механизм</b><div class="small">Это не просто «сделаем как у них», а объяснение того, почему подход работает.</div></div></div>
+    <div class="checkitem" data-check="measure"><div class="mark">4</div><div><b>Есть две проверки</b><div class="small">После изменения можно отдельно проверить и А, и Б.</div></div></div>
+  </div>
+
+  <div class="feedback" id="fb7"></div>
+
+  <div class="final-note hidden" id="finalNote">
+    <h3>Памятка</h3>
+    <div>Хорошее решение парадокса сохраняет обе стороны задачи. Если ради первого результата команда просто пожертвовала вторым, поиск еще не закончен.</div>
+    <div class="final-formula">А + Б → причина конфликта → система с похожим парадоксом → механизм → перенос → проверка обоих требований</div>
+  </div>
+</section>
+</main>
+
+<footer>
+  <button class="ctrl muted" id="resetBtn">Сбросить</button>
+  <div class="spacer"></div>
+  <button class="ctrl secondary" id="backBtn" disabled>Назад</button>
+  <button class="ctrl primary" id="checkBtn">Проверить</button>
+  <button class="ctrl secondary hidden" id="nextBtn">Дальше</button>
+</footer>
+</div>
+</div>
+
+<script>
+(function(){
+  let current=1, score=0;
+  const checked={1:false,2:false,3:false,4:false,5:false,6:false,7:false};
+  const awarded={1:false,2:false,3:false,4:false,5:false,6:false,7:false};
+
+  const screens=[...document.querySelectorAll('.screen')];
+  const progressText=document.getElementById('progressText');
+  const progressBar=document.getElementById('progressBar');
+  const scoreText=document.getElementById('scoreText');
+  const backBtn=document.getElementById('backBtn');
+  const nextBtn=document.getElementById('nextBtn');
+  const checkBtn=document.getElementById('checkBtn');
+  const resetBtn=document.getElementById('resetBtn');
+
+  function update(){
+    screens.forEach(s=>s.classList.toggle('active',Number(s.dataset.screen)===current));
+    progressText.textContent=`Шаг ${current} из 7`;
+    progressBar.style.width=`${current/7*100}%`;
+    scoreText.textContent=`Верных решений: ${score}`;
+    backBtn.disabled=current===1;
+    nextBtn.classList.toggle('hidden',!checked[current]||current===7);
+    checkBtn.classList.toggle('hidden',checked[current]&&current!==7);
+    checkBtn.textContent=(current===7&&checked[7])?'Проверить еще раз':'Проверить';
+  }
+
+  function feedback(id,type,html){
+    const el=document.getElementById(id);
+    el.className=`feedback show ${type}`;
+    el.innerHTML=html;
+  }
+
+  document.querySelectorAll('.options').forEach(group=>{
+    group.addEventListener('click',e=>{
+      const btn=e.target.closest('.option');
+      if(!btn || checked[current])return;
+      group.querySelectorAll('.option').forEach(o=>o.classList.remove('selected'));
+      btn.classList.add('selected');
+    });
+  });
+
+  function checkSingle(q,screen,fbId,ok,bad){
+    const group=document.querySelector(`[data-q="${q}"]`);
+    const sel=group.querySelector('.option.selected');
+    if(!sel){feedback(fbId,'neutral','Сначала выберите один вариант.');return false;}
+    checked[screen]=true;
+    const good=sel.dataset.correct==='true';
+
+    group.querySelectorAll('.option').forEach(o=>{
+      if(o.dataset.correct==='true')o.classList.add('correct');
+      else if(o.classList.contains('selected'))o.classList.add('wrong');
+    });
+
+    if(good){
+      if(!awarded[screen]){score++;awarded[screen]=true;}
+      feedback(fbId,'ok',ok);
+    }else feedback(fbId,'bad',bad);
+
+    return true;
+  }
+
+  // Screen 2 analogies
+  const analogies=[...document.querySelectorAll('.analogy')];
+  analogies.forEach(a=>{
+    a.addEventListener('click',()=>{
+      if(checked[2])return;
+      analogies.forEach(x=>x.classList.remove('selected'));
+      a.classList.add('selected');
+    });
+  });
+
+  function checkAnalogy(){
+    const sel=analogies.find(a=>a.classList.contains('selected'));
+    if(!sel){feedback('fb2','neutral','Сначала выберите одну аналогию.');return false;}
+    checked[2]=true;
+    const good=sel.dataset.correct==='true';
+    analogies.forEach(a=>{
+      if(a.dataset.correct==='true')a.classList.add('correct');
+      else if(a.classList.contains('selected'))a.classList.add('wrong');
+    });
+
+    if(good){
+      if(!awarded[2]){score++;awarded[2]=true;}
+      feedback('fb2','ok','Да. Здесь качество поддерживается не отдельной длинной проверкой после завершения работы, а контролем критичных параметров по ходу процесса.');
+    }else{
+      feedback('fb2','bad','Эта система решает другую функцию. Ищите пример, где <b>ошибку ловят до того, как она успевает перейти дальше</b>.');
+    }
+    return true;
+  }
+
+  // Screen 5 boundary
+  function checkScreen5(){
+    const group=document.querySelector('[data-q="q5"]');
+    const sel=group.querySelector('.option.selected');
+    if(!sel){feedback('fb5','neutral','Сначала выберите механизм.');return false;}
+    const text=document.getElementById('boundaryInput').value.trim();
+    if(text.length<20){feedback('fb5','neutral','Добавьте короткое правило: где заканчивается самостоятельность и начинается обязательное согласование.');return false;}
+
+    checked[5]=true;
+    const good=sel.dataset.correct==='true';
+    group.querySelectorAll('.option').forEach(o=>{
+      if(o.dataset.correct==='true')o.classList.add('correct');
+      else if(o.classList.contains('selected'))o.classList.add('wrong');
+    });
+
+    if(good){
+      if(!awarded[5]){score++;awarded[5]=true;}
+      feedback('fb5','ok','Верно. Самостоятельность сохраняется для низкорисковых решений, а контроль включается там, где цена ошибки выше. Граница должна быть понятна до того, как возник спорный случай.');
+    }else{
+      feedback('fb5','bad','Этот вариант жертвует одной стороной задачи. Нужен механизм, который <b>разделяет случаи</b>, а не выбирает между полной свободой и полным контролем.');
+    }
+    return true;
+  }
+
+  // Screen 6 mapping: click toggles selected; all are correct by design
+  const mapRights=[...document.querySelectorAll('.map-right')];
+  mapRights.forEach(r=>{
+    r.addEventListener('click',()=>{
+      if(checked[6])return;
+      r.classList.toggle('selected');
+    });
+  });
+
+  function checkMapping(){
+    if(mapRights.some(r=>!r.classList.contains('selected'))){
+      feedback('fb6','neutral','Отметьте все четыре переноса — здесь важна целая конструкция.');
+      return false;
+    }
+    checked[6]=true;
+    mapRights.forEach(r=>r.classList.add('correct'));
+    if(!awarded[6]){score++;awarded[6]=true;}
+    feedback('fb6','ok','Получилась рабочая схема: статус уходит в асинхронный формат, общее время тратится на решения, простые вопросы проходят короткий маршрут, сложные получают больше внимания.');
+    return true;
+  }
+
+  // Screen 7 free response
+  function setCheck(name,good,goodText,warnText){
+    const el=document.querySelector(`[data-check="${name}"]`);
+    el.classList.remove('good','warn');
+    el.classList.add(good?'good':'warn');
+    el.querySelector('.mark').textContent=good?'✓':'!';
+    el.querySelector('.small').textContent=good?goodText:warnText;
+  }
+
+  function value(id){return document.getElementById(id).value.trim();}
+
+  function checkFinal(){
+    const vals=[1,2,3,4,5,6,7,8].map(i=>value('f'+i));
+    if(vals.filter(Boolean).length<8){
+      feedback('fb7','neutral','Заполните все восемь полей. Можно коротко.');
+      return false;
+    }
+
+    const pairGood=vals[0].length>=8 && vals[1].length>=8;
+    const conflictGood=vals[2].length>=15;
+    const mechanismGood=vals[4].length>=15 && vals[5].length>=15;
+    const measureGood=vals[6].length>=10 && vals[7].length>=10;
+
+    setCheck('pair',pairGood,
+      'Обе стороны задачи явно сохранены.',
+      'Сформулируйте оба требования так, чтобы ни одно не выглядело второстепенным.');
+    setCheck('conflict',conflictGood,
+      'Есть объяснение, почему текущий процесс сталкивает А и Б.',
+      'Опишите механизм конфликта: что именно сейчас заставляет улучшение А ухудшать Б?');
+    setCheck('mechanism',mechanismGood,
+      'Есть внешний механизм и понятный перенос в вашу ситуацию.',
+      'Добавьте, почему внешний пример работает и что именно вы переносите, а не копируете.');
+    setCheck('measure',measureGood,
+      'Есть отдельная проверка для обоих требований.',
+      'Нужны два критерия: один показывает улучшение А, второй подтверждает, что Б не ухудшилось.');
+
+    checked[7]=true;
+    const passed=[pairGood,conflictGood,mechanismGood,measureGood].filter(Boolean).length;
+
+    if(passed===4){
+      if(!awarded[7]){score++;awarded[7]=true;}
+      feedback('fb7','ok','Противоречие разобрано полностью: обе стороны сохранены, механизм найден, перенос понятен, а результат можно проверить по двум требованиям отдельно.');
+    }else if(passed>=2){
+      feedback('fb7','neutral','Основа есть, но один-два элемента пока слишком общие. Посмотрите подсказки рядом с критериями и уточните формулировки.');
+    }else{
+      feedback('fb7','bad','Пока решение скорее выбирает одну сторону. Вернитесь к цепочке: <b>А + Б → причина конфликта → механизм → перенос → две проверки</b>.');
+    }
+
+    document.getElementById('finalNote').classList.remove('hidden');
+    return true;
+  }
+
+  checkBtn.addEventListener('click',()=>{
+    let done=false;
+
+    if(current===1){
+      done=checkSingle(
+        'q1',1,'fb1',
+        'Верно. Конфликт создается устройством процесса: дополнительный контроль появляется как отдельная ступень и увеличивает ожидание.',
+        'Эта версия объясняет проблему через людей или общую сложность. Для работы с парадоксом нужно понять, <b>какой механизм сталкивает два требования</b>.'
+      );
+    }
+
+    if(current===2)done=checkAnalogy();
+
+    if(current===3){
+      done=checkSingle(
+        'q3',3,'fb3',
+        'Да. Полезен не промышленный антураж, а момент контроля: критичная ошибка ловится до следующего этапа и не превращается в позднюю переделку.',
+        'Чаще проверять и добавить контролеров — значит снова платить временем. Ищите способ изменить <b>место проверки</b> внутри процесса.'
+      );
+    }
+
+    if(current===4){
+      done=checkSingle(
+        'q4',4,'fb4',
+        'Верно. Проверка встраивается до согласования, поэтому типовые ошибки отсекаются раньше, а отдельный дополнительный этап не появляется.',
+        'Этот вариант либо увеличивает цикл, либо ухудшает качество. Нужен ход, который сохраняет оба требования одновременно.'
+      );
+    }
+
+    if(current===5)done=checkScreen5();
+    if(current===6)done=checkMapping();
+    if(current===7)done=checkFinal();
+
+    if(done)update();
+  });
+
+  nextBtn.addEventListener('click',()=>{
+    if(current<7){current++;update();window.scrollTo({top:0,behavior:'smooth'});}
+  });
+
+  backBtn.addEventListener('click',()=>{
+    if(current>1){current--;update();window.scrollTo({top:0,behavior:'smooth'});}
+  });
+
+  resetBtn.addEventListener('click',()=>{
+    current=1;score=0;
+    Object.keys(checked).forEach(k=>checked[k]=false);
+    Object.keys(awarded).forEach(k=>awarded[k]=false);
+
+    document.querySelectorAll('.option').forEach(o=>o.classList.remove('selected','correct','wrong'));
+    analogies.forEach(a=>a.classList.remove('selected','correct','wrong'));
+    document.querySelectorAll('.feedback').forEach(f=>{f.className='feedback';f.innerHTML='';});
+
+    document.getElementById('boundaryInput').value='';
+    mapRights.forEach(r=>r.classList.remove('selected','correct','wrong'));
+
+    [1,2,3,4,5,6,7,8].forEach(i=>document.getElementById('f'+i).value='');
+
+    document.querySelectorAll('.checkitem').forEach((el,i)=>{
+      el.classList.remove('good','warn');
+      el.querySelector('.mark').textContent=String(i+1);
+    });
+    document.querySelector('[data-check="pair"] .small').textContent='Одна сторона не замаскирована под «неважную».';
+    document.querySelector('[data-check="conflict"] .small').textContent='Описан механизм, из-за которого сейчас А ухудшает Б.';
+    document.querySelector('[data-check="mechanism"] .small').textContent='Это не просто «сделаем как у них», а объяснение того, почему подход работает.';
+    document.querySelector('[data-check="measure"] .small').textContent='После изменения можно отдельно проверить и А, и Б.';
+    document.getElementById('finalNote').classList.add('hidden');
+
+    update();
+    window.scrollTo({top:0,behavior:'smooth'});
+  });
+
+  update();
+})();
+</script>
+</body>
+</html>
