@@ -1,0 +1,750 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Разберите провал до запуска</title>
+<style>
+:root{
+  --bg:#f4f6f8; --card:#ffffff; --text:#1f2933; --muted:#667085; --line:#d9dee7;
+  --soft:#eef2f6; --accent:#2f5d62; --accent-soft:#e7f0f1;
+  --ok:#1f6b45; --okbg:#e9f5ee; --bad:#913b35; --badbg:#faeceb;
+  --warn:#7b5719; --warnbg:#fff5dc; --shadow:0 14px 40px rgba(31,41,51,.08);
+}
+*{box-sizing:border-box}
+body{
+  margin:0;background:var(--bg);color:var(--text);
+  font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  line-height:1.55;
+}
+button,input,textarea{font:inherit}
+.app{width:min(100% - 28px,740px);margin:28px auto}
+.shell{background:var(--card);border:1px solid var(--line);border-radius:22px;box-shadow:var(--shadow);overflow:hidden}
+header{padding:22px 22px 18px;border-bottom:1px solid var(--line);background:#fff}
+.eyebrow{margin:0 0 6px;color:var(--accent);font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:.03em}
+h1{margin:0;font-size:clamp(27px,5vw,35px);line-height:1.12;letter-spacing:-.02em}
+.subtitle{margin:10px 0 0;color:var(--muted);font-size:15px}
+.progress-meta{display:flex;justify-content:space-between;gap:12px;margin:18px 0 7px;color:var(--muted);font-size:13px}
+.progress{height:8px;background:var(--soft);border-radius:999px;overflow:hidden}
+.progress span{display:block;height:100%;background:var(--accent);width:11.11%;transition:width .2s ease}
+main{padding:24px 22px 18px}
+.screen{display:none}.screen.active{display:block}
+.step{display:inline-flex;align-items:center;min-height:30px;padding:0 11px;border-radius:999px;background:var(--accent-soft);color:var(--accent);font-size:13px;font-weight:800;margin-bottom:12px}
+h2{margin:0 0 10px;font-size:23px;line-height:1.25}
+.lead{margin:0 0 18px;color:#3b4652}
+.case{margin:16px 0 18px;padding:15px 16px;background:#f8fafb;border:1px solid var(--line);border-radius:14px}
+.case strong{display:block;margin-bottom:6px}
+.alert{
+  margin-top:12px;padding:14px 15px;border-radius:12px;background:var(--badbg);border:1px solid #edc3c0;color:#742c27;font-weight:750
+}
+.instruction{margin:16px 0;padding:14px 15px;background:var(--accent-soft);border-left:4px solid var(--accent);border-radius:0 12px 12px 0;font-size:14px}
+.options{display:grid;gap:10px;margin-top:14px}
+.option{
+  width:100%;text-align:left;border:1px solid var(--line);background:#fff;color:var(--text);
+  border-radius:13px;padding:14px;cursor:pointer;transition:.15s ease
+}
+.option:hover{border-color:#aeb7c4;background:#fafbfc}
+.option.selected{border-color:var(--accent);background:var(--accent-soft)}
+.option.correct{border-color:#7fb395;background:var(--okbg)}
+.option.wrong{border-color:#d29a95;background:var(--badbg)}
+.feedback{display:none;margin-top:16px;padding:15px 16px;border-radius:13px;font-size:14px}
+.feedback.show{display:block}
+.feedback.ok{background:var(--okbg);border:1px solid #b9dcc8;color:#174c33}
+.feedback.bad{background:var(--badbg);border:1px solid #edc3c0;color:#742c27}
+.feedback.neutral{background:var(--warnbg);border:1px solid #ead7a2;color:#66470e}
+
+.sort-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px}
+.sort-grid.three{grid-template-columns:repeat(3,1fr)}
+.bucket{border:1px solid var(--line);border-radius:14px;background:#fafbfc;padding:12px;min-height:92px}
+.bucket h3{margin:0 0 8px;font-size:15px}
+.sort-item{margin:8px 0;padding:11px;border:1px solid var(--line);border-radius:10px;background:#fff;cursor:pointer;font-size:14px}
+.sort-item.assigned{background:var(--accent-soft);border-color:var(--accent)}
+.sort-item.correct{background:var(--okbg);border-color:#7fb395}
+.sort-item.wrong{background:var(--badbg);border-color:#d29a95}
+
+.chain{
+  margin-top:14px;padding:14px;border:1px solid var(--line);border-radius:13px;background:#f8fafb;
+  display:flex;align-items:center;gap:8px;flex-wrap:wrap
+}
+.node{padding:8px 10px;border:1px solid var(--line);border-radius:9px;background:#fff;font-size:13px}
+.arrow{color:var(--muted);font-weight:900}
+
+.reason-card{margin-top:14px;padding:14px;border:1px solid var(--line);border-radius:13px;background:#fff}
+.reason-card b{display:block;margin-bottom:5px}
+.threshold{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
+.metric{padding:12px;border:1px solid var(--line);border-radius:12px;background:#fff}
+.metric b{display:block;font-size:21px;color:var(--accent)}
+.measure-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:14px}
+.measure{border:1px solid var(--line);border-radius:12px;padding:13px;background:#fff;cursor:pointer}
+.measure.selected{border-color:var(--accent);background:var(--accent-soft)}
+.measure.correct{border-color:#7fb395;background:var(--okbg)}
+.measure.wrong{border-color:#d29a95;background:var(--badbg)}
+
+.process{
+  margin-top:16px;padding:14px;border:1px solid var(--line);border-radius:14px;background:#f8fafb
+}
+.process h3{margin:0 0 8px;font-size:16px}
+.process-list{display:grid;gap:8px}
+.process-item{padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:#fff}
+.process-item.added{border-color:#b9dcc8;background:var(--okbg)}
+
+.field-grid{display:grid;gap:12px;margin-top:16px}
+.field label{display:block;font-weight:750;font-size:14px;margin-bottom:6px}
+.field input,.field textarea{
+  width:100%;border:1px solid var(--line);border-radius:12px;padding:12px 13px;background:#fff;color:var(--text)
+}
+.field textarea{min-height:84px;resize:vertical}
+.field input:focus,.field textarea:focus{outline:3px solid rgba(47,93,98,.16);border-color:var(--accent)}
+.checklist{display:grid;gap:9px;margin-top:16px}
+.checkitem{
+  display:grid;grid-template-columns:24px 1fr;gap:10px;padding:12px 13px;border:1px solid var(--line);border-radius:12px;background:#fff
+}
+.checkitem .mark{
+  width:24px;height:24px;border-radius:50%;background:var(--soft);color:var(--muted);
+  display:flex;align-items:center;justify-content:center;font-weight:800;font-size:12px
+}
+.checkitem.good{border-color:#b9dcc8;background:var(--okbg)}
+.checkitem.good .mark{background:#d6ecdf;color:var(--ok)}
+.checkitem.warn{border-color:#ead7a2;background:var(--warnbg)}
+.checkitem.warn .mark{background:#f5e8bd;color:var(--warn)}
+.small{font-size:13px;color:var(--muted)}
+
+.final-note{margin-top:16px;padding:16px;border:1px solid var(--line);border-radius:14px;background:#f8fafb}
+.final-note h3{margin:0 0 8px;font-size:17px}
+.formula{margin-top:10px;font-weight:800;color:var(--accent)}
+
+footer{padding:16px 22px 22px;border-top:1px solid var(--line);display:flex;gap:10px;flex-wrap:wrap;align-items:center;background:#fff}
+footer .spacer{flex:1}
+.ctrl{border-radius:12px;padding:11px 15px;cursor:pointer;font-weight:750;border:1px solid var(--line)}
+.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+.secondary{background:#fff;color:var(--text)}
+.muted{background:#fff;color:var(--muted)}
+button[disabled]{opacity:.42;cursor:not-allowed}
+.hidden{display:none!important}
+
+@media(max-width:650px){
+  .app{width:min(100% - 16px,740px);margin:8px auto 18px}
+  .shell{border-radius:16px}
+  header,main,footer{padding-left:16px;padding-right:16px}
+  .sort-grid,.sort-grid.three,.threshold,.measure-grid{grid-template-columns:1fr}
+  footer .spacer{display:none}
+  footer button{flex:1 1 calc(50% - 6px)}
+}
+</style>
+</head>
+<body>
+<div class="app">
+<div class="shell">
+<header>
+  <p class="eyebrow">Проверочный интерактив</p>
+  <h1>Разберите провал до запуска</h1>
+  <p class="subtitle">Представьте, что решение уже не сработало. Найдите возможные причины, ранние сигналы и изменения, которые стоит внести заранее.</p>
+  <div class="progress-meta">
+    <span id="progressText">Шаг 1 из 9</span>
+    <span id="scoreText">Верных решений: 0</span>
+  </div>
+  <div class="progress"><span id="progressBar"></span></div>
+</header>
+
+<main>
+<section class="screen active" data-screen="1">
+  <div class="step">Шаг 1</div>
+  <h2>Сначала объясните провал, а не отменяйте решение</h2>
+
+  <div class="case">
+    <strong>Решение</strong>
+    Служба поддержки переводит больше сотрудников на часы, где по статистике приходит больше всего обращений.
+    <br><br>
+    <b>Цель:</b> сократить время первого содержательного ответа с 90 до 45 минут без роста переработок.
+    <div class="alert">Прошел месяц. Среднее время ответа — 80 минут, а переработки выросли на 25%. Новый график признан неудачным.</div>
+  </div>
+
+  <div class="instruction">
+    Вы действуете так, будто провал уже случился. Первый шаг — не искать виноватого и не возвращать старую схему, а составить несколько конкретных причин, которые могли привести к результату.
+  </div>
+
+  <div class="options" data-q="q1">
+    <button class="option">Вернуться к старому графику.</button>
+    <button class="option">Найти сотрудника, который хуже всех выполнял новый график.</button>
+    <button class="option" data-correct="true">Составить список конкретных причин, которые могли привести к такому результату.</button>
+    <button class="option">Обсудить, почему команда не поддержала изменение.</button>
+  </div>
+  <div class="feedback" id="fb1"></div>
+</section>
+
+<section class="screen" data-screen="2">
+  <div class="step">Шаг 2</div>
+  <h2>Не путайте причину с тем, что произошло после нее</h2>
+
+  <div class="instruction">
+    Нажимайте на карточку: первое нажатие отправляет ее в «Причины», второе — в «Последствия». После сортировки проверьте причинную цепочку.
+  </div>
+
+  <div id="sortPool2">
+    <div class="sort-item" data-right="cause" data-id="c1">Часы пик определили по слишком усредненным данным.</div>
+    <div class="sort-item" data-right="cause" data-id="c2">Сотрудники часто менялись сменами.</div>
+    <div class="sort-item" data-right="cause" data-id="c3">В расписании не оставили резерва на сложные обращения.</div>
+    <div class="sort-item" data-right="effect" data-id="c4">Увеличилась очередь.</div>
+    <div class="sort-item" data-right="effect" data-id="c5">Выросли переработки.</div>
+    <div class="sort-item" data-right="effect" data-id="c6">Время ответа осталось высоким.</div>
+  </div>
+
+  <div class="sort-grid">
+    <div class="bucket"><h3>Причины</h3><div id="causeBucket"></div></div>
+    <div class="bucket"><h3>Последствия</h3><div id="effectBucket"></div></div>
+  </div>
+
+  <div class="chain hidden" id="chain2">
+    <span class="node">неверный расчет пиков</span><span class="arrow">→</span>
+    <span class="node">недостаточное покрытие</span><span class="arrow">→</span>
+    <span class="node">рост очереди</span><span class="arrow">→</span>
+    <span class="node">высокое время ответа</span>
+  </div>
+
+  <div class="feedback" id="fb2"></div>
+</section>
+
+<section class="screen" data-screen="3">
+  <div class="step">Шаг 3</div>
+  <h2>Разделите причины по управляемости</h2>
+
+  <div class="instruction">
+    Нажимайте на карточку: первое нажатие — «Управляемая», второе — «Частично управляемая», третье — «Внешняя». Внешняя причина не означает бездействие: для нее нужен резервный сценарий.
+  </div>
+
+  <div id="sortPool3">
+    <div class="sort-item" data-right="managed" data-id="m1">График построили на неверной статистике.</div>
+    <div class="sort-item" data-right="partial" data-id="m2">Сотрудники массово меняют смены.</div>
+    <div class="sort-item" data-right="external" data-id="m3">Внезапное внешнее событие увеличило поток обращений на 40%.</div>
+    <div class="sort-item" data-right="managed" data-id="m4">Сотрудники получают слишком много пиковых смен подряд.</div>
+    <div class="sort-item" data-right="partial" data-id="m5">Часть специалистов заболела.</div>
+  </div>
+
+  <div class="sort-grid three">
+    <div class="bucket"><h3>Управляемая</h3><div id="managedBucket"></div></div>
+    <div class="bucket"><h3>Частично управляемая</h3><div id="partialBucket"></div></div>
+    <div class="bucket"><h3>Внешняя</h3><div id="externalBucket"></div></div>
+  </div>
+
+  <div class="feedback" id="fb3"></div>
+</section>
+
+<section class="screen" data-screen="4">
+  <div class="step">Шаг 4</div>
+  <h2>Найдите сигнал, связанный с причиной</h2>
+
+  <div class="reason-card">
+    <b>Причина</b>
+    Сотрудники начинают массово менять новые смены.
+  </div>
+
+  <div class="instruction">
+    Выберите показатель, который напрямую показывает появление этой причины. Чем ближе сигнал к механизму провала, тем раньше можно вмешаться.
+  </div>
+
+  <div class="options" data-q="q4">
+    <button class="option">Общая удовлетворенность работой снизилась.</button>
+    <button class="option">Руководителю кажется, что команда недовольна.</button>
+    <button class="option" data-correct="true">Доля смен, которые меняют после публикации графика, начинает заметно расти.</button>
+    <button class="option">В чате появляется больше сообщений.</button>
+  </div>
+
+  <div class="feedback" id="fb4"></div>
+</section>
+
+<section class="screen" data-screen="5">
+  <div class="step">Шаг 5</div>
+  <h2>Заранее задайте условие для действия</h2>
+
+  <div class="threshold">
+    <div class="metric"><b>5%</b>обычный уровень обменов сменами</div>
+    <div class="metric"><b>?</b>порог для вмешательства</div>
+  </div>
+
+  <div class="instruction">
+    Один обмен не означает провал. Нужен порог, который отделяет обычные колебания от ситуации, требующей реакции.
+  </div>
+
+  <div class="options" data-q="q5">
+    <button class="option">Реагировать на каждый обмен.</button>
+    <button class="option">Проверить ситуацию через месяц.</button>
+    <button class="option" data-correct="true">Реагировать, если после публикации меняется более 15% смен.</button>
+    <button class="option">Реагировать только после жалобы сотрудника.</button>
+  </div>
+
+  <div class="feedback" id="fb5"></div>
+</section>
+
+<section class="screen" data-screen="6">
+  <div class="step">Шаг 6</div>
+  <h2>Измените решение до запуска</h2>
+
+  <div class="reason-card">
+    <b>Причина</b>
+    График не учитывает различия нагрузки по дням недели.
+  </div>
+
+  <div class="instruction">Что лучше сделать еще до запуска нового расписания?</div>
+
+  <div class="options" data-q="q6">
+    <button class="option">Усилить контроль соблюдения графика.</button>
+    <button class="option">Предупредить сотрудников, что изменение очень важно.</button>
+    <button class="option" data-correct="true">Проверить новый график на почасовых данных по разным дням недели и скорректировать расписание.</button>
+    <button class="option">Ничего: сначала нужно увидеть реальный результат.</button>
+  </div>
+
+  <div class="feedback" id="fb6"></div>
+</section>
+
+<section class="screen" data-screen="7">
+  <div class="step">Шаг 7</div>
+  <h2>Свяжите реакцию с механизмом риска</h2>
+
+  <div class="case">
+    <strong>Ранний сигнал после запуска</strong>
+    Повторные обращения выросли более чем на 5 п.п.
+  </div>
+
+  <div class="instruction">
+    Выберите действие, которое помогает понять, не возник ли новый компромисс: скорость выросла за счет качества ответа.
+  </div>
+
+  <div class="options" data-q="q7">
+    <button class="option">Требовать отвечать еще быстрее.</button>
+    <button class="option">Вернуть старый график целиком.</button>
+    <button class="option" data-correct="true">Разобрать выборку обращений и проверить, не снизилось ли качество первого содержательного ответа.</button>
+    <button class="option">Игнорировать показатель, потому что основная цель связана со скоростью.</button>
+  </div>
+
+  <div class="feedback" id="fb7"></div>
+</section>
+
+<section class="screen" data-screen="8">
+  <div class="step">Шаг 8</div>
+  <h2>Пересоберите решение с учетом провала</h2>
+
+  <div class="process">
+    <h3>Первоначальная версия</h3>
+    <div class="process-list">
+      <div class="process-item">Перераспределить больше людей на часы пик.</div>
+    </div>
+  </div>
+
+  <div class="instruction">
+    Выберите <b>три меры</b>, которые превращают исходную идею в более устойчивую схему.
+  </div>
+
+  <div class="measure-grid" id="measureGrid">
+    <div class="measure" data-good="true" data-id="days">Уточнить пики по дням недели.</div>
+    <div class="measure" data-good="true" data-id="limits">Учитывать ограничения сотрудников до публикации графика.</div>
+    <div class="measure" data-good="true" data-id="metrics">Одновременно отслеживать скорость, повторные обращения и переработки.</div>
+    <div class="measure" data-good="false" data-id="control">Усилить контроль соблюдения расписания.</div>
+    <div class="measure" data-good="false" data-id="meeting">Проводить дополнительное совещание каждый день.</div>
+  </div>
+
+  <div class="process hidden" id="newProcess">
+    <h3>Новая версия</h3>
+    <div class="process-list" id="newProcessList"></div>
+  </div>
+
+  <div class="feedback" id="fb8"></div>
+</section>
+
+<section class="screen" data-screen="9">
+  <div class="step">Шаг 9</div>
+  <h2>Проведите предварительный разбор своего решения</h2>
+  <p class="lead">Опишите провал так, будто он уже случился. Это помогает искать причины свободнее, чем вопрос «что может пойти не так?».</p>
+
+  <div class="field-grid">
+    <div class="field"><label for="f1">Мое решение</label><textarea id="f1" placeholder="Что вы собираетесь внедрить или изменить?"></textarea></div>
+    <div class="field"><label for="f2">Через какой срок оно провалилось</label><input id="f2" placeholder="Например: через 6 недель"></div>
+    <div class="field"><label for="f3">Как выглядит провал</label><textarea id="f3" placeholder="Какие показатели или события показывают, что решение не сработало?"></textarea></div>
+
+    <div class="field"><label for="f4">Причина 1</label><textarea id="f4" placeholder="Конкретная причина, а не последствие"></textarea></div>
+    <div class="field"><label for="f5">Ранний сигнал для причины 1</label><textarea id="f5" placeholder="Что начнет меняться раньше итогового провала?"></textarea></div>
+    <div class="field"><label for="f6">Что изменю до запуска</label><textarea id="f6" placeholder="Как снизить вероятность этой причины заранее?"></textarea></div>
+
+    <div class="field"><label for="f7">Причина 2</label><textarea id="f7" placeholder="Еще один механизм провала"></textarea></div>
+    <div class="field"><label for="f8">Ранний сигнал для причины 2</label><textarea id="f8" placeholder="Как заметить его заранее?"></textarea></div>
+    <div class="field"><label for="f9">Что изменю до запуска</label><textarea id="f9" placeholder="Что можно встроить в решение заранее?"></textarea></div>
+
+    <div class="field"><label for="f10">Внешний риск</label><textarea id="f10" placeholder="Что команда не контролирует напрямую?"></textarea></div>
+    <div class="field"><label for="f11">Что сделаем, если он возникнет</label><textarea id="f11" placeholder="Резервный сценарий"></textarea></div>
+  </div>
+
+  <div class="checklist">
+    <div class="checkitem" data-check="failure"><div class="mark">1</div><div><b>Провал описан наблюдаемо</b><div class="small">Есть события или показатели, а не просто «решение не сработало».</div></div></div>
+    <div class="checkitem" data-check="causes"><div class="mark">2</div><div><b>Есть минимум две причины</b><div class="small">Они объясняют механизм провала, а не повторяют последствия.</div></div></div>
+    <div class="checkitem" data-check="signals"><div class="mark">3</div><div><b>Причины связаны с ранними сигналами</b><div class="small">Понятно, что отслеживать до итогового провала.</div></div></div>
+    <div class="checkitem" data-check="change"><div class="mark">4</div><div><b>Есть изменения до запуска и резервный сценарий</b><div class="small">Разбор повлиял на само решение, а не только создал список рисков.</div></div></div>
+  </div>
+
+  <div class="feedback" id="fb9"></div>
+
+  <div class="final-note hidden" id="finalNote">
+    <h3>Памятка</h3>
+    <div>Предварительный разбор провала сработал, если после него команда меняет решение и заранее понимает, какие сигналы заставят ее пересмотреть план после запуска.</div>
+    <div class="formula">Представить провал → назвать причины → разделить по управляемости → найти ранние сигналы → определить пороги → изменить решение до запуска → заранее выбрать реакцию</div>
+  </div>
+</section>
+</main>
+
+<footer>
+  <button class="ctrl muted" id="resetBtn">Сбросить</button>
+  <div class="spacer"></div>
+  <button class="ctrl secondary" id="backBtn" disabled>Назад</button>
+  <button class="ctrl primary" id="checkBtn">Проверить</button>
+  <button class="ctrl secondary hidden" id="nextBtn">Дальше</button>
+</footer>
+</div>
+</div>
+
+<script>
+(function(){
+  let current=1, score=0;
+  const checked={1:false,2:false,3:false,4:false,5:false,6:false,7:false,8:false,9:false};
+  const awarded={1:false,2:false,3:false,4:false,5:false,6:false,7:false,8:false,9:false};
+
+  const screens=[...document.querySelectorAll('.screen')];
+  const progressText=document.getElementById('progressText');
+  const progressBar=document.getElementById('progressBar');
+  const scoreText=document.getElementById('scoreText');
+  const backBtn=document.getElementById('backBtn');
+  const nextBtn=document.getElementById('nextBtn');
+  const checkBtn=document.getElementById('checkBtn');
+  const resetBtn=document.getElementById('resetBtn');
+
+  function update(){
+    screens.forEach(s=>s.classList.toggle('active',Number(s.dataset.screen)===current));
+    progressText.textContent=`Шаг ${current} из 9`;
+    progressBar.style.width=`${current/9*100}%`;
+    scoreText.textContent=`Верных решений: ${score}`;
+    backBtn.disabled=current===1;
+    nextBtn.classList.toggle('hidden',!checked[current]||current===9);
+    checkBtn.classList.toggle('hidden',checked[current]&&current!==9);
+    checkBtn.textContent=(current===9&&checked[9])?'Проверить еще раз':'Проверить';
+  }
+
+  function feedback(id,type,html){
+    const el=document.getElementById(id);
+    el.className=`feedback show ${type}`;
+    el.innerHTML=html;
+  }
+
+  document.querySelectorAll('.options').forEach(group=>{
+    group.addEventListener('click',e=>{
+      const btn=e.target.closest('.option');
+      if(!btn || checked[current])return;
+      group.querySelectorAll('.option').forEach(o=>o.classList.remove('selected'));
+      btn.classList.add('selected');
+    });
+  });
+
+  function checkSingle(q,screen,fbId,ok,bad){
+    const group=document.querySelector(`[data-q="${q}"]`);
+    const sel=group.querySelector('.option.selected');
+    if(!sel){feedback(fbId,'neutral','Сначала выберите один вариант.');return false;}
+    checked[screen]=true;
+    const good=sel.dataset.correct==='true';
+
+    group.querySelectorAll('.option').forEach(o=>{
+      if(o.dataset.correct==='true')o.classList.add('correct');
+      else if(o.classList.contains('selected'))o.classList.add('wrong');
+    });
+
+    if(good){
+      if(!awarded[screen]){score++;awarded[screen]=true;}
+      feedback(fbId,'ok',ok);
+    }else feedback(fbId,'bad',bad);
+
+    return true;
+  }
+
+  function setupCycleSort(poolSelector,state,cycle,renderFn,screenNo){
+    const items=[...document.querySelectorAll(poolSelector+' .sort-item')];
+    items.forEach(item=>{
+      state[item.dataset.id]=null;
+      item.addEventListener('click',()=>{
+        if(checked[screenNo])return;
+        const cur=state[item.dataset.id];
+        const idx=cur===null?-1:cycle.indexOf(cur);
+        state[item.dataset.id]=cycle[(idx+1)%cycle.length];
+        renderFn();
+      });
+    });
+    return items;
+  }
+
+  const sortState2={};
+  let items2=[];
+  function render2(){
+    const a=document.getElementById('causeBucket');
+    const b=document.getElementById('effectBucket');
+    a.innerHTML='';b.innerHTML='';
+    items2.forEach(item=>{
+      item.classList.remove('assigned');
+      const st=sortState2[item.dataset.id];
+      if(st){
+        item.classList.add('assigned');
+        const clone=item.cloneNode(true);
+        clone.classList.remove('assigned','correct','wrong');
+        clone.style.cursor='default';
+        (st==='cause'?a:b).appendChild(clone);
+      }
+    });
+  }
+  items2=setupCycleSort('#sortPool2',sortState2,['cause','effect'],render2,2);
+
+  function checkSort2(){
+    if(Object.values(sortState2).some(v=>!v)){feedback('fb2','neutral','Распределите все карточки.');return false;}
+    checked[2]=true;
+    let good=true;
+    items2.forEach(item=>{
+      const ok=sortState2[item.dataset.id]===item.dataset.right;
+      if(!ok)good=false;
+      item.classList.add(ok?'correct':'wrong');
+    });
+    document.getElementById('chain2').classList.remove('hidden');
+    if(good){
+      if(!awarded[2]){score++;awarded[2]=true;}
+      feedback('fb2','ok','Верно. Причина объясняет, почему возникло ухудшение. Очередь, переработки и высокое время ответа — уже последствия. Такая цепочка помогает искать точку, куда можно вмешаться раньше.');
+    }else{
+      feedback('fb2','bad','Проверьте направление причинности. «Выросли переработки» и «время ответа осталось высоким» описывают результат. Ищите то, что могло породить этот результат.');
+    }
+    return true;
+  }
+
+  const sortState3={};
+  let items3=[];
+  function render3(){
+    const a=document.getElementById('managedBucket');
+    const b=document.getElementById('partialBucket');
+    const c=document.getElementById('externalBucket');
+    a.innerHTML='';b.innerHTML='';c.innerHTML='';
+    items3.forEach(item=>{
+      item.classList.remove('assigned');
+      const st=sortState3[item.dataset.id];
+      if(st){
+        item.classList.add('assigned');
+        const clone=item.cloneNode(true);
+        clone.classList.remove('assigned','correct','wrong');
+        clone.style.cursor='default';
+        (st==='managed'?a:st==='partial'?b:c).appendChild(clone);
+      }
+    });
+  }
+  items3=setupCycleSort('#sortPool3',sortState3,['managed','partial','external'],render3,3);
+
+  function checkSort3(){
+    if(Object.values(sortState3).some(v=>!v)){feedback('fb3','neutral','Распределите все пять причин.');return false;}
+    checked[3]=true;
+    let good=true;
+    items3.forEach(item=>{
+      const ok=sortState3[item.dataset.id]===item.dataset.right;
+      if(!ok)good=false;
+      item.classList.add(ok?'correct':'wrong');
+    });
+    if(good){
+      if(!awarded[3]){score++;awarded[3]=true;}
+      feedback('fb3','ok','Верно. Ошибки в расчете и перегрузку пиковыми сменами команда контролирует напрямую. Обмены и болезни — частично. Внешний скачок обращений нельзя предотвратить, но под него можно заранее подготовить резервный сценарий.');
+    }else{
+      feedback('fb3','bad','Смотрите не на серьезность, а на степень контроля. Даже внешняя причина требует ответа: резервных правил, дополнительных триггеров или временного сценария.');
+    }
+    return true;
+  }
+
+  const measures=[...document.querySelectorAll('.measure')];
+  measures.forEach(m=>{
+    m.addEventListener('click',()=>{
+      if(checked[8])return;
+      m.classList.toggle('selected');
+      if(measures.filter(x=>x.classList.contains('selected')).length>3)m.classList.remove('selected');
+    });
+  });
+
+  function checkMeasures(){
+    const selected=measures.filter(x=>x.classList.contains('selected'));
+    if(selected.length!==3){feedback('fb8','neutral','Выберите ровно три меры.');return false;}
+    checked[8]=true;
+    const good=selected.every(x=>x.dataset.good==='true');
+
+    measures.forEach(m=>{
+      if(m.dataset.good==='true')m.classList.add('correct');
+      else if(m.classList.contains('selected'))m.classList.add('wrong');
+    });
+
+    const list=document.getElementById('newProcessList');
+    list.innerHTML='';
+    const base=document.createElement('div');
+    base.className='process-item';base.textContent='Перераспределить больше людей на часы пик.';
+    list.appendChild(base);
+    selected.forEach(m=>{
+      const d=document.createElement('div');
+      d.className='process-item added';d.textContent=m.textContent;
+      list.appendChild(d);
+    });
+    document.getElementById('newProcess').classList.remove('hidden');
+
+    if(good){
+      if(!awarded[8]){score++;awarded[8]=true;}
+      feedback('fb8','ok','Теперь решение устойчивее: пики уточняются на более точных данных, ограничения сотрудников учитываются до публикации, а результат контролируется сразу по скорости, качеству и переработкам.');
+    }else{
+      feedback('fb8','bad','Одна из выбранных мер не устраняет найденный механизм провала. Усиленный контроль и дополнительные совещания добавляют нагрузку, но не улучшают расчет графика и ранние сигналы.');
+    }
+    return true;
+  }
+
+  function setCheck(name,good,goodText,warnText){
+    const el=document.querySelector(`[data-check="${name}"]`);
+    el.classList.remove('good','warn');
+    el.classList.add(good?'good':'warn');
+    el.querySelector('.mark').textContent=good?'✓':'!';
+    el.querySelector('.small').textContent=good?goodText:warnText;
+  }
+
+  function val(id){return document.getElementById(id).value.trim();}
+
+  function checkFinal(){
+    const v={};
+    for(let i=1;i<=11;i++)v[i]=val('f'+i);
+    if(Object.values(v).filter(Boolean).length<11){
+      feedback('fb9','neutral','Заполните все поля. Короткой, но конкретной формулировки достаточно.');
+      return false;
+    }
+
+    const failureGood=v[3].length>=20;
+    const causesGood=v[4].length>=12 && v[7].length>=12;
+    const signalsGood=v[5].length>=12 && v[8].length>=12;
+    const changeGood=v[6].length>=12 && v[9].length>=12 && v[10].length>=10 && v[11].length>=12;
+
+    setCheck('failure',failureGood,
+      'Провал описан через наблюдаемые события или показатели.',
+      'Добавьте конкретные признаки провала: какой показатель ухудшился, что стало происходить чаще или реже?');
+    setCheck('causes',causesGood,
+      'Есть минимум две конкретные причины.',
+      'Уточните механизм причин: что именно может породить провал, а не что произойдет после него.');
+    setCheck('signals',signalsGood,
+      'Для обеих причин есть ранние сигналы.',
+      'Добавьте наблюдаемый сигнал, который меняется раньше итогового результата.');
+    setCheck('change',changeGood,
+      'Разбор привел к изменениям до запуска и резервному сценарию.',
+      'Добавьте, что вы измените заранее и как будете действовать при внешнем риске.');
+
+    checked[9]=true;
+    const passed=[failureGood,causesGood,signalsGood,changeGood].filter(Boolean).length;
+
+    if(passed===4){
+      if(!awarded[9]){score++;awarded[9]=true;}
+      feedback('fb9','ok','Разбор доведен до действия: провал конкретизирован, причины связаны с сигналами, а решение изменено еще до запуска.');
+    }else if(passed>=2){
+      feedback('fb9','neutral','Основа есть, но один-два элемента пока слишком общие. Посмотрите подсказки в критериях.');
+    }else{
+      feedback('fb9','bad','Пока получился список опасений. Доведите его до рабочей цепочки: причина → ранний сигнал → порог или реакция → изменение решения.');
+    }
+
+    document.getElementById('finalNote').classList.remove('hidden');
+    return true;
+  }
+
+  checkBtn.addEventListener('click',()=>{
+    let done=false;
+
+    if(current===1){
+      done=checkSingle(
+        'q1',1,'fb1',
+        'Верно. Предварительный разбор начинается с причин возможного провала. Важно не объяснять все «сопротивлением команды» и не отменять решение до анализа.',
+        'Вы переходите к действию или поиску виноватого раньше, чем разобрали механизм провала. Сначала назовите несколько конкретных причин.'
+      );
+    }
+
+    if(current===2)done=checkSort2();
+    if(current===3)done=checkSort3();
+
+    if(current===4){
+      done=checkSingle(
+        'q4',4,'fb4',
+        'Да. Рост доли обменов сменами напрямую связан с выбранной причиной и заметен раньше итогового провала по скорости или переработкам.',
+        'Сигнал слишком общий или субъективный. Ищите показатель, который меняется именно потому, что эта причина уже начала проявляться.'
+      );
+    }
+
+    if(current===5){
+      done=checkSingle(
+        'q5',5,'fb5',
+        'Верно. Порог отделяет обычные единичные обмены от устойчивого отклонения и заранее определяет момент, когда руководитель должен проверить ситуацию.',
+        'Такой вариант либо создает избыточную реакцию на каждый случай, либо заставляет ждать слишком долго. Нужен заранее заданный порог.'
+      );
+    }
+
+    if(current===6){
+      done=checkSingle(
+        'q6',6,'fb6',
+        'Да. Это профилактическое действие связано с причиной: команда проверяет, не скрывает ли усредненная статистика разные пики по дням недели.',
+        'Этот шаг не исправляет сам механизм ошибки в расписании. Профилактика должна работать с причиной еще до запуска.'
+      );
+    }
+
+    if(current===7){
+      done=checkSingle(
+        'q7',7,'fb7',
+        'Верно. Рост повторных обращений может означать, что скорость достигнута ценой качества. Разбор выборки помогает проверить именно этот механизм.',
+        'Нельзя реагировать на защитный показатель усилением исходной цели или игнорировать его. Нужно проверить, почему он ухудшился.'
+      );
+    }
+
+    if(current===8)done=checkMeasures();
+    if(current===9)done=checkFinal();
+
+    if(done)update();
+  });
+
+  nextBtn.addEventListener('click',()=>{
+    if(current<9){current++;update();window.scrollTo({top:0,behavior:'smooth'});}
+  });
+
+  backBtn.addEventListener('click',()=>{
+    if(current>1){current--;update();window.scrollTo({top:0,behavior:'smooth'});}
+  });
+
+  resetBtn.addEventListener('click',()=>{
+    current=1;score=0;
+    Object.keys(checked).forEach(k=>checked[k]=false);
+    Object.keys(awarded).forEach(k=>awarded[k]=false);
+
+    document.querySelectorAll('.option').forEach(o=>o.classList.remove('selected','correct','wrong'));
+    document.querySelectorAll('.feedback').forEach(f=>{f.className='feedback';f.innerHTML='';});
+
+    Object.keys(sortState2).forEach(k=>sortState2[k]=null);
+    items2.forEach(i=>i.classList.remove('assigned','correct','wrong'));
+    render2();
+    document.getElementById('chain2').classList.add('hidden');
+
+    Object.keys(sortState3).forEach(k=>sortState3[k]=null);
+    items3.forEach(i=>i.classList.remove('assigned','correct','wrong'));
+    render3();
+
+    measures.forEach(m=>m.classList.remove('selected','correct','wrong'));
+    document.getElementById('newProcess').classList.add('hidden');
+    document.getElementById('newProcessList').innerHTML='';
+
+    for(let i=1;i<=11;i++)document.getElementById('f'+i).value='';
+
+    document.querySelectorAll('.checkitem').forEach((el,i)=>{
+      el.classList.remove('good','warn');
+      el.querySelector('.mark').textContent=String(i+1);
+    });
+    document.querySelector('[data-check="failure"] .small').textContent='Есть события или показатели, а не просто «решение не сработало».';
+    document.querySelector('[data-check="causes"] .small').textContent='Они объясняют механизм провала, а не повторяют последствия.';
+    document.querySelector('[data-check="signals"] .small').textContent='Понятно, что отслеживать до итогового провала.';
+    document.querySelector('[data-check="change"] .small').textContent='Разбор повлиял на само решение, а не только создал список рисков.';
+    document.getElementById('finalNote').classList.add('hidden');
+
+    update();
+    window.scrollTo({top:0,behavior:'smooth'});
+  });
+
+  render2();render3();update();
+})();
+</script>
+</body>
+</html>

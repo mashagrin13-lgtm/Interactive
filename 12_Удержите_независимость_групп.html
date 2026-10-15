@@ -1,0 +1,662 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Удержите независимость групп</title>
+<style>
+:root{
+  --bg:#f4f6f8; --card:#fff; --text:#1f2933; --muted:#667085; --line:#d9dee7;
+  --soft:#eef2f6; --accent:#2f5d62; --accent-soft:#e7f0f1;
+  --ok:#1f6b45; --okbg:#e9f5ee; --bad:#913b35; --badbg:#faeceb;
+  --warn:#7b5719; --warnbg:#fff5dc; --shadow:0 14px 40px rgba(31,41,51,.08);
+}
+*{box-sizing:border-box}
+body{
+  margin:0;background:var(--bg);color:var(--text);
+  font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  line-height:1.55;
+}
+button{font:inherit}
+.app{width:min(100% - 28px,720px);margin:28px auto}
+.shell{background:var(--card);border:1px solid var(--line);border-radius:22px;box-shadow:var(--shadow);overflow:hidden}
+header{padding:22px 22px 18px;border-bottom:1px solid var(--line);background:#fff}
+.eyebrow{margin:0 0 6px;color:var(--accent);font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:.03em}
+h1{margin:0;font-size:clamp(27px,5vw,35px);line-height:1.12;letter-spacing:-.02em}
+.subtitle{margin:10px 0 0;color:var(--muted);font-size:15px}
+.progress-meta{display:flex;justify-content:space-between;gap:12px;margin:18px 0 7px;color:var(--muted);font-size:13px}
+.progress{height:8px;background:var(--soft);border-radius:999px;overflow:hidden}
+.progress span{display:block;height:100%;background:var(--accent);width:12.5%;transition:width .2s ease}
+main{padding:24px 22px 18px}
+.screen{display:none}.screen.active{display:block}
+.step{display:inline-flex;align-items:center;min-height:30px;padding:0 11px;border-radius:999px;background:var(--accent-soft);color:var(--accent);font-size:13px;font-weight:800;margin-bottom:12px}
+h2{margin:0 0 10px;font-size:23px;line-height:1.25}
+.lead{margin:0 0 18px;color:#3b4652}
+.case{margin:16px 0 18px;padding:15px 16px;background:#f8fafb;border:1px solid var(--line);border-radius:14px}
+.case strong{display:block;margin-bottom:6px}
+.instruction{margin:16px 0;padding:14px 15px;background:var(--accent-soft);border-left:4px solid var(--accent);border-radius:0 12px 12px 0;font-size:14px}
+.instructions-list{margin:8px 0 0;padding-left:20px}
+.options{display:grid;gap:10px;margin-top:14px}
+.option{
+  width:100%;text-align:left;border:1px solid var(--line);background:#fff;color:var(--text);
+  border-radius:13px;padding:14px;cursor:pointer;transition:.15s ease
+}
+.option:hover{border-color:#aeb7c4;background:#fafbfc}
+.option.selected{border-color:var(--accent);background:var(--accent-soft)}
+.option.correct{border-color:#7fb395;background:var(--okbg)}
+.option.wrong{border-color:#d29a95;background:var(--badbg)}
+.feedback{display:none;margin-top:16px;padding:15px 16px;border-radius:13px;font-size:14px}
+.feedback.show{display:block}
+.feedback.ok{background:var(--okbg);border:1px solid #b9dcc8;color:#174c33}
+.feedback.bad{background:var(--badbg);border:1px solid #edc3c0;color:#742c27}
+.feedback.neutral{background:var(--warnbg);border:1px solid #ead7a2;color:#66470e}
+.consequence{margin-top:10px;padding:11px 12px;border:1px solid var(--line);border-radius:10px;background:#fff;color:#3f4b56}
+.consequence b{display:block;margin-bottom:4px}
+
+.timeline{
+  display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:16px
+}
+.tstep{
+  min-height:72px;border:1px solid var(--line);border-radius:12px;background:#fff;padding:10px;
+  display:flex;align-items:center;justify-content:center;text-align:center;cursor:pointer;font-size:13px
+}
+.tstep.selected{border-color:var(--accent);background:var(--accent-soft)}
+.tstep.correct{border-color:#7fb395;background:var(--okbg)}
+.tstep.wrong{border-color:#d29a95;background:var(--badbg)}
+.order-view{margin-top:12px;padding:12px 13px;border:1px solid var(--line);border-radius:12px;background:#f8fafb;font-size:14px}
+
+.sort-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px}
+.bucket{border:1px solid var(--line);border-radius:14px;background:#fafbfc;padding:12px}
+.bucket h3{margin:0 0 8px;font-size:15px}
+.sort-item{margin:8px 0;padding:11px;border:1px solid var(--line);border-radius:10px;background:#fff;cursor:pointer;font-size:14px}
+.sort-item.assigned{background:var(--accent-soft);border-color:var(--accent)}
+.sort-item.correct{background:var(--okbg);border-color:#7fb395}
+.sort-item.wrong{background:var(--badbg);border-color:#d29a95}
+
+.pool{display:grid;gap:10px;margin-top:14px}
+.pool-card{
+  border:1px solid var(--line);border-radius:12px;background:#fff;padding:13px;cursor:pointer
+}
+.pool-card.selected{border-color:var(--accent);background:var(--accent-soft)}
+.pool-card.correct{border-color:#7fb395;background:var(--okbg)}
+.pool-card.wrong{border-color:#d29a95;background:var(--badbg)}
+
+.quote{margin-top:8px;padding-left:14px;border-left:3px solid #b5c3c5;color:#334155;font-weight:650}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:14px}
+.stat{padding:12px;border:1px solid var(--line);border-radius:12px;background:#fff;text-align:center}
+.stat b{display:block;font-size:24px;color:var(--accent)}
+
+.kpi-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-top:16px}
+.kpi{border:1px solid var(--line);border-radius:14px;padding:14px;background:#fff}
+.kpi b{display:block;margin-bottom:4px}
+.kpi .value{font-size:26px;font-weight:900;color:var(--accent)}
+.kpi.good{border-color:#b9dcc8;background:var(--okbg)}
+.kpi.warn{border-color:#ead7a2;background:var(--warnbg)}
+
+.flow{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:14px}
+.node{padding:8px 10px;border:1px solid var(--line);border-radius:9px;background:#fff;font-size:13px}
+.arrow{color:var(--muted);font-weight:900}
+.final-note{margin-top:16px;padding:16px;border:1px solid var(--line);border-radius:14px;background:#f8fafb}
+.final-note h3{margin:0 0 8px;font-size:17px}
+.formula{margin-top:10px;font-weight:800;color:var(--accent)}
+
+footer{padding:16px 22px 22px;border-top:1px solid var(--line);display:flex;gap:10px;flex-wrap:wrap;align-items:center;background:#fff}
+footer .spacer{flex:1}
+.ctrl{border-radius:12px;padding:11px 15px;cursor:pointer;font-weight:750;border:1px solid var(--line)}
+.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+.secondary{background:#fff;color:var(--text)}
+.muted{background:#fff;color:var(--muted)}
+button[disabled]{opacity:.42;cursor:not-allowed}
+.hidden{display:none!important}
+
+@media(max-width:620px){
+  .app{width:min(100% - 16px,720px);margin:8px auto 18px}
+  .shell{border-radius:16px}
+  header,main,footer{padding-left:16px;padding-right:16px}
+  .timeline{grid-template-columns:1fr 1fr}
+  .sort-grid,.kpi-grid,.stats{grid-template-columns:1fr}
+  footer .spacer{display:none}
+  footer button{flex:1 1 calc(50% - 6px)}
+}
+</style>
+</head>
+<body>
+<div class="app">
+<div class="shell">
+<header>
+  <p class="eyebrow">Проверочный интерактив</p>
+  <h1>Удержите независимость групп</h1>
+  <p class="subtitle">Соберите 30-минутную сессию так, чтобы получить несколько независимых линий поиска и довести их до проверяемых гипотез.</p>
+  <div class="progress-meta">
+    <span id="progressText">Шаг 1 из 8</span>
+    <span id="scoreText">Верных решений: 0</span>
+  </div>
+  <div class="progress"><span id="progressBar"></span></div>
+</header>
+
+<main>
+<section class="screen active" data-screen="1">
+  <div class="step">Шаг 1</div>
+  <h2>Сформируйте группы до начала обсуждения</h2>
+
+  <div class="case">
+    <strong>Исходная ситуация</strong>
+    У вас 12 участников из четырех функций. Нужно найти способы сократить срок согласования договоров, сохранив обязательные проверки.
+  </div>
+
+  <div class="instruction">
+    Выберите структуру работы. Цель — получить несколько независимых направлений решения до того, как участники начнут влиять друг на друга.
+  </div>
+
+  <div class="options" data-q="q1">
+    <button class="option">Одна группа из 12 человек.</button>
+    <button class="option">Шесть пар.</button>
+    <button class="option" data-correct="true">Три группы по четыре человека.</button>
+    <button class="option">Четыре группы по функциям.</button>
+  </div>
+  <div class="feedback" id="fb1"></div>
+</section>
+
+<section class="screen" data-screen="2">
+  <div class="step">Шаг 2</div>
+  <h2>Соберите первые пять минут</h2>
+  <p class="lead">Главная ошибка на старте — успеть обсудить идеи всем составом до разделения. Тогда первая реплика быстро становится общей точкой отсчета.</p>
+
+  <div class="instruction">
+    Нажимайте на действия в нужном порядке. В правильной последовательности содержательная дискуссия начинается уже после разделения и назначения координаторов.
+  </div>
+
+  <div class="timeline" id="timeline">
+    <div class="tstep" data-id="question">Назвать общий вопрос</div>
+    <div class="tstep" data-id="result">Объяснить результат встречи</div>
+    <div class="tstep" data-id="groups">Разделить участников</div>
+    <div class="tstep" data-id="coords">Назначить координаторов</div>
+    <div class="tstep" data-id="discussion">Начать обсуждать варианты</div>
+  </div>
+  <div class="order-view" id="orderView">Порядок появится здесь.</div>
+  <div class="feedback" id="fb2"></div>
+</section>
+
+<section class="screen" data-screen="3">
+  <div class="step">Шаг 3</div>
+  <h2>Координатор управляет процессом, а не судьбой идеи</h2>
+
+  <div class="case">
+    <strong>Первая идея группы</strong>
+    «Давайте согласовывать юридические и финансовые условия параллельно».
+    <div class="quote">Участник: «Юристы на это никогда не согласятся».</div>
+  </div>
+
+  <div class="instruction">Что делает координатор?</div>
+
+  <div class="options" data-q="q3">
+    <button class="option">Просит юриста объяснить, почему.</button>
+    <button class="option">Исключает идею.</button>
+    <button class="option" data-correct="true">Фиксирует риск отдельно и продолжает собирать варианты.</button>
+    <button class="option">Проводит голосование группы.</button>
+  </div>
+  <div class="feedback" id="fb3"></div>
+</section>
+
+<section class="screen" data-screen="4">
+  <div class="step">Шаг 4</div>
+  <h2>Включите тихого участника в генерацию</h2>
+
+  <div class="case">
+    <strong>Через пять минут</strong>
+    Трое участников активно обсуждают идеи, четвертый почти не говорит.
+  </div>
+
+  <div class="instruction">Выберите реплику, которая поможет получить еще одну независимую точку зрения.</div>
+
+  <div class="options" data-q="q4">
+    <button class="option">Ничего не делать: если идеи есть, участие всех необязательно.</button>
+    <button class="option">Спросить: «Вы согласны с коллегами?»</button>
+    <button class="option" data-correct="true">Попросить участника назвать собственный вариант или наблюдение со своей стороны процесса.</button>
+    <button class="option">Передать ему роль секретаря.</button>
+  </div>
+  <div class="feedback" id="fb4"></div>
+</section>
+
+<section class="screen" data-screen="5">
+  <div class="step">Шаг 5</div>
+  <h2>Соберите общий пул без скрытого отбора</h2>
+
+  <div class="stats">
+    <div class="stat"><b>8</b>идей группы 1</div>
+    <div class="stat"><b>6</b>идей группы 2</div>
+    <div class="stat"><b>9</b>идей группы 3</div>
+  </div>
+
+  <div class="instruction">Что просит руководитель перед общим сравнением?</div>
+
+  <div class="options" data-q="q5">
+    <button class="option">Выбрать по одной лучшей идее.</button>
+    <button class="option">Выбрать по три наиболее реалистичные.</button>
+    <button class="option" data-correct="true">Передать все идеи в общий список без оценки.</button>
+    <button class="option">Подготовить пятиминутную презентацию каждой группы.</button>
+  </div>
+  <div class="feedback" id="fb5"></div>
+</section>
+
+<section class="screen" data-screen="6">
+  <div class="step">Шаг 6</div>
+  <h2>Объединяйте только настоящие дубли</h2>
+
+  <div class="instruction">
+    Отметьте идеи, которые можно объединить в одно направление. Не объединяйте варианты только потому, что они относятся к одной части процесса.
+  </div>
+
+  <div class="pool" id="pool">
+    <div class="pool-card" data-id="a" data-group="input">Проверять комплектность данных до запуска согласования.</div>
+    <div class="pool-card" data-id="b" data-group="input">Добавить входной чек-лист обязательных данных.</div>
+    <div class="pool-card" data-id="c" data-group="auto">Автоматически проверять заполненность полей.</div>
+  </div>
+
+  <div class="feedback" id="fb6"></div>
+</section>
+
+<section class="screen" data-screen="7">
+  <div class="step">Шаг 7</div>
+  <h2>После переключения критика становится полезной</h2>
+
+  <div class="case">
+    <strong>Критерии отбора</strong>
+    Влияние на срок · сохранение обязательных проверок · возможность провести пилот в течение месяца.
+  </div>
+
+  <div class="instruction">
+    Нажимайте на карточку: первое нажатие — «уместно на отборе», второе — «это снова генерация».
+  </div>
+
+  <div id="sortPool">
+    <div class="sort-item" data-right="select" data-id="r1">«Это сложно внедрить».</div>
+    <div class="sort-item" data-right="select" data-id="r2">«Этот вариант может убрать два дня ожидания».</div>
+    <div class="sort-item" data-right="gen" data-id="r3">«Можно придумать еще один вариант маршрута».</div>
+    <div class="sort-item" data-right="select" data-id="r4">«Здесь есть риск пропустить нетиповой договор».</div>
+  </div>
+
+  <div class="sort-grid">
+    <div class="bucket"><h3>Уместно на отборе</h3><div id="selectBucket"></div></div>
+    <div class="bucket"><h3>Снова генерация</h3><div id="genBucket"></div></div>
+  </div>
+
+  <div class="feedback" id="fb7"></div>
+</section>
+
+<section class="screen" data-screen="8">
+  <div class="step">Шаг 8</div>
+  <h2>Закройте встречу конкретной проверкой</h2>
+
+  <div class="case">
+    <strong>Выбраны три гипотезы</strong>
+    1. Параллельная проверка независимых условий.<br>
+    2. Короткий маршрут для типовых договоров.<br>
+    3. Входная проверка обязательных данных.
+  </div>
+
+  <div class="instruction">Что делает руководитель в последние две минуты?</div>
+
+  <div class="options" data-q="q8">
+    <button class="option">Завершает встречу, потому что идеи уже выбраны.</button>
+    <button class="option">Назначает еще одно совещание для обсуждения.</button>
+    <button class="option" data-correct="true">Для каждой гипотезы фиксирует способ проверки, ответственного и срок.</button>
+    <button class="option">Просит участников проголосовать еще раз.</button>
+  </div>
+
+  <div class="feedback" id="fb8"></div>
+
+  <div class="kpi-grid hidden" id="kpiGrid">
+    <div class="kpi" id="k1"><b>Независимость генерации</b><div class="value" id="v1">—</div><div id="t1"></div></div>
+    <div class="kpi" id="k2"><b>Участие команды</b><div class="value" id="v2">—</div><div id="t2"></div></div>
+    <div class="kpi" id="k3"><b>Сохранность идей</b><div class="value" id="v3">—</div><div id="t3"></div></div>
+    <div class="kpi" id="k4"><b>Переход к действию</b><div class="value" id="v4">—</div><div id="t4"></div></div>
+  </div>
+
+  <div class="final-note hidden" id="finalNote">
+    <h3>Схема сессии</h3>
+    <div class="flow">
+      <span class="node">Один вопрос</span><span class="arrow">→</span>
+      <span class="node">малые группы</span><span class="arrow">→</span>
+      <span class="node">координатор</span><span class="arrow">→</span>
+      <span class="node">самостоятельный старт</span><span class="arrow">→</span>
+      <span class="node">групповая генерация</span><span class="arrow">→</span>
+      <span class="node">общий пул</span><span class="arrow">→</span>
+      <span class="node">отбор</span><span class="arrow">→</span>
+      <span class="node">следующий шаг</span>
+    </div>
+    <div class="formula">Малые группы полезны не тем, что делают встречу уютнее, а тем, что дают несколько независимых линий поиска до общего влияния и отбора.</div>
+  </div>
+</section>
+</main>
+
+<footer>
+  <button class="ctrl muted" id="resetBtn">Сбросить</button>
+  <div class="spacer"></div>
+  <button class="ctrl secondary" id="backBtn" disabled>Назад</button>
+  <button class="ctrl primary" id="checkBtn">Проверить</button>
+  <button class="ctrl secondary hidden" id="nextBtn">Дальше</button>
+</footer>
+</div>
+</div>
+
+<script>
+(function(){
+  let current=1, score=0;
+  let independence=0, participation=0, preservation=0, action=0;
+  const checked={1:false,2:false,3:false,4:false,5:false,6:false,7:false,8:false};
+  const awarded={1:false,2:false,3:false,4:false,5:false,6:false,7:false,8:false};
+
+  const screens=[...document.querySelectorAll('.screen')];
+  const progressText=document.getElementById('progressText');
+  const progressBar=document.getElementById('progressBar');
+  const scoreText=document.getElementById('scoreText');
+  const backBtn=document.getElementById('backBtn');
+  const nextBtn=document.getElementById('nextBtn');
+  const checkBtn=document.getElementById('checkBtn');
+  const resetBtn=document.getElementById('resetBtn');
+
+  function update(){
+    screens.forEach(s=>s.classList.toggle('active',Number(s.dataset.screen)===current));
+    progressText.textContent=`Шаг ${current} из 8`;
+    progressBar.style.width=`${current/8*100}%`;
+    scoreText.textContent=`Верных решений: ${score}`;
+    backBtn.disabled=current===1;
+    nextBtn.classList.toggle('hidden',!checked[current]||current===8);
+    checkBtn.classList.toggle('hidden',checked[current]&&current!==8);
+    checkBtn.textContent=(current===8&&checked[8])?'Показать итог еще раз':'Проверить';
+  }
+
+  function feedback(id,type,html){
+    const el=document.getElementById(id);
+    el.className=`feedback show ${type}`;
+    el.innerHTML=html;
+  }
+
+  document.querySelectorAll('.options').forEach(group=>{
+    group.addEventListener('click',e=>{
+      const btn=e.target.closest('.option');
+      if(!btn || checked[current])return;
+      group.querySelectorAll('.option').forEach(o=>o.classList.remove('selected'));
+      btn.classList.add('selected');
+    });
+  });
+
+  function checkSingle(q,screen,fbId,ok,bad,metric){
+    const group=document.querySelector(`[data-q="${q}"]`);
+    const sel=group.querySelector('.option.selected');
+    if(!sel){feedback(fbId,'neutral','Сначала выберите один вариант.');return false;}
+    checked[screen]=true;
+    const good=sel.dataset.correct==='true';
+    group.querySelectorAll('.option').forEach(o=>{
+      if(o.dataset.correct==='true')o.classList.add('correct');
+      else if(o.classList.contains('selected'))o.classList.add('wrong');
+    });
+    if(good){
+      if(!awarded[screen]){score++;awarded[screen]=true;}
+      if(metric==='independence')independence++;
+      if(metric==='participation')participation++;
+      if(metric==='preservation')preservation++;
+      if(metric==='action')action++;
+      feedback(fbId,'ok',ok);
+    }else{
+      feedback(fbId,'bad',bad);
+    }
+    return true;
+  }
+
+  // screen 2 order
+  const timeline=[...document.querySelectorAll('.tstep')];
+  const order=[];
+  timeline.forEach(t=>{
+    t.addEventListener('click',()=>{
+      if(checked[2]||t.classList.contains('selected'))return;
+      t.classList.add('selected');
+      order.push(t.dataset.id);
+      renderOrder();
+    });
+  });
+
+  function renderOrder(){
+    const names={
+      question:'общий вопрос',
+      result:'результат встречи',
+      groups:'разделение на группы',
+      coords:'координаторы',
+      discussion:'обсуждение вариантов'
+    };
+    document.getElementById('orderView').textContent=order.length?order.map((x,i)=>`${i+1}. ${names[x]}`).join(' → '):'Порядок появится здесь.';
+  }
+
+  function checkOrder(){
+    if(order.length!==5){feedback('fb2','neutral','Расположите все пять действий.');return false;}
+    checked[2]=true;
+    const expected=['question','result','groups','coords','discussion'];
+    const good=order.join('|')===expected.join('|');
+
+    timeline.forEach((t,i)=>{
+      const ok=t.dataset.id===expected[i];
+      t.classList.add(ok?'correct':'wrong');
+    });
+
+    if(good){
+      if(!awarded[2]){score++;awarded[2]=true;}
+      independence++;
+      feedback('fb2','ok','Да. Сначала команда понимает вопрос и ожидаемый результат, затем делится на группы и получает координаторов. Содержательное обсуждение начинается уже внутри малых групп.');
+    }else{
+      feedback('fb2','bad','Критичная ошибка — начать обсуждать варианты общим составом до разделения. Первая идея быстро становится общей точкой отсчета и снижает независимость групп.');
+    }
+    return true;
+  }
+
+  // screen 6
+  const poolCards=[...document.querySelectorAll('.pool-card')];
+  poolCards.forEach(c=>{
+    c.addEventListener('click',()=>{
+      if(checked[6])return;
+      c.classList.toggle('selected');
+    });
+  });
+
+  function checkPool(){
+    const selected=poolCards.filter(c=>c.classList.contains('selected'));
+    if(selected.length===0){feedback('fb6','neutral','Отметьте идеи, которые можно объединить.');return false;}
+    checked[6]=true;
+
+    const ids=selected.map(x=>x.dataset.id).sort().join(',');
+    const good=ids==='a,b';
+
+    poolCards.forEach(c=>{
+      if(c.dataset.id==='a'||c.dataset.id==='b')c.classList.add('correct');
+      else if(c.classList.contains('selected'))c.classList.add('wrong');
+    });
+
+    if(good){
+      if(!awarded[6]){score++;awarded[6]=true;}
+      preservation++;
+      feedback('fb6','ok','Верно. Первые две идеи близки по направлению: обе проверяют комплектность данных до запуска маршрута. Третья использует другой механизм — автоматическую проверку — и должна остаться отдельной гипотезой.');
+    }else{
+      feedback('fb6','bad','Не объединяйте идеи только потому, что они относятся к одной теме. Важно сохранить разные механизмы решения, иначе общий пул сузится раньше времени.');
+    }
+    return true;
+  }
+
+  // screen 7 sorting
+  const sortItems=[...document.querySelectorAll('#sortPool .sort-item')];
+  const sortState={};
+  sortItems.forEach(item=>{
+    sortState[item.dataset.id]=null;
+    item.addEventListener('click',()=>{
+      if(checked[7])return;
+      const id=item.dataset.id;
+      sortState[id]=sortState[id]===null?'select':sortState[id]==='select'?'gen':'select';
+      renderSort();
+    });
+  });
+
+  function renderSort(){
+    const sel=document.getElementById('selectBucket');
+    const gen=document.getElementById('genBucket');
+    sel.innerHTML='';gen.innerHTML='';
+    sortItems.forEach(item=>{
+      item.classList.remove('assigned');
+      const st=sortState[item.dataset.id];
+      if(st){
+        item.classList.add('assigned');
+        const clone=item.cloneNode(true);
+        clone.classList.remove('assigned','correct','wrong');
+        clone.style.cursor='default';
+        (st==='select'?sel:gen).appendChild(clone);
+      }
+    });
+  }
+
+  function checkSort(){
+    if(Object.values(sortState).some(v=>!v)){feedback('fb7','neutral','Распределите все четыре реплики.');return false;}
+    checked[7]=true;
+    let good=true;
+
+    sortItems.forEach(item=>{
+      const ok=sortState[item.dataset.id]===item.dataset.right;
+      if(!ok)good=false;
+      item.classList.add(ok?'correct':'wrong');
+    });
+
+    if(good){
+      if(!awarded[7]){score++;awarded[7]=true;}
+      action++;
+      feedback('fb7','ok','Верно. После переключения уже нужны вопросы о сложности, эффекте и рисках. Реплика про еще один вариант маршрута снова открывает генерацию и сейчас уже мешает сужать поле.');
+    }else{
+      feedback('fb7','bad','На этапе отбора критика уже уместна. Оцениваем сложность, эффект и риски. Новые варианты маршрута сейчас снова расширяют поле вместо выбора.');
+    }
+    return true;
+  }
+
+  function showFinal(){
+    document.getElementById('kpiGrid').classList.remove('hidden');
+    document.getElementById('finalNote').classList.remove('hidden');
+
+    const values=[
+      ['k1','v1','t1',independence,2,'Группы успели сформировать собственные направления до общего влияния.','Общее обсуждение вмешалось слишком рано.'],
+      ['k2','v2','t2',participation,2,'Вы включали не только самых активных участников.','Часть команды могла остаться наблюдателями.'],
+      ['k3','v3','t3',preservation,2,'Идеи дошли до общего пула без скрытого отбора и лишнего склеивания.','Часть вариантов потерялась до общего сравнения.'],
+      ['k4','v4','t4',action,2,'Встреча закончилась отбором и конкретными шагами проверки.','Обсуждение не полностью дошло до действия.']
+    ];
+
+    values.forEach(([kid,vid,tid,val,max,goodText,warnText])=>{
+      const pct=Math.round(val/max*100);
+      const box=document.getElementById(kid);
+      box.classList.remove('good','warn');
+      box.classList.add(pct>=100?'good':'warn');
+      document.getElementById(vid).textContent=pct+'%';
+      document.getElementById(tid).textContent=pct>=100?goodText:warnText;
+    });
+
+    const total=independence+participation+preservation+action;
+    if(total>=7){
+      feedback('fb8','ok','Сессия собрана устойчиво: группы сохраняют независимость, участники включены, общий пул не обрезан, а встреча заканчивается проверяемыми гипотезами.');
+    }else if(total>=5){
+      feedback('fb8','neutral','В целом сессия работает, но один из этапов проседает. Посмотрите на показатели ниже — они покажут, где теряются идеи или участие.');
+    }else{
+      feedback('fb8','bad','Сессия слишком рано теряет независимость или идеи. Стоит жестче разделить самостоятельный старт групп, общий сбор и последующий отбор.');
+    }
+  }
+
+  checkBtn.addEventListener('click',()=>{
+    let done=false;
+
+    if(current===1){
+      done=checkSingle(
+        'q1',1,'fb1',
+        'Верно. Три смешанные группы по четыре человека дают несколько независимых линий поиска и при этом сохраняют межфункциональный взгляд.',
+        'Эта структура либо слишком крупная, либо слишком однородная. Особенно рискованно делить участников по функциям: тогда каждая группа начнет оптимизировать только свой участок.',
+        'independence'
+      );
+    }
+
+    if(current===2)done=checkOrder();
+
+    if(current===3){
+      done=checkSingle(
+        'q3',3,'fb3',
+        'Да. Координатор не решает судьбу идеи в момент генерации. Он фиксирует риск отдельно и помогает группе продолжать поиск.',
+        'Вы слишком рано переводите группу в спор о реализуемости. Задача координатора сейчас — сохранить поток вариантов.',
+        'preservation'
+      );
+    }
+
+    if(current===4){
+      done=checkSingle(
+        'q4',4,'fb4',
+        'Верно. Вопрос приглашает человека добавить собственную точку зрения, а не просто согласиться или не согласиться с уже заданной линией.',
+        'Так участник остается в роли комментатора. Чтобы расширить поле, попросите его назвать свой вариант или наблюдение со своей стороны процесса.',
+        'participation'
+      );
+    }
+
+    if(current===5){
+      done=checkSingle(
+        'q5',5,'fb5',
+        'Да. Все идеи переходят в общий пул. Ранний выбор внутри групп уничтожил бы часть независимых направлений еще до общего сравнения.',
+        'Так возникает скрытый отбор: каждая группа сама обрезает свой список, и общий пул уже не отражает реального разнообразия идей.',
+        'preservation'
+      );
+    }
+
+    if(current===6)done=checkPool();
+    if(current===7)done=checkSort();
+
+    if(current===8){
+      done=checkSingle(
+        'q8',8,'fb8',
+        'Верно. Каждая гипотеза должна выйти со способом проверки, ответственным и сроком. Только тогда встреча превращается в действие.',
+        'Выбор идеи еще не означает, что она будет проверена. Последние минуты нужны для фиксации конкретного следующего шага.',
+        'action'
+      );
+      if(done)showFinal();
+    }
+
+    if(done)update();
+  });
+
+  nextBtn.addEventListener('click',()=>{
+    if(current<8){current++;update();window.scrollTo({top:0,behavior:'smooth'});}
+  });
+
+  backBtn.addEventListener('click',()=>{
+    if(current>1){current--;update();window.scrollTo({top:0,behavior:'smooth'});}
+  });
+
+  resetBtn.addEventListener('click',()=>{
+    current=1;score=0;independence=0;participation=0;preservation=0;action=0;
+    Object.keys(checked).forEach(k=>checked[k]=false);
+    Object.keys(awarded).forEach(k=>awarded[k]=false);
+
+    document.querySelectorAll('.option').forEach(o=>o.classList.remove('selected','correct','wrong'));
+    document.querySelectorAll('.feedback').forEach(f=>{f.className='feedback';f.innerHTML='';});
+
+    timeline.forEach(t=>t.classList.remove('selected','correct','wrong'));
+    order.length=0;renderOrder();
+
+    poolCards.forEach(c=>c.classList.remove('selected','correct','wrong'));
+
+    Object.keys(sortState).forEach(k=>sortState[k]=null);
+    sortItems.forEach(i=>i.classList.remove('assigned','correct','wrong'));
+    renderSort();
+
+    document.getElementById('kpiGrid').classList.add('hidden');
+    document.getElementById('finalNote').classList.add('hidden');
+    document.querySelectorAll('.kpi').forEach(k=>k.classList.remove('good','warn'));
+    ['v1','v2','v3','v4'].forEach(id=>document.getElementById(id).textContent='—');
+    ['t1','t2','t3','t4'].forEach(id=>document.getElementById(id).textContent='');
+
+    update();
+    window.scrollTo({top:0,behavior:'smooth'});
+  });
+
+  renderSort();
+  update();
+})();
+</script>
+</body>
+</html>

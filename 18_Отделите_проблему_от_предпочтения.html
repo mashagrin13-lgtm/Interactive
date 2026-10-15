@@ -1,0 +1,498 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Отделите проблему от предпочтения</title>
+<style>
+:root{
+  --bg:#f4f6f8; --card:#fff; --text:#1f2933; --muted:#667085; --line:#d9dee7;
+  --soft:#eef2f6; --accent:#2f5d62; --accent-soft:#e7f0f1;
+  --ok:#1f6b45; --okbg:#e9f5ee; --bad:#913b35; --badbg:#faeceb;
+  --warn:#7b5719; --warnbg:#fff5dc; --shadow:0 14px 40px rgba(31,41,51,.08);
+}
+*{box-sizing:border-box}
+body{
+  margin:0;background:var(--bg);color:var(--text);
+  font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  line-height:1.55;
+}
+button{font:inherit}
+.app{width:min(100% - 28px,720px);margin:28px auto}
+.shell{background:var(--card);border:1px solid var(--line);border-radius:22px;box-shadow:var(--shadow);overflow:hidden}
+header{padding:22px 22px 18px;border-bottom:1px solid var(--line);background:#fff}
+.eyebrow{margin:0 0 6px;color:var(--accent);font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:.03em}
+h1{margin:0;font-size:clamp(27px,5vw,35px);line-height:1.12;letter-spacing:-.02em}
+.subtitle{margin:10px 0 0;color:var(--muted);font-size:15px}
+.progress-meta{display:flex;justify-content:space-between;gap:12px;margin:18px 0 7px;color:var(--muted);font-size:13px}
+.progress{height:8px;background:var(--soft);border-radius:999px;overflow:hidden}
+.progress span{display:block;height:100%;background:var(--accent);width:20%;transition:width .2s ease}
+main{padding:24px 22px 18px}
+.screen{display:none}.screen.active{display:block}
+.step{display:inline-flex;align-items:center;min-height:30px;padding:0 11px;border-radius:999px;background:var(--accent-soft);color:var(--accent);font-size:13px;font-weight:800;margin-bottom:12px}
+h2{margin:0 0 10px;font-size:23px;line-height:1.25}
+.lead{margin:0 0 18px;color:#3b4652}
+.case{margin:16px 0 18px;padding:15px 16px;background:#f8fafb;border:1px solid var(--line);border-radius:14px}
+.case strong{display:block;margin-bottom:6px}
+.instruction{margin:16px 0;padding:14px 15px;background:var(--accent-soft);border-left:4px solid var(--accent);border-radius:0 12px 12px 0;font-size:14px}
+.comment{
+  margin:10px 0;padding:13px 14px;border:1px solid var(--line);border-radius:12px;background:#fff
+}
+.comment b{display:block;margin-bottom:4px;color:var(--accent)}
+
+.sort-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:16px}
+.bucket{border:1px solid var(--line);border-radius:14px;background:#fafbfc;padding:11px;min-height:100px}
+.bucket h3{margin:0 0 8px;font-size:14px}
+.sort-item{margin:8px 0;padding:11px;border:1px solid var(--line);border-radius:10px;background:#fff;cursor:pointer;font-size:13px}
+.sort-item.assigned{background:var(--accent-soft);border-color:var(--accent)}
+.sort-item.correct{background:var(--okbg);border-color:#7fb395}
+.sort-item.wrong{background:var(--badbg);border-color:#d29a95}
+
+.pattern-grid{display:grid;gap:10px;margin-top:14px}
+.pattern{
+  border:1px solid var(--line);border-radius:12px;padding:13px;background:#fff;cursor:pointer
+}
+.pattern.selected{border-color:var(--accent);background:var(--accent-soft)}
+.pattern.correct{border-color:#7fb395;background:var(--okbg)}
+.pattern.wrong{border-color:#d29a95;background:var(--badbg)}
+
+.options{display:grid;gap:10px;margin-top:14px}
+.option{
+  width:100%;text-align:left;border:1px solid var(--line);background:#fff;color:var(--text);
+  border-radius:13px;padding:14px;cursor:pointer;transition:.15s ease
+}
+.option:hover{border-color:#aeb7c4;background:#fafbfc}
+.option.selected{border-color:var(--accent);background:var(--accent-soft)}
+.option.correct{border-color:#7fb395;background:var(--okbg)}
+.option.wrong{border-color:#d29a95;background:var(--badbg)}
+
+.feedback{display:none;margin-top:16px;padding:15px 16px;border-radius:13px;font-size:14px}
+.feedback.show{display:block}
+.feedback.ok{background:var(--okbg);border:1px solid #b9dcc8;color:#174c33}
+.feedback.bad{background:var(--badbg);border:1px solid #edc3c0;color:#742c27}
+.feedback.neutral{background:var(--warnbg);border:1px solid #ead7a2;color:#66470e}
+
+.rule-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:14px}
+.rule{border:1px solid var(--line);border-radius:13px;padding:13px;background:#fff}
+.rule b{display:block;margin-bottom:5px}
+.rule.change{border-color:#b9dcc8;background:var(--okbg)}
+.rule.check{border-color:#ead7a2;background:var(--warnbg)}
+.rule.ignore{background:#f8fafb}
+
+.final-note{margin-top:16px;padding:16px;border:1px solid var(--line);border-radius:14px;background:#f8fafb}
+.final-note h3{margin:0 0 8px;font-size:17px}
+.formula{margin-top:10px;font-weight:800;color:var(--accent)}
+.score-box{
+  margin-top:16px;border:1px solid var(--line);border-radius:14px;padding:15px;background:#fff
+}
+.score-box b{font-size:26px;color:var(--accent);display:block}
+.hidden{display:none!important}
+
+footer{padding:16px 22px 22px;border-top:1px solid var(--line);display:flex;gap:10px;flex-wrap:wrap;align-items:center;background:#fff}
+footer .spacer{flex:1}
+.ctrl{border-radius:12px;padding:11px 15px;cursor:pointer;font-weight:750;border:1px solid var(--line)}
+.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+.secondary{background:#fff;color:var(--text)}
+.muted{background:#fff;color:var(--muted)}
+button[disabled]{opacity:.42;cursor:not-allowed}
+
+@media(max-width:650px){
+  .app{width:min(100% - 16px,720px);margin:8px auto 18px}
+  .shell{border-radius:16px}
+  header,main,footer{padding-left:16px;padding-right:16px}
+  .sort-grid,.rule-grid{grid-template-columns:1fr}
+  footer .spacer{display:none}
+  footer button{flex:1 1 calc(50% - 6px)}
+}
+</style>
+</head>
+<body>
+<div class="app">
+<div class="shell">
+<header>
+  <p class="eyebrow">Проверочный интерактив</p>
+  <h1>Отделите проблему от предпочтения</h1>
+  <p class="subtitle">Разберите противоречивую обратную связь и решите, что менять сейчас, что проверить дополнительно, а что пока оставить без изменений.</p>
+  <div class="progress-meta">
+    <span id="progressText">Шаг 1 из 5</span>
+    <span id="scoreText">Верных решений: 0</span>
+  </div>
+  <div class="progress"><span id="progressBar"></span></div>
+</header>
+
+<main>
+<section class="screen active" data-screen="1">
+  <div class="step">Шаг 1</div>
+  <h2>Сначала читайте комментарий как свидетельство</h2>
+
+  <div class="case">
+    <strong>Ситуация</strong>
+    Команда тестирует новый шаблон постановки задач в двух проектных группах. Через несколько рабочих дней приходят пять комментариев.
+  </div>
+
+  <div class="comment"><b>Участник 1</b>«Я не понял, чем “результат задачи” отличается от “критерия готовности”. Пришлось спрашивать руководителя».</div>
+  <div class="comment"><b>Участник 2</b>«Мне больше нравился старый шаблон. Он выглядел привычнее».</div>
+  <div class="comment"><b>Участник 3</b>«Я тоже заполнил “результат” и “критерий готовности” почти одинаково. Только после комментария руководителя понял разницу».</div>
+  <div class="comment"><b>Участник 4</b>«На сложной задаче мне не хватило поля, где можно указать зависимость от другой команды. Но пока это произошло один раз».</div>
+  <div class="comment"><b>Участник 5</b>«Поле со сроком лучше поставить в самый верх. Я всегда смотрю на него первым».</div>
+
+  <div class="instruction">
+    На следующих экранах не оценивайте, «хороший» комментарий или «плохой». Ищите три вещи: наблюдаемую проблему, повторяемость и влияние на работу.
+  </div>
+
+  <div class="options" data-q="q1">
+    <button class="option">Все комментарии одинаково важны: раз пользователи это сказали, нужно учесть все.</button>
+    <button class="option" data-correct="true">Нужно отделить повторяющиеся рабочие затруднения от единичных сигналов и личных предпочтений.</button>
+    <button class="option">Учитывать только комментарии руководителей.</button>
+    <button class="option">Менять только то, что упомянули минимум три человека.</button>
+  </div>
+  <div class="feedback" id="fb1"></div>
+</section>
+
+<section class="screen" data-screen="2">
+  <div class="step">Шаг 2</div>
+  <h2>Распределите пять комментариев по трем действиям</h2>
+
+  <div class="instruction">
+    Нажимайте на карточку: первое нажатие — «Требует изменения», второе — «Нужно проверить», третье — «Пока не меняем». Распределите все пять комментариев.
+  </div>
+
+  <div id="sortPool">
+    <div class="sort-item" data-id="c1" data-right="change">1. Не понял разницу между «результатом» и «критерием готовности», пришлось спрашивать руководителя.</div>
+    <div class="sort-item" data-id="c2" data-right="ignore">2. Старый шаблон нравился больше и выглядел привычнее.</div>
+    <div class="sort-item" data-id="c3" data-right="change">3. Заполнил два поля почти одинаково и понял разницу только после комментария руководителя.</div>
+    <div class="sort-item" data-id="c4" data-right="check">4. В одной сложной задаче не хватило поля для зависимости от другой команды.</div>
+    <div class="sort-item" data-id="c5" data-right="ignore">5. Срок лучше поставить выше, потому что участник всегда смотрит на него первым.</div>
+  </div>
+
+  <div class="sort-grid">
+    <div class="bucket"><h3>Требует изменения</h3><div id="changeBucket"></div></div>
+    <div class="bucket"><h3>Нужно проверить</h3><div id="checkBucket"></div></div>
+    <div class="bucket"><h3>Пока не меняем</h3><div id="ignoreBucket"></div></div>
+  </div>
+
+  <div class="feedback" id="fb2"></div>
+</section>
+
+<section class="screen" data-screen="3">
+  <div class="step">Шаг 3</div>
+  <h2>Найдите повторяющийся сигнал</h2>
+  <p class="lead">Предложения пользователей могут отличаться, но под ними иногда лежит одна и та же проблема.</p>
+
+  <div class="instruction">
+    Выберите связку комментариев, которая показывает повторяющееся рабочее затруднение, а не совпадение вкусов.
+  </div>
+
+  <div class="pattern-grid" id="patternGrid">
+    <div class="pattern" data-good="true">Комментарии 1 и 3: два пользователя по-разному описали одну проблему — они не различают назначение двух полей.</div>
+    <div class="pattern" data-good="false">Комментарии 2 и 5: оба участника хотят изменить внешний вид или порядок элементов.</div>
+    <div class="pattern" data-good="false">Комментарии 3 и 4: оба комментария относятся к сложным задачам.</div>
+    <div class="pattern" data-good="false">Комментарии 1 и 5: оба участника упоминают отдельные поля формы.</div>
+  </div>
+
+  <div class="feedback" id="fb3"></div>
+</section>
+
+<section class="screen" data-screen="4">
+  <div class="step">Шаг 4</div>
+  <h2>Меняйте ограниченный набор элементов</h2>
+
+  <div class="case">
+    <strong>Решение команды</strong>
+    Уточнить название поля «критерии готовности» и добавить короткий пример заполнения.
+  </div>
+
+  <div class="instruction">
+    Что лучше сделать после такого изменения? Цель — проверить, исчезла ли именно найденная проблема, а не открыть новую волну переделок.
+  </div>
+
+  <div class="options" data-q="q4">
+    <button class="option">Сразу внедрить обновленный шаблон во всем подразделении.</button>
+    <button class="option">Заодно переработать остальные поля, раз уж шаблон все равно меняется.</button>
+    <button class="option" data-correct="true">Дать обновленный шаблон небольшой группе и проверить, исчезла ли путаница.</button>
+    <button class="option">Собрать голосование, какая версия сотрудникам нравится больше.</button>
+  </div>
+
+  <div class="feedback" id="fb4"></div>
+</section>
+
+<section class="screen" data-screen="5">
+  <div class="step">Шаг 5</div>
+  <h2>Соберите правило работы с обратной связью</h2>
+
+  <div class="rule-grid">
+    <div class="rule change">
+      <b>Меняем</b>
+      Повторяющаяся наблюдаемая проблема мешает действию, вызывает ошибки, возвраты или дополнительные уточнения.
+    </div>
+    <div class="rule check">
+      <b>Проверяем</b>
+      Сигнал конкретный и потенциально важный, но пока встречался редко или данных недостаточно.
+    </div>
+    <div class="rule ignore">
+      <b>Пока не меняем</b>
+      Комментарий отражает привычку или предпочтение и пока не связан с измеримым затруднением.
+    </div>
+  </div>
+
+  <div class="score-box">
+    <b id="finalScore">0 / 4</b>
+    <span id="finalText">Нажмите «Проверить», чтобы увидеть итог.</span>
+  </div>
+
+  <div class="feedback" id="fb5"></div>
+
+  <div class="final-note hidden" id="finalNote">
+    <h3>Памятка</h3>
+    <div>Не каждое замечание требует переделки. Ищите конкретное затруднение, проверяйте, повторяется ли оно, и отделяйте проблему от предложенного пользователем решения.</div>
+    <div class="formula">Наблюдение → повторяемость → влияние на работу → изменить / проверить / пока не менять → повторная проверка</div>
+  </div>
+</section>
+</main>
+
+<footer>
+  <button class="ctrl muted" id="resetBtn">Сбросить</button>
+  <div class="spacer"></div>
+  <button class="ctrl secondary" id="backBtn" disabled>Назад</button>
+  <button class="ctrl primary" id="checkBtn">Проверить</button>
+  <button class="ctrl secondary hidden" id="nextBtn">Дальше</button>
+</footer>
+</div>
+</div>
+
+<script>
+(function(){
+  let current=1, score=0;
+  const checked={1:false,2:false,3:false,4:false,5:false};
+  const awarded={1:false,2:false,3:false,4:false};
+
+  const screens=[...document.querySelectorAll('.screen')];
+  const progressText=document.getElementById('progressText');
+  const progressBar=document.getElementById('progressBar');
+  const scoreText=document.getElementById('scoreText');
+  const backBtn=document.getElementById('backBtn');
+  const nextBtn=document.getElementById('nextBtn');
+  const checkBtn=document.getElementById('checkBtn');
+  const resetBtn=document.getElementById('resetBtn');
+
+  function update(){
+    screens.forEach(s=>s.classList.toggle('active',Number(s.dataset.screen)===current));
+    progressText.textContent=`Шаг ${current} из 5`;
+    progressBar.style.width=`${current/5*100}%`;
+    scoreText.textContent=`Верных решений: ${score}`;
+    backBtn.disabled=current===1;
+    nextBtn.classList.toggle('hidden',!checked[current]||current===5);
+    checkBtn.classList.toggle('hidden',checked[current]&&current!==5);
+    checkBtn.textContent=(current===5&&checked[5])?'Показать итог еще раз':'Проверить';
+  }
+
+  function feedback(id,type,html){
+    const el=document.getElementById(id);
+    el.className=`feedback show ${type}`;
+    el.innerHTML=html;
+  }
+
+  document.querySelectorAll('.options').forEach(group=>{
+    group.addEventListener('click',e=>{
+      const btn=e.target.closest('.option');
+      if(!btn || checked[current])return;
+      group.querySelectorAll('.option').forEach(o=>o.classList.remove('selected'));
+      btn.classList.add('selected');
+    });
+  });
+
+  function checkSingle(q,screen,fbId,ok,bad){
+    const group=document.querySelector(`[data-q="${q}"]`);
+    const sel=group.querySelector('.option.selected');
+    if(!sel){feedback(fbId,'neutral','Сначала выберите один вариант.');return false;}
+    checked[screen]=true;
+    const good=sel.dataset.correct==='true';
+
+    group.querySelectorAll('.option').forEach(o=>{
+      if(o.dataset.correct==='true')o.classList.add('correct');
+      else if(o.classList.contains('selected'))o.classList.add('wrong');
+    });
+
+    if(good){
+      if(!awarded[screen]){score++;awarded[screen]=true;}
+      feedback(fbId,'ok',ok);
+    }else{
+      feedback(fbId,'bad',bad);
+    }
+    return true;
+  }
+
+  // screen 2 sorting
+  const sortItems=[...document.querySelectorAll('#sortPool .sort-item')];
+  const sortState={};
+  sortItems.forEach(item=>{
+    sortState[item.dataset.id]=null;
+    item.addEventListener('click',()=>{
+      if(checked[2])return;
+      const cur=sortState[item.dataset.id];
+      sortState[item.dataset.id]=cur===null?'change':cur==='change'?'check':cur==='check'?'ignore':'change';
+      renderSort();
+    });
+  });
+
+  function renderSort(){
+    const change=document.getElementById('changeBucket');
+    const check=document.getElementById('checkBucket');
+    const ignore=document.getElementById('ignoreBucket');
+    change.innerHTML='';check.innerHTML='';ignore.innerHTML='';
+
+    sortItems.forEach(item=>{
+      item.classList.remove('assigned');
+      const st=sortState[item.dataset.id];
+      if(st){
+        item.classList.add('assigned');
+        const clone=item.cloneNode(true);
+        clone.classList.remove('assigned','correct','wrong');
+        clone.style.cursor='default';
+        (st==='change'?change:st==='check'?check:ignore).appendChild(clone);
+      }
+    });
+  }
+
+  function checkSort(){
+    if(Object.values(sortState).some(v=>!v)){
+      feedback('fb2','neutral','Распределите все пять комментариев.');
+      return false;
+    }
+
+    checked[2]=true;
+    let good=true;
+    sortItems.forEach(item=>{
+      const ok=sortState[item.dataset.id]===item.dataset.right;
+      if(!ok)good=false;
+      item.classList.add(ok?'correct':'wrong');
+    });
+
+    if(good){
+      if(!awarded[2]){score++;awarded[2]=true;}
+      feedback('fb2','ok','Верно. Комментарии 1 и 3 показывают повторяющуюся проблему. Комментарий 4 заслуживает дополнительной проверки. Комментарии 2 и 5 пока описывают предпочтения, а не затруднение в работе.');
+    }else{
+      feedback('fb2','bad','Проверьте три признака: повторяемость, наблюдаемое затруднение и влияние на работу. Личное предпочтение без последствий пока не повод менять решение.');
+    }
+    return true;
+  }
+
+  // screen 3 pattern
+  const patterns=[...document.querySelectorAll('.pattern')];
+  patterns.forEach(p=>{
+    p.addEventListener('click',()=>{
+      if(checked[3])return;
+      patterns.forEach(x=>x.classList.remove('selected'));
+      p.classList.add('selected');
+    });
+  });
+
+  function checkPattern(){
+    const sel=patterns.find(p=>p.classList.contains('selected'));
+    if(!sel){feedback('fb3','neutral','Сначала выберите одну связку комментариев.');return false;}
+    checked[3]=true;
+    const good=sel.dataset.good==='true';
+    patterns.forEach(p=>{
+      if(p.dataset.good==='true')p.classList.add('correct');
+      else if(p.classList.contains('selected'))p.classList.add('wrong');
+    });
+
+    if(good){
+      if(!awarded[3]){score++;awarded[3]=true;}
+      feedback('fb3','ok','Да. Два разных человека независимо столкнулись с одной и той же трудностью. Это уже не вопрос вкуса: структура шаблона приводит к одинаковой ошибке понимания.');
+    }else{
+      feedback('fb3','bad','Ищите не тематическое сходство, а один и тот же рабочий сбой, который повторился у разных пользователей.');
+    }
+    return true;
+  }
+
+  function finalCheck(){
+    checked[5]=true;
+    document.getElementById('finalScore').textContent=`${score} / 4`;
+
+    if(score===4){
+      document.getElementById('finalText').textContent='Вы последовательно отделяли рабочие проблемы от единичных сигналов и предпочтений.';
+      feedback('fb5','ok','Логика выдержана: вы не пытаетесь исправить все комментарии сразу и связываете изменение с конкретной наблюдаемой проблемой.');
+    }else if(score>=2){
+      document.getElementById('finalText').textContent='Основная логика понятна, но в нескольких шагах вы слишком рано меняли решение или, наоборот, недооценивали сигнал.';
+      feedback('fb5','neutral','Вернитесь к критерию: повторяемая проблема + влияние на работу — основание для изменения. Один конкретный случай — повод проверить. Предпочтение без последствий — пока нет.');
+    }else{
+      document.getElementById('finalText').textContent='Стоит еще раз пройти цепочку от наблюдения к решению.';
+      feedback('fb5','bad','Не превращайте сбор обратной связи в голосование за любимый вариант. Задача — понять, что именно мешает людям работать с решением.');
+    }
+
+    document.getElementById('finalNote').classList.remove('hidden');
+    return true;
+  }
+
+  checkBtn.addEventListener('click',()=>{
+    let done=false;
+
+    if(current===1){
+      done=checkSingle(
+        'q1',1,'fb1',
+        'Верно. Обратная связь ценна не сама по себе, а как источник данных о том, где решение мешает работе, вызывает ошибки или требует дополнительных действий.',
+        'Такой подход либо превращает обратную связь в голосование, либо вводит слишком механическое правило. Сначала нужно отделить проблему от предпочтения.'
+      );
+    }
+
+    if(current===2)done=checkSort();
+    if(current===3)done=checkPattern();
+
+    if(current===4){
+      done=checkSingle(
+        'q4',4,'fb4',
+        'Да. Команда внесла изменение под конкретную проблему. Следующий шаг — снова дать шаблон небольшой группе и проверить, исчезла ли именно эта путаница.',
+        'После ранней обратной связи не стоит сразу масштабировать изменение или заодно переделывать все остальное. Сначала проверьте, решило ли точечное изменение найденную проблему.'
+      );
+    }
+
+    if(current===5)done=finalCheck();
+
+    if(done)update();
+  });
+
+  nextBtn.addEventListener('click',()=>{
+    if(current<5){
+      current++;
+      update();
+      window.scrollTo({top:0,behavior:'smooth'});
+    }
+  });
+
+  backBtn.addEventListener('click',()=>{
+    if(current>1){
+      current--;
+      update();
+      window.scrollTo({top:0,behavior:'smooth'});
+    }
+  });
+
+  resetBtn.addEventListener('click',()=>{
+    current=1;score=0;
+    Object.keys(checked).forEach(k=>checked[k]=false);
+    Object.keys(awarded).forEach(k=>awarded[k]=false);
+
+    document.querySelectorAll('.option').forEach(o=>o.classList.remove('selected','correct','wrong'));
+    document.querySelectorAll('.feedback').forEach(f=>{f.className='feedback';f.innerHTML='';});
+
+    Object.keys(sortState).forEach(k=>sortState[k]=null);
+    sortItems.forEach(i=>i.classList.remove('assigned','correct','wrong'));
+    renderSort();
+
+    patterns.forEach(p=>p.classList.remove('selected','correct','wrong'));
+
+    document.getElementById('finalScore').textContent='0 / 4';
+    document.getElementById('finalText').textContent='Нажмите «Проверить», чтобы увидеть итог.';
+    document.getElementById('finalNote').classList.add('hidden');
+
+    update();
+    window.scrollTo({top:0,behavior:'smooth'});
+  });
+
+  renderSort();
+  update();
+})();
+</script>
+</body>
+</html>

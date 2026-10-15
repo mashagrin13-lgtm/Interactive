@@ -1,0 +1,752 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Проверьте идею без большого запуска</title>
+<style>
+:root{
+  --bg:#f4f6f8; --card:#fff; --text:#1f2933; --muted:#667085; --line:#d9dee7;
+  --soft:#eef2f6; --accent:#2f5d62; --accent-soft:#e7f0f1;
+  --ok:#1f6b45; --okbg:#e9f5ee; --bad:#913b35; --badbg:#faeceb;
+  --warn:#7b5719; --warnbg:#fff5dc; --shadow:0 14px 40px rgba(31,41,51,.08);
+}
+*{box-sizing:border-box}
+body{
+  margin:0;background:var(--bg);color:var(--text);
+  font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  line-height:1.55;
+}
+button,input,textarea{font:inherit}
+.app{width:min(100% - 28px,760px);margin:28px auto}
+.shell{background:var(--card);border:1px solid var(--line);border-radius:22px;box-shadow:var(--shadow);overflow:hidden}
+header{padding:22px 22px 18px;border-bottom:1px solid var(--line);background:#fff}
+.eyebrow{margin:0 0 6px;color:var(--accent);font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:.03em}
+h1{margin:0;font-size:clamp(27px,5vw,35px);line-height:1.12;letter-spacing:-.02em}
+.subtitle{margin:10px 0 0;color:var(--muted);font-size:15px}
+.progress-meta{display:flex;justify-content:space-between;gap:12px;margin:18px 0 7px;color:var(--muted);font-size:13px}
+.progress{height:8px;background:var(--soft);border-radius:999px;overflow:hidden}
+.progress span{display:block;height:100%;background:var(--accent);width:11.11%;transition:width .2s ease}
+main{padding:24px 22px 18px}
+.screen{display:none}.screen.active{display:block}
+.step{display:inline-flex;align-items:center;min-height:30px;padding:0 11px;border-radius:999px;background:var(--accent-soft);color:var(--accent);font-size:13px;font-weight:800;margin-bottom:12px}
+h2{margin:0 0 10px;font-size:23px;line-height:1.25}
+.lead{margin:0 0 18px;color:#3b4652}
+.case{margin:16px 0 18px;padding:15px 16px;background:#f8fafb;border:1px solid var(--line);border-radius:14px}
+.case strong{display:block;margin-bottom:6px}
+.instruction{margin:16px 0;padding:14px 15px;background:var(--accent-soft);border-left:4px solid var(--accent);border-radius:0 12px 12px 0;font-size:14px}
+.options{display:grid;gap:10px;margin-top:14px}
+.option{
+  width:100%;text-align:left;border:1px solid var(--line);background:#fff;color:var(--text);
+  border-radius:13px;padding:14px;cursor:pointer;transition:.15s ease
+}
+.option:hover{border-color:#aeb7c4;background:#fafbfc}
+.option.selected{border-color:var(--accent);background:var(--accent-soft)}
+.option.correct{border-color:#7fb395;background:var(--okbg)}
+.option.wrong{border-color:#d29a95;background:var(--badbg)}
+.feedback{display:none;margin-top:16px;padding:15px 16px;border-radius:13px;font-size:14px}
+.feedback.show{display:block}
+.feedback.ok{background:var(--okbg);border:1px solid #b9dcc8;color:#174c33}
+.feedback.bad{background:var(--badbg);border:1px solid #edc3c0;color:#742c27}
+.feedback.neutral{background:var(--warnbg);border:1px solid #ead7a2;color:#66470e}
+
+.pilot-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:14px}
+.pilot-card{border:1px solid var(--line);border-radius:13px;padding:13px;background:#fff;cursor:pointer}
+.pilot-card.selected{border-color:var(--accent);background:var(--accent-soft)}
+.pilot-card.correct{border-color:#7fb395;background:var(--okbg)}
+.pilot-card.wrong{border-color:#d29a95;background:var(--badbg)}
+
+.builder{margin-top:16px}
+.pool-title{font-size:13px;color:var(--muted);font-weight:800;margin-bottom:8px}
+.pool{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
+.block{
+  border:1px solid var(--line);background:#fff;border-radius:999px;padding:9px 12px;cursor:pointer;font-size:14px
+}
+.block.used{opacity:.38;cursor:default}
+.slots{display:grid;gap:10px}
+.slot-row{display:grid;grid-template-columns:30px 1fr;gap:10px;align-items:start}
+.num{
+  width:30px;height:30px;border-radius:8px;background:var(--soft);color:var(--muted);
+  display:flex;align-items:center;justify-content:center;font-weight:800;font-size:12px
+}
+.slot{
+  min-height:48px;border:1px dashed #aab4c1;border-radius:11px;background:#fafbfc;
+  display:flex;align-items:center;padding:10px 12px;color:var(--muted);cursor:pointer
+}
+.slot.filled{border-style:solid;border-color:var(--accent);background:var(--accent-soft);color:var(--text);font-weight:700}
+
+.metric-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px}
+.metric-box{border:1px solid var(--line);border-radius:14px;padding:12px;background:#fafbfc}
+.metric-box h3{margin:0 0 8px;font-size:15px}
+.metric-item{margin:8px 0;padding:11px;border:1px solid var(--line);border-radius:10px;background:#fff;cursor:pointer;font-size:14px}
+.metric-item.selected{border-color:var(--accent);background:var(--accent-soft)}
+.metric-item.correct{border-color:#7fb395;background:var(--okbg)}
+.metric-item.wrong{border-color:#d29a95;background:var(--badbg)}
+
+.result-card{margin-top:14px;padding:14px;border:1px solid var(--line);border-radius:13px;background:#fff}
+.result-card b{display:block;margin-bottom:4px}
+.result-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:14px}
+.result-stat{border:1px solid var(--line);border-radius:12px;padding:13px;background:#fff}
+.result-stat b{display:block;font-size:24px;color:var(--accent)}
+
+.field-grid{display:grid;gap:12px;margin-top:16px}
+.field label{display:block;font-weight:750;font-size:14px;margin-bottom:6px}
+.field input,.field textarea{
+  width:100%;border:1px solid var(--line);border-radius:12px;padding:12px 13px;background:#fff;color:var(--text)
+}
+.field textarea{min-height:84px;resize:vertical}
+.field input:focus,.field textarea:focus{outline:3px solid rgba(47,93,98,.16);border-color:var(--accent)}
+.checklist{display:grid;gap:9px;margin-top:16px}
+.checkitem{
+  display:grid;grid-template-columns:24px 1fr;gap:10px;padding:12px 13px;border:1px solid var(--line);border-radius:12px;background:#fff
+}
+.checkitem .mark{
+  width:24px;height:24px;border-radius:50%;background:var(--soft);color:var(--muted);
+  display:flex;align-items:center;justify-content:center;font-weight:800;font-size:12px
+}
+.checkitem.good{border-color:#b9dcc8;background:var(--okbg)}
+.checkitem.good .mark{background:#d6ecdf;color:var(--ok)}
+.checkitem.warn{border-color:#ead7a2;background:var(--warnbg)}
+.checkitem.warn .mark{background:#f5e8bd;color:var(--warn)}
+.small{font-size:13px;color:var(--muted)}
+
+.flow{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:14px}
+.node{padding:8px 10px;border:1px solid var(--line);border-radius:9px;background:#fff;font-size:13px}
+.arrow{color:var(--muted);font-weight:900}
+.final-note{margin-top:16px;padding:16px;border:1px solid var(--line);border-radius:14px;background:#f8fafb}
+.final-note h3{margin:0 0 8px;font-size:17px}
+.formula{margin-top:10px;font-weight:800;color:var(--accent)}
+
+footer{padding:16px 22px 22px;border-top:1px solid var(--line);display:flex;gap:10px;flex-wrap:wrap;align-items:center;background:#fff}
+footer .spacer{flex:1}
+.ctrl{border-radius:12px;padding:11px 15px;cursor:pointer;font-weight:750;border:1px solid var(--line)}
+.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+.secondary{background:#fff;color:var(--text)}
+.muted{background:#fff;color:var(--muted)}
+button[disabled]{opacity:.42;cursor:not-allowed}
+.hidden{display:none!important}
+
+@media(max-width:650px){
+  .app{width:min(100% - 16px,760px);margin:8px auto 18px}
+  .shell{border-radius:16px}
+  header,main,footer{padding-left:16px;padding-right:16px}
+  .pilot-grid,.metric-grid,.result-grid{grid-template-columns:1fr}
+  footer .spacer{display:none}
+  footer button{flex:1 1 calc(50% - 6px)}
+}
+</style>
+</head>
+<body>
+<div class="app">
+<div class="shell">
+<header>
+  <p class="eyebrow">Проверочный интерактив</p>
+  <h1>Проверьте идею без большого запуска</h1>
+  <p class="subtitle">Соберите пилот так, чтобы он дал полезные данные, ограничил риск и помог принять следующий управленческий шаг.</p>
+  <div class="progress-meta">
+    <span id="progressText">Шаг 1 из 9</span>
+    <span id="scoreText">Верных решений: 0</span>
+  </div>
+  <div class="progress"><span id="progressBar"></span></div>
+</header>
+
+<main>
+<section class="screen active" data-screen="1">
+  <div class="step">Шаг 1</div>
+  <h2>Сначала уменьшите масштаб риска</h2>
+
+  <div class="case">
+    <strong>Первоначальный план</strong>
+    Руководитель хочет проверить новый порядок согласования заявок между четырьмя подразделениями:
+    <br><br>
+    «С первого числа переводим все подразделения на новый процесс на три месяца».
+  </div>
+
+  <div class="instruction">
+    Найдите главную проблему плана. Хороший пилот должен быть достаточно узким, чтобы ошибка не затронула весь процесс, и достаточно содержательным, чтобы по результату можно было принять решение.
+  </div>
+
+  <div class="options" data-q="q1">
+    <button class="option">Три месяца слишком мало.</button>
+    <button class="option" data-correct="true">Масштаб слишком широк: при ошибке изменение затронет сразу весь процесс, а причин результата будет трудно отделить друг от друга.</button>
+    <button class="option">Нужно сначала провести голосование сотрудников.</button>
+    <button class="option">Следовало запускать сразу на полгода.</button>
+  </div>
+
+  <div class="feedback" id="fb1"></div>
+</section>
+
+<section class="screen" data-screen="2">
+  <div class="step">Шаг 2</div>
+  <h2>Выберите участок, где можно получить данные без большого риска</h2>
+
+  <div class="instruction">
+    Выберите вариант, который одновременно ограничивает последствия ошибки и дает достаточно повторяющихся случаев для сравнения.
+  </div>
+
+  <div class="pilot-grid" id="pilotGrid">
+    <div class="pilot-card" data-good="false">А. Все подразделения, все типы заявок.</div>
+    <div class="pilot-card" data-good="false">Б. Одно подразделение, но все виды заявок, включая критичные.</div>
+    <div class="pilot-card" data-good="true">В. Один тип стандартных заявок в двух командах.</div>
+    <div class="pilot-card" data-good="false">Г. Одна случайная заявка.</div>
+  </div>
+
+  <div class="feedback" id="fb2"></div>
+</section>
+
+<section class="screen" data-screen="3">
+  <div class="step">Шаг 3</div>
+  <h2>Сформулируйте гипотезу, которую можно опровергнуть</h2>
+  <p class="lead">Гипотеза пилота должна связывать изменение, ожидаемый результат и защитное условие.</p>
+
+  <div class="instruction">
+    Нажимайте на нужные блоки в правильном порядке. Лишние общие формулировки оставьте внизу.
+  </div>
+
+  <div class="builder">
+    <div class="pool-title">Блоки</div>
+    <div class="pool" id="pool3">
+      <button class="block" data-id="if">Если стандартные заявки будут сразу направляться нужному исполнителю по заданным признакам</button>
+      <button class="block" data-id="then">среднее время обработки сократится с двух дней до одного</button>
+      <button class="block" data-id="guard">без роста числа ошибочных маршрутизаций</button>
+      <button class="block" data-id="easy">процесс станет удобнее</button>
+      <button class="block" data-id="happy">сотрудники будут довольнее</button>
+      <button class="block" data-id="efficient">команда станет работать эффективнее</button>
+    </div>
+
+    <div class="slots">
+      <div class="slot-row"><div class="num">1</div><div class="slot" data-slot="0">Изменение</div></div>
+      <div class="slot-row"><div class="num">2</div><div class="slot" data-slot="1">Ожидаемый результат</div></div>
+      <div class="slot-row"><div class="num">3</div><div class="slot" data-slot="2">Защитное условие</div></div>
+    </div>
+  </div>
+
+  <div class="feedback" id="fb3"></div>
+</section>
+
+<section class="screen" data-screen="4">
+  <div class="step">Шаг 4</div>
+  <h2>Выберите основной и защитный показатели</h2>
+
+  <div class="instruction">
+    Нажимайте на показатель: первое нажатие отправляет его в «Основной», второе — в «Защитный». Основной показатель отвечает на вопрос, достигли ли мы цели. Защитный — не ухудшили ли важное условие по дороге.
+  </div>
+
+  <div id="metricPool">
+    <div class="metric-item" data-id="time" data-right="main">Среднее время обработки.</div>
+    <div class="metric-item" data-id="chat" data-right="none">Количество сообщений в рабочем чате.</div>
+    <div class="metric-item" data-id="errors" data-right="guard">Доля ошибочных маршрутизаций.</div>
+    <div class="metric-item" data-id="staff" data-right="none">Количество сотрудников в отделе.</div>
+    <div class="metric-item" data-id="boss" data-right="none">Удовлетворенность руководителя.</div>
+  </div>
+
+  <div class="metric-grid">
+    <div class="metric-box"><h3>Основной показатель</h3><div id="mainMetricBucket"></div></div>
+    <div class="metric-box"><h3>Защитный показатель</h3><div id="guardMetricBucket"></div></div>
+  </div>
+
+  <div class="feedback" id="fb4"></div>
+</section>
+
+<section class="screen" data-screen="5">
+  <div class="step">Шаг 5</div>
+  <h2>Задайте срок, объем и базу сравнения</h2>
+
+  <div class="case">
+    <strong>Исходные данные</strong>
+    В среднем отдел обрабатывает около 15 подходящих заявок в неделю.
+  </div>
+
+  <div class="instruction">Какой дизайн пилота даст более содержательный результат?</div>
+
+  <div class="options" data-q="q5">
+    <button class="option">Один день и две заявки.</button>
+    <button class="option">Три месяца без промежуточного контроля.</button>
+    <button class="option" data-correct="true">Две недели с минимумом 25–30 заявок и сравнением с сопоставимыми заявками старого процесса.</button>
+    <button class="option">Пока руководителю не станет понятно, работает идея или нет.</button>
+  </div>
+
+  <div class="feedback" id="fb5"></div>
+</section>
+
+<section class="screen" data-screen="6">
+  <div class="step">Шаг 6</div>
+  <h2>Определите стоп-критерий до запуска</h2>
+
+  <div class="case">
+    <strong>Риск</strong>
+    Новый маршрут может отправить заявку не тому исполнителю.
+  </div>
+
+  <div class="instruction">
+    Хороший стоп-критерий заранее задает уровень риска, после которого пилот приостанавливают или ограничивают. Он не должен зависеть от субъективного ощущения «ошибок стало много».
+  </div>
+
+  <div class="options" data-q="q6">
+    <button class="option">«Если будет много ошибок — остановимся».</button>
+    <button class="option">«Ошибки в пилоте допустимы любые, потому что это эксперимент».</button>
+    <button class="option" data-correct="true">Определить конкретный уровень ошибочной маршрутизации, после которого новые заявки временно перестают включать в пилот.</button>
+    <button class="option">Оценивать ошибки только после завершения эксперимента.</button>
+  </div>
+
+  <div class="feedback" id="fb6"></div>
+</section>
+
+<section class="screen" data-screen="7">
+  <div class="step">Шаг 7</div>
+  <h2>Не масштабируйте, если защитный показатель провален</h2>
+
+  <div class="result-grid">
+    <div class="result-stat"><b>2 → 1,1 дня</b>время обработки</div>
+    <div class="result-stat"><b>4% → 12%</b>ошибочная маршрутизация</div>
+  </div>
+
+  <div class="result-card">
+    <b>Стоп-уровень:</b>
+    ошибочная маршрутизация не выше 7%.
+  </div>
+
+  <div class="instruction">Что делать с текущей версией решения?</div>
+
+  <div class="options" data-q="q7">
+    <button class="option">Масштабировать, потому что основной показатель улучшился почти вдвое.</button>
+    <button class="option">Закрыть идею навсегда.</button>
+    <button class="option" data-correct="true">Не масштабировать текущую версию, разобрать причины ошибок, скорректировать маршрутизацию и решить, нужен ли повторный пилот.</button>
+    <button class="option">Убрать показатель ошибок из оценки.</button>
+  </div>
+
+  <div class="feedback" id="fb7"></div>
+</section>
+
+<section class="screen" data-screen="8">
+  <div class="step">Шаг 8</div>
+  <h2>Успешный пилот не требует мгновенного полного запуска</h2>
+
+  <div class="result-grid">
+    <div class="result-stat"><b>1,2 дня</b>время обработки после корректировки</div>
+    <div class="result-stat"><b>5%</b>ошибочная маршрутизация</div>
+  </div>
+
+  <div class="instruction">
+    Повторный пилот подтвердил улучшение и удержал защитный показатель. Какой следующий шаг даст больше информации при умеренном риске?
+  </div>
+
+  <div class="options" data-q="q8">
+    <button class="option">Сразу перевести всю организацию.</button>
+    <button class="option" data-correct="true">Расширить пилот на следующий тип заявок или еще одно подразделение и проверить, сохраняется ли эффект.</button>
+    <button class="option">Вернуться к старому процессу.</button>
+    <button class="option">Продолжать тот же тест бесконечно.</button>
+  </div>
+
+  <div class="feedback" id="fb8"></div>
+</section>
+
+<section class="screen" data-screen="9">
+  <div class="step">Шаг 9</div>
+  <h2>Соберите карточку собственного пилота</h2>
+
+  <div class="instruction">
+    Заполните поля по порядку. В хорошей карточке видно, что именно проверяется, где проходят границы эксперимента, какие показатели считаются успехом и что команда сделает при разных результатах.
+  </div>
+
+  <div class="field-grid">
+    <div class="field"><label for="f1">Гипотеза</label><textarea id="f1" placeholder="Если мы изменим X, показатель Y изменится так-то, без ухудшения Z"></textarea></div>
+    <div class="field"><label for="f2">Где проверяем</label><input id="f2" placeholder="Команда, участок, подразделение"></div>
+    <div class="field"><label for="f3">Что входит в пилот</label><textarea id="f3" placeholder="Какие кейсы и действия входят"></textarea></div>
+    <div class="field"><label for="f4">Что не входит</label><textarea id="f4" placeholder="Какие кейсы исключены"></textarea></div>
+    <div class="field"><label for="f5">Срок / объем кейсов</label><input id="f5" placeholder="Например: 3 недели, не менее 40 кейсов"></div>
+    <div class="field"><label for="f6">Основной показатель</label><input id="f6" placeholder="Что должно улучшиться"></div>
+    <div class="field"><label for="f7">Защитный показатель</label><input id="f7" placeholder="Что нельзя ухудшить"></div>
+    <div class="field"><label for="f8">Стоп-критерий</label><textarea id="f8" placeholder="При каком уровне риска пилот приостанавливается"></textarea></div>
+    <div class="field"><label for="f9">Если подтверждается</label><textarea id="f9" placeholder="Что делаем дальше"></textarea></div>
+    <div class="field"><label for="f10">Если не подтверждается</label><textarea id="f10" placeholder="Что анализируем, меняем или прекращаем"></textarea></div>
+  </div>
+
+  <div class="checklist">
+    <div class="checkitem" data-check="hyp"><div class="mark">1</div><div><b>Гипотеза проверяема</b><div class="small">Есть изменение, ожидаемый результат и защитное условие.</div></div></div>
+    <div class="checkitem" data-check="scope"><div class="mark">2</div><div><b>Границы пилота понятны</b><div class="small">Ясно, где проходит тест и какие случаи в него не входят.</div></div></div>
+    <div class="checkitem" data-check="metrics"><div class="mark">3</div><div><b>Есть основной и защитный показатели</b><div class="small">Можно отличить реальный успех от улучшения одной метрики ценой другой.</div></div></div>
+    <div class="checkitem" data-check="decision"><div class="mark">4</div><div><b>Заранее определены стоп и следующий шаг</b><div class="small">Данные пилота действительно повлияют на дальнейшее решение.</div></div></div>
+  </div>
+
+  <div class="feedback" id="fb9"></div>
+
+  <div class="final-note hidden" id="finalNote">
+    <h3>Памятка</h3>
+    <div>Пилот нужен не для того, чтобы доказать, что идея хорошая. Он нужен, чтобы дешевле и безопаснее получить данные, которые изменят следующий шаг.</div>
+    <div class="flow">
+      <span class="node">Гипотеза</span><span class="arrow">→</span>
+      <span class="node">ограниченный участок</span><span class="arrow">→</span>
+      <span class="node">база сравнения</span><span class="arrow">→</span>
+      <span class="node">срок</span><span class="arrow">→</span>
+      <span class="node">основной показатель</span><span class="arrow">→</span>
+      <span class="node">защитный показатель</span><span class="arrow">→</span>
+      <span class="node">стоп-критерий</span><span class="arrow">→</span>
+      <span class="node">следующее решение</span>
+    </div>
+    <div class="formula">Пилот сработал, если после него команда знает больше, чем до запуска, и эти данные действительно влияют на следующий шаг.</div>
+  </div>
+</section>
+</main>
+
+<footer>
+  <button class="ctrl muted" id="resetBtn">Сбросить</button>
+  <div class="spacer"></div>
+  <button class="ctrl secondary" id="backBtn" disabled>Назад</button>
+  <button class="ctrl primary" id="checkBtn">Проверить</button>
+  <button class="ctrl secondary hidden" id="nextBtn">Дальше</button>
+</footer>
+</div>
+</div>
+
+<script>
+(function(){
+  let current=1, score=0;
+  const checked={1:false,2:false,3:false,4:false,5:false,6:false,7:false,8:false,9:false};
+  const awarded={1:false,2:false,3:false,4:false,5:false,6:false,7:false,8:false,9:false};
+
+  const screens=[...document.querySelectorAll('.screen')];
+  const progressText=document.getElementById('progressText');
+  const progressBar=document.getElementById('progressBar');
+  const scoreText=document.getElementById('scoreText');
+  const backBtn=document.getElementById('backBtn');
+  const nextBtn=document.getElementById('nextBtn');
+  const checkBtn=document.getElementById('checkBtn');
+  const resetBtn=document.getElementById('resetBtn');
+
+  function update(){
+    screens.forEach(s=>s.classList.toggle('active',Number(s.dataset.screen)===current));
+    progressText.textContent=`Шаг ${current} из 9`;
+    progressBar.style.width=`${current/9*100}%`;
+    scoreText.textContent=`Верных решений: ${score}`;
+    backBtn.disabled=current===1;
+    nextBtn.classList.toggle('hidden',!checked[current]||current===9);
+    checkBtn.classList.toggle('hidden',checked[current]&&current!==9);
+    checkBtn.textContent=(current===9&&checked[9])?'Проверить еще раз':'Проверить';
+  }
+
+  function feedback(id,type,html){
+    const el=document.getElementById(id);
+    el.className=`feedback show ${type}`;
+    el.innerHTML=html;
+  }
+
+  document.querySelectorAll('.options').forEach(group=>{
+    group.addEventListener('click',e=>{
+      const btn=e.target.closest('.option');
+      if(!btn || checked[current])return;
+      group.querySelectorAll('.option').forEach(o=>o.classList.remove('selected'));
+      btn.classList.add('selected');
+    });
+  });
+
+  function checkSingle(q,screen,fbId,ok,bad){
+    const group=document.querySelector(`[data-q="${q}"]`);
+    const sel=group.querySelector('.option.selected');
+    if(!sel){feedback(fbId,'neutral','Сначала выберите один вариант.');return false;}
+    checked[screen]=true;
+    const good=sel.dataset.correct==='true';
+    group.querySelectorAll('.option').forEach(o=>{
+      if(o.dataset.correct==='true')o.classList.add('correct');
+      else if(o.classList.contains('selected'))o.classList.add('wrong');
+    });
+    if(good){
+      if(!awarded[screen]){score++;awarded[screen]=true;}
+      feedback(fbId,'ok',ok);
+    }else feedback(fbId,'bad',bad);
+    return true;
+  }
+
+  // screen 2
+  const pilotCards=[...document.querySelectorAll('.pilot-card')];
+  pilotCards.forEach(c=>{
+    c.addEventListener('click',()=>{
+      if(checked[2])return;
+      pilotCards.forEach(x=>x.classList.remove('selected'));
+      c.classList.add('selected');
+    });
+  });
+
+  function checkPilotArea(){
+    const sel=pilotCards.find(c=>c.classList.contains('selected'));
+    if(!sel){feedback('fb2','neutral','Сначала выберите один вариант пилота.');return false;}
+    checked[2]=true;
+    const good=sel.dataset.good==='true';
+    pilotCards.forEach(c=>{
+      if(c.dataset.good==='true')c.classList.add('correct');
+      else if(c.classList.contains('selected'))c.classList.add('wrong');
+    });
+    if(good){
+      if(!awarded[2]){score++;awarded[2]=true;}
+      feedback('fb2','ok','Верно. Один тип стандартных заявок в двух командах дает повторяемые кейсы, но не подвергает риску весь процесс и критичные обращения.');
+    }else{
+      feedback('fb2','bad','Нужен баланс. Слишком широкий участок увеличивает риск и смешивает причины результата. Один случай, наоборот, почти ничего не доказывает.');
+    }
+    return true;
+  }
+
+  // screen 3 builder
+  const blocks=[...document.querySelectorAll('#pool3 .block')];
+  const slots=[...document.querySelectorAll('.slot')];
+  let selectedBlock=null;
+  const state3=[null,null,null];
+
+  blocks.forEach(b=>{
+    b.addEventListener('click',()=>{
+      if(checked[3]||b.classList.contains('used'))return;
+      blocks.forEach(x=>x.style.outline='');
+      selectedBlock=b;
+      b.style.outline='3px solid rgba(47,93,98,.22)';
+    });
+  });
+
+  slots.forEach((s,i)=>{
+    s.addEventListener('click',()=>{
+      if(checked[3])return;
+      if(s.dataset.item){
+        const old=blocks.find(b=>b.dataset.id===s.dataset.item);
+        if(old){old.classList.remove('used');old.style.outline='';}
+        s.dataset.item='';
+        s.textContent=['Изменение','Ожидаемый результат','Защитное условие'][i];
+        s.classList.remove('filled');
+        state3[i]=null;
+        return;
+      }
+      if(!selectedBlock)return;
+      s.dataset.item=selectedBlock.dataset.id;
+      s.textContent=selectedBlock.textContent;
+      s.classList.add('filled');
+      selectedBlock.classList.add('used');
+      selectedBlock.style.outline='';
+      state3[i]=selectedBlock.dataset.id;
+      selectedBlock=null;
+    });
+  });
+
+  function checkHypothesis(){
+    if(state3.some(x=>!x)){feedback('fb3','neutral','Заполните все три части гипотезы.');return false;}
+    checked[3]=true;
+    const good=state3.join('|')==='if|then|guard';
+    if(good){
+      if(!awarded[3]){score++;awarded[3]=true;}
+      feedback('fb3','ok','Гипотеза собрана: есть конкретное изменение, ожидаемый эффект и защитное условие. Ее можно проверить и опровергнуть на данных пилота.');
+    }else{
+      feedback('fb3','bad','Общие фразы вроде «станет удобнее» не задают проверяемого результата. Нужны конкретное изменение, измеримый эффект и условие, которое нельзя ухудшить.');
+    }
+    return true;
+  }
+
+  // screen 4 metrics
+  const metricItems=[...document.querySelectorAll('#metricPool .metric-item')];
+  const metricState={};
+  metricItems.forEach(item=>{
+    metricState[item.dataset.id]=null;
+    item.addEventListener('click',()=>{
+      if(checked[4])return;
+      const cur=metricState[item.dataset.id];
+      metricState[item.dataset.id]=cur===null?'main':cur==='main'?'guard':null;
+      renderMetrics();
+    });
+  });
+
+  function renderMetrics(){
+    const main=document.getElementById('mainMetricBucket');
+    const guard=document.getElementById('guardMetricBucket');
+    main.innerHTML='';guard.innerHTML='';
+    metricItems.forEach(item=>{
+      item.classList.remove('selected');
+      const st=metricState[item.dataset.id];
+      if(st){
+        item.classList.add('selected');
+        const clone=item.cloneNode(true);
+        clone.classList.remove('selected','correct','wrong');
+        clone.style.cursor='default';
+        (st==='main'?main:guard).appendChild(clone);
+      }
+    });
+  }
+
+  function checkMetrics(){
+    const mainIds=Object.entries(metricState).filter(([k,v])=>v==='main').map(([k])=>k);
+    const guardIds=Object.entries(metricState).filter(([k,v])=>v==='guard').map(([k])=>k);
+
+    if(mainIds.length!==1 || guardIds.length!==1){
+      feedback('fb4','neutral','Выберите ровно один основной и один защитный показатель.');
+      return false;
+    }
+
+    checked[4]=true;
+    const good=mainIds[0]==='time' && guardIds[0]==='errors';
+
+    metricItems.forEach(item=>{
+      const chosen=metricState[item.dataset.id];
+      const expected=item.dataset.right;
+      if(expected!=='none' && chosen===expected)item.classList.add('correct');
+      else if(chosen && chosen!==expected)item.classList.add('wrong');
+    });
+
+    if(good){
+      if(!awarded[4]){score++;awarded[4]=true;}
+      feedback('fb4','ok','Да. Время обработки показывает, достигнута ли цель. Ошибочная маршрутизация защищает качество процесса: ускорение за счет неверного маршрута нельзя считать успехом.');
+    }else{
+      feedback('fb4','bad','Основной показатель должен отражать цель пилота, а защитный — риск ухудшить важное условие. Здесь это время обработки и доля ошибочных маршрутизаций.');
+    }
+    return true;
+  }
+
+  function setCheck(name,good,goodText,warnText){
+    const el=document.querySelector(`[data-check="${name}"]`);
+    el.classList.remove('good','warn');
+    el.classList.add(good?'good':'warn');
+    el.querySelector('.mark').textContent=good?'✓':'!';
+    el.querySelector('.small').textContent=good?goodText:warnText;
+  }
+
+  function val(id){return document.getElementById(id).value.trim();}
+
+  function checkFinal(){
+    const v={};
+    for(let i=1;i<=10;i++)v[i]=val('f'+i);
+    if(Object.values(v).filter(Boolean).length<10){
+      feedback('fb9','neutral','Заполните все десять полей. Короткой, но конкретной формулировки достаточно.');
+      return false;
+    }
+
+    const hypGood=v[1].length>=25;
+    const scopeGood=v[2].length>=8 && v[3].length>=12 && v[4].length>=12;
+    const metricsGood=v[6].length>=8 && v[7].length>=8;
+    const decisionGood=v[8].length>=12 && v[9].length>=12 && v[10].length>=12;
+
+    setCheck('hyp',hypGood,
+      'Гипотеза сформулирована достаточно конкретно.',
+      'Добавьте изменение, ожидаемый эффект и условие, которое нельзя ухудшить.');
+    setCheck('scope',scopeGood,
+      'Границы пилота и объем проверки понятны.',
+      'Уточните, где идет тест, что входит, что исключено и сколько кейсов нужно.');
+    setCheck('metrics',metricsGood,
+      'Есть основной и защитный показатели.',
+      'Добавьте отдельный показатель успеха и отдельный показатель риска.');
+    setCheck('decision',decisionGood,
+      'Есть стоп-критерий и решения для двух исходов.',
+      'Уточните, когда пилот останавливается и что команда делает при подтверждении и неподтверждении гипотезы.');
+
+    checked[9]=true;
+    const passed=[hypGood,scopeGood,metricsGood,decisionGood].filter(Boolean).length;
+
+    if(passed===4){
+      if(!awarded[9]){score++;awarded[9]=true;}
+      feedback('fb9','ok','Карточка пилота собрана: эксперимент ограничен, показатели определены, риск контролируется, а данные заранее связаны со следующим решением.');
+    }else if(passed>=2){
+      feedback('fb9','neutral','Основа есть, но один-два элемента стоит уточнить. Посмотрите подсказки ниже.');
+    }else{
+      feedback('fb9','bad','Пока это описание запуска, а не пилота. Доведите схему до измеримого эффекта, защитного показателя, стоп-критерия и следующего решения.');
+    }
+
+    document.getElementById('finalNote').classList.remove('hidden');
+    return true;
+  }
+
+  checkBtn.addEventListener('click',()=>{
+    let done=false;
+
+    if(current===1){
+      done=checkSingle(
+        'q1',1,'fb1',
+        'Верно. Такой запуск слишком широк для проверки гипотезы: риск велик, а результат будет трудно связать с конкретным изменением.',
+        'Главная проблема не в длительности, а в масштабе. Пилот должен ограничивать риск и помогать понять, почему получился именно такой результат.'
+      );
+    }
+
+    if(current===2)done=checkPilotArea();
+    if(current===3)done=checkHypothesis();
+    if(current===4)done=checkMetrics();
+
+    if(current===5){
+      done=checkSingle(
+        'q5',5,'fb5',
+        'Да. Две недели дают около 30 подходящих кейсов, а сопоставимая база старого процесса помогает понять, связано ли изменение со схемой, а не со случайной неделей.',
+        'Слишком короткий тест не дает данных, а слишком длинный без промежуточного контроля увеличивает риск. Нужны разумный объем и база сравнения.'
+      );
+    }
+
+    if(current===6){
+      done=checkSingle(
+        'q6',6,'fb6',
+        'Верно. Стоп-критерий должен быть конкретным и известным до запуска. Он защищает процесс от ситуации, когда команда продолжает тест несмотря на явный рост риска.',
+        'Формулировка слишком расплывчатая или откладывает решение до конца. Порог риска нужно определить заранее.'
+      );
+    }
+
+    if(current===7){
+      done=checkSingle(
+        'q7',7,'fb7',
+        'Да. Основной показатель улучшился, но защитный вышел за допустимый уровень. Текущую версию нельзя масштабировать: сначала нужно понять механизм ошибок и скорректировать решение.',
+        'Улучшение одной метрики не отменяет провал защитного показателя. Пилот нужен именно для того, чтобы увидеть такой компромисс до масштабирования.'
+      );
+    }
+
+    if(current===8){
+      done=checkSingle(
+        'q8',8,'fb8',
+        'Верно. Следующий шаг — расширить область проверки постепенно и убедиться, что эффект переносится на другой тип заявок или другое подразделение.',
+        'Даже успешный пилот не требует мгновенного полного запуска. Следующий масштаб должен расти вместе с уверенностью в решении.'
+      );
+    }
+
+    if(current===9)done=checkFinal();
+
+    if(done)update();
+  });
+
+  nextBtn.addEventListener('click',()=>{
+    if(current<9){current++;update();window.scrollTo({top:0,behavior:'smooth'});}
+  });
+
+  backBtn.addEventListener('click',()=>{
+    if(current>1){current--;update();window.scrollTo({top:0,behavior:'smooth'});}
+  });
+
+  resetBtn.addEventListener('click',()=>{
+    current=1;score=0;selectedBlock=null;
+    Object.keys(checked).forEach(k=>checked[k]=false);
+    Object.keys(awarded).forEach(k=>awarded[k]=false);
+
+    document.querySelectorAll('.option').forEach(o=>o.classList.remove('selected','correct','wrong'));
+    document.querySelectorAll('.feedback').forEach(f=>{f.className='feedback';f.innerHTML='';});
+
+    pilotCards.forEach(c=>c.classList.remove('selected','correct','wrong'));
+
+    blocks.forEach(b=>{b.classList.remove('used');b.style.outline='';});
+    slots.forEach((s,i)=>{
+      s.dataset.item='';
+      s.textContent=['Изменение','Ожидаемый результат','Защитное условие'][i];
+      s.classList.remove('filled');
+    });
+    state3.fill(null);
+
+    Object.keys(metricState).forEach(k=>metricState[k]=null);
+    metricItems.forEach(m=>m.classList.remove('selected','correct','wrong'));
+    renderMetrics();
+
+    for(let i=1;i<=10;i++)document.getElementById('f'+i).value='';
+
+    document.querySelectorAll('.checkitem').forEach((el,i)=>{
+      el.classList.remove('good','warn');
+      el.querySelector('.mark').textContent=String(i+1);
+    });
+    document.querySelector('[data-check="hyp"] .small').textContent='Есть изменение, ожидаемый результат и защитное условие.';
+    document.querySelector('[data-check="scope"] .small').textContent='Ясно, где проходит тест и какие случаи в него не входят.';
+    document.querySelector('[data-check="metrics"] .small').textContent='Можно отличить реальный успех от улучшения одной метрики ценой другой.';
+    document.querySelector('[data-check="decision"] .small').textContent='Данные пилота действительно повлияют на дальнейшее решение.';
+    document.getElementById('finalNote').classList.add('hidden');
+
+    update();
+    window.scrollTo({top:0,behavior:'smooth'});
+  });
+
+  renderMetrics();
+  update();
+})();
+</script>
+</body>
+</html>

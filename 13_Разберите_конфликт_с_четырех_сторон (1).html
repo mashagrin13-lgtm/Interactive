@@ -1,0 +1,742 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Разберите конфликт с четырех сторон</title>
+<style>
+:root{
+  --bg:#f4f6f8; --card:#fff; --text:#1f2933; --muted:#667085; --line:#d9dee7;
+  --soft:#eef2f6; --accent:#2f5d62; --accent-soft:#e7f0f1;
+  --ok:#1f6b45; --okbg:#e9f5ee; --bad:#913b35; --badbg:#faeceb;
+  --warn:#7b5719; --warnbg:#fff5dc; --shadow:0 14px 40px rgba(31,41,51,.08);
+}
+*{box-sizing:border-box}
+body{
+  margin:0;background:var(--bg);color:var(--text);
+  font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  line-height:1.55;
+}
+button{font:inherit}
+.app{width:min(100% - 28px,720px);margin:28px auto}
+.shell{background:var(--card);border:1px solid var(--line);border-radius:22px;box-shadow:var(--shadow);overflow:hidden}
+header{padding:22px 22px 18px;border-bottom:1px solid var(--line);background:#fff}
+.eyebrow{margin:0 0 6px;color:var(--accent);font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:.03em}
+h1{margin:0;font-size:clamp(27px,5vw,35px);line-height:1.12;letter-spacing:-.02em}
+.subtitle{margin:10px 0 0;color:var(--muted);font-size:15px}
+.progress-meta{display:flex;justify-content:space-between;gap:12px;margin:18px 0 7px;color:var(--muted);font-size:13px}
+.progress{height:8px;background:var(--soft);border-radius:999px;overflow:hidden}
+.progress span{display:block;height:100%;background:var(--accent);width:12.5%;transition:width .2s ease}
+main{padding:24px 22px 18px}
+.screen{display:none}.screen.active{display:block}
+.step{display:inline-flex;align-items:center;min-height:30px;padding:0 11px;border-radius:999px;background:var(--accent-soft);color:var(--accent);font-size:13px;font-weight:800;margin-bottom:12px}
+h2{margin:0 0 10px;font-size:23px;line-height:1.25}
+.lead{margin:0 0 18px;color:#3b4652}
+.case{margin:16px 0 18px;padding:15px 16px;background:#f8fafb;border:1px solid var(--line);border-radius:14px}
+.case strong{display:block;margin-bottom:6px}
+.instruction{margin:16px 0;padding:14px 15px;background:var(--accent-soft);border-left:4px solid var(--accent);border-radius:0 12px 12px 0;font-size:14px}
+.options{display:grid;gap:10px;margin-top:14px}
+.option{
+  width:100%;text-align:left;border:1px solid var(--line);background:#fff;color:var(--text);
+  border-radius:13px;padding:14px;cursor:pointer;transition:.15s ease
+}
+.option:hover{border-color:#aeb7c4;background:#fafbfc}
+.option.selected{border-color:var(--accent);background:var(--accent-soft)}
+.option.correct{border-color:#7fb395;background:var(--okbg)}
+.option.wrong{border-color:#d29a95;background:var(--badbg)}
+.feedback{display:none;margin-top:16px;padding:15px 16px;border-radius:13px;font-size:14px}
+.feedback.show{display:block}
+.feedback.ok{background:var(--okbg);border:1px solid #b9dcc8;color:#174c33}
+.feedback.bad{background:var(--badbg);border:1px solid #edc3c0;color:#742c27}
+.feedback.neutral{background:var(--warnbg);border:1px solid #ead7a2;color:#66470e}
+
+.sort-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px}
+.bucket{border:1px solid var(--line);border-radius:14px;background:#fafbfc;padding:12px}
+.bucket h3{margin:0 0 8px;font-size:15px}
+.sort-item{margin:8px 0;padding:11px;border:1px solid var(--line);border-radius:10px;background:#fff;cursor:pointer;font-size:14px}
+.sort-item.assigned{background:var(--accent-soft);border-color:var(--accent)}
+.sort-item.correct{background:var(--okbg);border-color:#7fb395}
+.sort-item.wrong{background:var(--badbg);border-color:#d29a95}
+
+.sector{
+  margin-top:16px;padding:14px;border:1px solid var(--line);border-radius:14px;background:#f8fafb
+}
+.sector h3{margin:0 0 8px;font-size:16px}
+.cards{display:grid;gap:9px;margin-top:12px}
+.card{border:1px solid var(--line);border-radius:11px;padding:12px;background:#fff;cursor:pointer}
+.card.selected{border-color:var(--accent);background:var(--accent-soft)}
+.card.correct{border-color:#7fb395;background:var(--okbg)}
+.card.wrong{border-color:#d29a95;background:var(--badbg)}
+
+.mirror-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px}
+.mirror{border:1px solid var(--line);border-radius:14px;background:#fafbfc;padding:12px}
+.mirror h3{margin:0 0 8px;font-size:15px}
+.mirror-item{margin:8px 0;padding:11px;border:1px solid var(--line);border-radius:10px;background:#fff;cursor:pointer;font-size:14px}
+.mirror-item.assigned{background:var(--accent-soft);border-color:var(--accent)}
+.tag{display:inline-block;margin-top:6px;padding:4px 8px;border-radius:999px;font-size:12px;background:var(--soft);color:var(--muted)}
+
+.priority-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
+.priority{border:1px solid var(--line);border-radius:12px;padding:13px;background:#fff;cursor:pointer}
+.priority.selected{border-color:var(--accent);background:var(--accent-soft)}
+.priority.correct{border-color:#7fb395;background:var(--okbg)}
+.priority.wrong{border-color:#d29a95;background:var(--badbg)}
+
+.method-card{margin-top:14px;padding:14px;border:1px solid var(--line);border-radius:13px;background:#fff}
+.method-card b{display:block;margin-bottom:5px}
+.method-grid{display:grid;gap:10px;margin-top:12px}
+.method{border:1px solid var(--line);border-radius:11px;padding:12px;background:#fff;cursor:pointer}
+.method.selected{border-color:var(--accent);background:var(--accent-soft)}
+.method.correct{border-color:#7fb395;background:var(--okbg)}
+.method.wrong{border-color:#d29a95;background:var(--badbg)}
+
+.flow{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:14px}
+.node{padding:8px 10px;border:1px solid var(--line);border-radius:9px;background:#fff;font-size:13px}
+.arrow{color:var(--muted);font-weight:900}
+.final-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px}
+.kpi{border:1px solid var(--line);border-radius:14px;padding:14px;background:#fff}
+.kpi b{display:block;margin-bottom:4px}
+.kpi .value{font-size:26px;font-weight:900;color:var(--accent)}
+.kpi.good{border-color:#b9dcc8;background:var(--okbg)}
+.kpi.warn{border-color:#ead7a2;background:var(--warnbg)}
+.final-note{margin-top:16px;padding:16px;border:1px solid var(--line);border-radius:14px;background:#f8fafb}
+.final-note h3{margin:0 0 8px;font-size:17px}
+.formula{margin-top:10px;font-weight:800;color:var(--accent)}
+
+footer{padding:16px 22px 22px;border-top:1px solid var(--line);display:flex;gap:10px;flex-wrap:wrap;align-items:center;background:#fff}
+footer .spacer{flex:1}
+.ctrl{border-radius:12px;padding:11px 15px;cursor:pointer;font-weight:750;border:1px solid var(--line)}
+.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+.secondary{background:#fff;color:var(--text)}
+.muted{background:#fff;color:var(--muted)}
+button[disabled]{opacity:.42;cursor:not-allowed}
+.hidden{display:none!important}
+
+@media(max-width:620px){
+  .app{width:min(100% - 16px,720px);margin:8px auto 18px}
+  .shell{border-radius:16px}
+  header,main,footer{padding-left:16px;padding-right:16px}
+  .sort-grid,.mirror-grid,.priority-grid,.final-grid{grid-template-columns:1fr}
+  footer .spacer{display:none}
+  footer button{flex:1 1 calc(50% - 6px)}
+}
+</style>
+</head>
+<body>
+<div class="app">
+<div class="shell">
+<header>
+  <p class="eyebrow">Проверочный интерактив</p>
+  <h1>Разберите конфликт с четырех сторон</h1>
+  <p class="subtitle">Отделите факты от догадок, посмотрите на процесс глазами обеих сторон и найдите предположение, которое стоит проверить первым.</p>
+  <div class="progress-meta">
+    <span id="progressText">Шаг 1 из 8</span>
+    <span id="scoreText">Верных решений: 0</span>
+  </div>
+  <div class="progress"><span id="progressBar"></span></div>
+</header>
+
+<main>
+<section class="screen active" data-screen="1">
+  <div class="step">Шаг 1</div>
+  <h2>Сначала отделите наблюдение от объяснения</h2>
+  <div class="case">
+    <strong>Ситуация</strong>
+    Проектный офис вводит карточку постановки задачи: цель, срок, ответственный и критерии результата. Через месяц около трети заказчиков по-прежнему отправляют запросы сообщением напрямую руководителю проекта.
+  </div>
+
+  <div class="instruction">
+    Нажимайте на утверждение: первое нажатие — «наблюдение», второе — «интерпретация или предположение». Не пытайтесь решить, правдоподобно ли объяснение. Смотрите только на то, можно ли утверждение подтвердить непосредственно данными.
+  </div>
+
+  <div id="sortPool1">
+    <div class="sort-item" data-right="interpret" data-id="s1">1. «Мы сделали постановку задач прозрачнее».</div>
+    <div class="sort-item" data-right="interpret" data-id="s2">2. «Заказчики не хотят соблюдать правила».</div>
+    <div class="sort-item" data-right="observe" data-id="s3">3. «Новую карточку обходят примерно в трети случаев».</div>
+    <div class="sort-item" data-right="interpret" data-id="s4">4. «Заказчикам новая форма кажется лишней бюрократией».</div>
+  </div>
+
+  <div class="sort-grid">
+    <div class="bucket"><h3>Наблюдение</h3><div id="observeBucket"></div></div>
+    <div class="bucket"><h3>Интерпретация / предположение</h3><div id="interpretBucket"></div></div>
+  </div>
+  <div class="feedback" id="fb1"></div>
+</section>
+
+<section class="screen" data-screen="2">
+  <div class="step">Шаг 2</div>
+  <h2>Заполните первую позицию без чтения мыслей</h2>
+
+  <div class="sector">
+    <h3>Как проектный офис видит себя?</h3>
+    Этот сектор описывает собственную логику проектного офиса: что он пытался улучшить и как видит ценность нового порядка.
+  </div>
+
+  <div class="instruction">Отметьте только формулировки, которые относятся к этой позиции.</div>
+
+  <div class="cards" id="cards2">
+    <div class="card" data-good="true">Единый формат входящих задач.</div>
+    <div class="card" data-good="true">Меньше уточнений после старта.</div>
+    <div class="card" data-good="true">Критерии результата известны заранее.</div>
+    <div class="card" data-good="false">Заказчики сопротивляются дисциплине.</div>
+    <div class="card" data-good="false">Заказчикам неудобно искать данные.</div>
+  </div>
+
+  <div class="feedback" id="fb2"></div>
+</section>
+
+<section class="screen" data-screen="3">
+  <div class="step">Шаг 3</div>
+  <h2>Соберите версию другой стороны</h2>
+
+  <div class="case">
+    <strong>Дополнительные данные</strong>
+    Заказчики ведут несколько проектов одновременно. Для заполнения карточки им нужно заранее назвать критерии результата и ответственного. В части срочных ситуаций ответственный определяется только после первичного обсуждения.
+  </div>
+
+  <div class="instruction">Какое утверждение лучше передает позицию «Как другая сторона видит себя»?</div>
+
+  <div class="options" data-q="q3">
+    <button class="option">«Мне не хочется соблюдать новый порядок».</button>
+    <button class="option" data-correct="true">«Мне нужно быстро запустить обсуждение, а часть обязательных данных появляется только после первого контакта».</button>
+    <button class="option">«Проектный офис усложняет мне жизнь специально».</button>
+    <button class="option">«Лучше вообще не заполнять никакие формы».</button>
+  </div>
+  <div class="feedback" id="fb3"></div>
+</section>
+
+<section class="screen" data-screen="4">
+  <div class="step">Шаг 4</div>
+  <h2>Заполните две зеркальные позиции</h2>
+
+  <div class="instruction">
+    Нажимайте на карточку: первое нажатие отправляет ее в «Как они могут видеть нас», второе — в «Как мы видим их». Обратите внимание: обе колонки содержат гипотезы, а не доказанные факты.
+  </div>
+
+  <div id="mirrorPool">
+    <div class="mirror-item" data-right="themUs" data-id="m1">«Проектный офис хочет получить полную информацию до того, как включится в задачу».</div>
+    <div class="mirror-item" data-right="usThem" data-id="m2">«Заказчики не хотят тратить время на подготовку».</div>
+    <div class="mirror-item" data-right="themUs" data-id="m3">«Проектный офис переложил подготовительную работу на заказчиков».</div>
+    <div class="mirror-item" data-right="usThem" data-id="m4">«Заказчикам нужна скорость старта».</div>
+  </div>
+
+  <div class="mirror-grid">
+    <div class="mirror"><h3>Как они могут видеть нас</h3><div id="themUsBucket"></div></div>
+    <div class="mirror"><h3>Как мы видим их</h3><div id="usThemBucket"></div></div>
+  </div>
+
+  <div class="feedback" id="fb4"></div>
+</section>
+
+<section class="screen" data-screen="5">
+  <div class="step">Шаг 5</div>
+  <h2>Выберите предположения, которые могут изменить сам процесс</h2>
+  <p class="lead">Проверять стоит не все догадки подряд, а те, от которых зависит конструкция решения.</p>
+
+  <div class="instruction">Выберите <b>два предположения</b>, подтверждение или опровержение которых сильнее всего повлияет на маршрут работы.</div>
+
+  <div class="priority-grid" id="priorityGrid">
+    <div class="priority" data-good="false">А. Заказчики не понимают инструкцию.</div>
+    <div class="priority" data-good="true">Б. Некоторые поля невозможно заполнить до первого обсуждения.</div>
+    <div class="priority" data-good="true">В. Большинство обходных запросов срочные.</div>
+    <div class="priority" data-good="false">Г. Заказчики в целом отрицательно относятся к стандартизации.</div>
+  </div>
+
+  <div class="feedback" id="fb5"></div>
+</section>
+
+<section class="screen" data-screen="6">
+  <div class="step">Шаг 6</div>
+  <h2>Подберите проверку под конкретное предположение</h2>
+
+  <div class="method-card">
+    <b>Предположение 1</b>
+    «Большинство обходных запросов возникает из-за срочности».
+  </div>
+
+  <div class="instruction">Выберите способ проверки, который даст факты по реальным случаям.</div>
+
+  <div class="method-grid" id="method1">
+    <div class="method">Спросить руководителя проекта, как ему кажется.</div>
+    <div class="method">Провести общий опрос удовлетворенности.</div>
+    <div class="method" data-good="true">Разобрать последние 20 обходных запросов и определить обстоятельства каждого.</div>
+    <div class="method">Еще раз разослать инструкцию.</div>
+  </div>
+
+  <div class="method-card">
+    <b>Предположение 2</b>
+    «Часть обязательных данных появляется позже».
+  </div>
+
+  <div class="instruction">Выберите способ, который соединяет данные процесса с объяснением конкретных случаев.</div>
+
+  <div class="method-grid" id="method2">
+    <div class="method">Посмотреть только среднее время заполнения карточки.</div>
+    <div class="method" data-good="true">Сопоставить заполненные формы с несколькими короткими интервью по реальным кейсам.</div>
+    <div class="method">Спросить, нравится ли пользователям карточка.</div>
+    <div class="method">Попросить руководителя проекта предположить причину.</div>
+  </div>
+
+  <div class="feedback" id="fb6"></div>
+</section>
+
+<section class="screen" data-screen="7">
+  <div class="step">Шаг 7</div>
+  <h2>Пересоберите задачу по фактам</h2>
+
+  <div class="case">
+    <strong>Что показала проверка</strong>
+    70% обходных запросов связаны со срочными задачами. Два обязательных поля в момент первичного запроса часто неизвестны. Заказчики не возражают против карточки, если нужные данные у них уже есть.
+  </div>
+
+  <div class="instruction">Какая формулировка теперь точнее описывает задачу?</div>
+
+  <div class="options" data-q="q7">
+    <button class="option">Как повысить дисциплину заказчиков?</button>
+    <button class="option">Как убедить сотрудников в пользе стандартизации?</button>
+    <button class="option" data-correct="true">Как сохранить обязательные данные для нормального запуска проекта, но не блокировать срочный запрос полями, которые появляются позже?</button>
+    <button class="option">Как запретить прямые сообщения руководителям проектов?</button>
+  </div>
+
+  <div class="feedback" id="fb7"></div>
+</section>
+
+<section class="screen" data-screen="8">
+  <div class="step">Шаг 8</div>
+  <h2>Проверьте, что метод привел к решению, а не к более длинному конфликту</h2>
+
+  <div class="flow">
+    <span class="node">Наша версия</span><span class="arrow">→</span>
+    <span class="node">версия другой стороны</span><span class="arrow">→</span>
+    <span class="node">зеркальные представления</span><span class="arrow">→</span>
+    <span class="node">предположения</span><span class="arrow">→</span>
+    <span class="node">проверка</span><span class="arrow">→</span>
+    <span class="node">новая задача</span>
+  </div>
+
+  <div class="final-grid">
+    <div class="kpi" id="kpi1">
+      <b>Факты и предположения</b>
+      <div class="value" id="v1">—</div>
+      <div id="t1">Покажет, не превратили ли вы интерпретации в «факты».</div>
+    </div>
+    <div class="kpi" id="kpi2">
+      <b>Проверка гипотез</b>
+      <div class="value" id="v2">—</div>
+      <div id="t2">Покажет, дошла ли работа до проверяемого предположения.</div>
+    </div>
+  </div>
+
+  <div class="instruction">Нажмите «Проверить», чтобы получить итог симуляции.</div>
+
+  <div class="feedback" id="fb8"></div>
+
+  <div class="final-note hidden" id="finalNote">
+    <h3>Главная проверка</h3>
+    <div>Если четыре позиции только помогли подробнее описать, кто кем недоволен, работа не закончена. Метод должен вывести к предположению, которое можно проверить, и к новой формулировке задачи после проверки.</div>
+    <div class="formula">Позиции → предположения → проверка → изменение решения</div>
+  </div>
+</section>
+</main>
+
+<footer>
+  <button class="ctrl muted" id="resetBtn">Сбросить</button>
+  <div class="spacer"></div>
+  <button class="ctrl secondary" id="backBtn" disabled>Назад</button>
+  <button class="ctrl primary" id="checkBtn">Проверить</button>
+  <button class="ctrl secondary hidden" id="nextBtn">Дальше</button>
+</footer>
+</div>
+</div>
+
+<script>
+(function(){
+  let current=1, score=0;
+  let factSkill=0, hypothesisSkill=0;
+  const checked={1:false,2:false,3:false,4:false,5:false,6:false,7:false,8:false};
+  const awarded={1:false,2:false,3:false,4:false,5:false,6:false,7:false};
+
+  const screens=[...document.querySelectorAll('.screen')];
+  const progressText=document.getElementById('progressText');
+  const progressBar=document.getElementById('progressBar');
+  const scoreText=document.getElementById('scoreText');
+  const backBtn=document.getElementById('backBtn');
+  const nextBtn=document.getElementById('nextBtn');
+  const checkBtn=document.getElementById('checkBtn');
+  const resetBtn=document.getElementById('resetBtn');
+
+  function update(){
+    screens.forEach(s=>s.classList.toggle('active',Number(s.dataset.screen)===current));
+    progressText.textContent=`Шаг ${current} из 8`;
+    progressBar.style.width=`${current/8*100}%`;
+    scoreText.textContent=`Верных решений: ${score}`;
+    backBtn.disabled=current===1;
+    nextBtn.classList.toggle('hidden',!checked[current]||current===8);
+    checkBtn.classList.toggle('hidden',checked[current]&&current!==8);
+    checkBtn.textContent=(current===8&&checked[8])?'Посмотреть итог еще раз':'Проверить';
+  }
+
+  function feedback(id,type,html){
+    const el=document.getElementById(id);
+    el.className=`feedback show ${type}`;
+    el.innerHTML=html;
+  }
+
+  document.querySelectorAll('.options').forEach(group=>{
+    group.addEventListener('click',e=>{
+      const btn=e.target.closest('.option');
+      if(!btn || checked[current])return;
+      group.querySelectorAll('.option').forEach(o=>o.classList.remove('selected'));
+      btn.classList.add('selected');
+    });
+  });
+
+  function checkSingle(q,screen,fbId,ok,bad,metric){
+    const group=document.querySelector(`[data-q="${q}"]`);
+    const sel=group.querySelector('.option.selected');
+    if(!sel){feedback(fbId,'neutral','Сначала выберите один вариант.');return false;}
+    checked[screen]=true;
+    const good=sel.dataset.correct==='true';
+
+    group.querySelectorAll('.option').forEach(o=>{
+      if(o.dataset.correct==='true')o.classList.add('correct');
+      else if(o.classList.contains('selected'))o.classList.add('wrong');
+    });
+
+    if(good){
+      if(!awarded[screen]){score++;awarded[screen]=true;}
+      if(metric==='fact')factSkill++;
+      if(metric==='hyp')hypothesisSkill++;
+      feedback(fbId,'ok',ok);
+    }else{
+      feedback(fbId,'bad',bad);
+    }
+    return true;
+  }
+
+  // Screen 1 sorting
+  const sortItems1=[...document.querySelectorAll('#sortPool1 .sort-item')];
+  const sortState1={};
+  sortItems1.forEach(item=>{
+    sortState1[item.dataset.id]=null;
+    item.addEventListener('click',()=>{
+      if(checked[1])return;
+      const id=item.dataset.id;
+      sortState1[id]=sortState1[id]===null?'observe':sortState1[id]==='observe'?'interpret':'observe';
+      renderSort1();
+    });
+  });
+
+  function renderSort1(){
+    const observe=document.getElementById('observeBucket');
+    const interpret=document.getElementById('interpretBucket');
+    observe.innerHTML='';interpret.innerHTML='';
+    sortItems1.forEach(item=>{
+      item.classList.remove('assigned');
+      const st=sortState1[item.dataset.id];
+      if(st){
+        item.classList.add('assigned');
+        const clone=item.cloneNode(true);
+        clone.classList.remove('assigned','correct','wrong');
+        clone.style.cursor='default';
+        (st==='observe'?observe:interpret).appendChild(clone);
+      }
+    });
+  }
+
+  function checkSort1(){
+    if(Object.values(sortState1).some(v=>!v)){
+      feedback('fb1','neutral','Распределите все четыре утверждения.');
+      return false;
+    }
+    checked[1]=true;
+    let good=true;
+    sortItems1.forEach(item=>{
+      const ok=sortState1[item.dataset.id]===item.dataset.right;
+      if(!ok)good=false;
+      item.classList.add(ok?'correct':'wrong');
+    });
+
+    if(good){
+      if(!awarded[1]){score++;awarded[1]=true;}
+      factSkill++;
+      feedback('fb1','ok','Верно. Только третье утверждение описывает наблюдаемый факт. Остальные объясняют, оценивают или приписывают мотивы — их еще нужно проверять.');
+    }else{
+      feedback('fb1','bad','Спросите себя: можно ли это увидеть в данных напрямую? «Обходят в трети случаев» — наблюдение. «Не хотят», «кажется бюрократией», «мы сделали прозрачнее» — уже интерпретации.');
+    }
+    return true;
+  }
+
+  // Screen 2 cards
+  const cards2=[...document.querySelectorAll('#cards2 .card')];
+  cards2.forEach(c=>{
+    c.addEventListener('click',()=>{
+      if(checked[2])return;
+      c.classList.toggle('selected');
+    });
+  });
+
+  function checkCards2(){
+    const selected=cards2.filter(c=>c.classList.contains('selected'));
+    if(!selected.length){feedback('fb2','neutral','Отметьте пункты, которые относятся к позиции проектного офиса.');return false;}
+    checked[2]=true;
+    let good=true;
+    cards2.forEach(c=>{
+      const should=c.dataset.good==='true';
+      const is=c.classList.contains('selected');
+      if(should!==is)good=false;
+      if(should)c.classList.add('correct');
+      else if(is)c.classList.add('wrong');
+    });
+    if(good){
+      if(!awarded[2]){score++;awarded[2]=true;}
+      factSkill++;
+      feedback('fb2','ok','Да. Первые три пункта описывают, какую ценность проектный офис видит в новом порядке. Последние два уже приписывают другой стороне мотивы и трудности.');
+    }else{
+      feedback('fb2','bad','Не смешивайте собственную логику проектного офиса с догадками о заказчиках. Здесь нужны только формулировки про единый формат, уточнения и заранее известные критерии.');
+    }
+    return true;
+  }
+
+  // Screen 4 mirror sorting
+  const mirrorItems=[...document.querySelectorAll('#mirrorPool .mirror-item')];
+  const mirrorState={};
+  mirrorItems.forEach(item=>{
+    mirrorState[item.dataset.id]=null;
+    item.addEventListener('click',()=>{
+      if(checked[4])return;
+      const id=item.dataset.id;
+      mirrorState[id]=mirrorState[id]===null?'themUs':mirrorState[id]==='themUs'?'usThem':'themUs';
+      renderMirror();
+    });
+  });
+
+  function renderMirror(){
+    const a=document.getElementById('themUsBucket');
+    const b=document.getElementById('usThemBucket');
+    a.innerHTML='';b.innerHTML='';
+    mirrorItems.forEach(item=>{
+      item.classList.remove('assigned');
+      const st=mirrorState[item.dataset.id];
+      if(st){
+        item.classList.add('assigned');
+        const clone=item.cloneNode(true);
+        clone.classList.remove('assigned');
+        clone.style.cursor='default';
+        const tag=document.createElement('span');
+        tag.className='tag';
+        tag.textContent='Гипотеза — требует проверки';
+        clone.appendChild(tag);
+        (st==='themUs'?a:b).appendChild(clone);
+      }
+    });
+  }
+
+  function checkMirror(){
+    if(Object.values(mirrorState).some(v=>!v)){
+      feedback('fb4','neutral','Распределите все четыре формулировки.');
+      return false;
+    }
+    checked[4]=true;
+    let good=true;
+    mirrorItems.forEach(item=>{
+      if(mirrorState[item.dataset.id]!==item.dataset.right)good=false;
+    });
+
+    if(good){
+      if(!awarded[4]){score++;awarded[4]=true;}
+      hypothesisSkill++;
+      feedback('fb4','ok','Распределение верное. Но важнее другое: обе зеркальные позиции — это гипотезы. Их нельзя превращать в «объяснение конфликта» без проверки.');
+    }else{
+      feedback('fb4','bad','Проверьте направление взгляда. «Проектный офис переложил работу» — возможный взгляд заказчика на проектный офис. «Заказчикам нужна скорость» — взгляд проектного офиса на их поведение.');
+    }
+    return true;
+  }
+
+  // Screen 5 priorities
+  const priorities=[...document.querySelectorAll('.priority')];
+  priorities.forEach(p=>{
+    p.addEventListener('click',()=>{
+      if(checked[5])return;
+      p.classList.toggle('selected');
+      if(priorities.filter(x=>x.classList.contains('selected')).length>2)p.classList.remove('selected');
+    });
+  });
+
+  function checkPriorities(){
+    const selected=priorities.filter(x=>x.classList.contains('selected'));
+    if(selected.length!==2){feedback('fb5','neutral','Выберите ровно два предположения.');return false;}
+    checked[5]=true;
+    const good=selected.every(x=>x.dataset.good==='true');
+    priorities.forEach(p=>{
+      if(p.dataset.good==='true')p.classList.add('correct');
+      else if(p.classList.contains('selected'))p.classList.add('wrong');
+    });
+
+    if(good){
+      if(!awarded[5]){score++;awarded[5]=true;}
+      hypothesisSkill++;
+      feedback('fb5','ok','Да. Если поля действительно нельзя заполнить заранее, а обход связан со срочностью, придется менять сам маршрут входа. Это сильнее влияет на решение, чем общие рассуждения об отношении к правилам.');
+    }else{
+      feedback('fb5','bad','Выбирайте предположения, которые могут изменить устройство процесса. «Не любят стандартизацию» звучит широко, но почти не подсказывает, что именно нужно перестроить.');
+    }
+    return true;
+  }
+
+  // Screen 6 methods
+  const methodGroups=[...document.querySelectorAll('.method-grid')];
+  methodGroups.forEach(group=>{
+    group.addEventListener('click',e=>{
+      const m=e.target.closest('.method');
+      if(!m || checked[6])return;
+      group.querySelectorAll('.method').forEach(x=>x.classList.remove('selected'));
+      m.classList.add('selected');
+    });
+  });
+
+  function checkMethods(){
+    const m1=document.querySelector('#method1 .method.selected');
+    const m2=document.querySelector('#method2 .method.selected');
+    if(!m1||!m2){feedback('fb6','neutral','Выберите способ проверки для обоих предположений.');return false;}
+    checked[6]=true;
+    const good=m1.dataset.good==='true' && m2.dataset.good==='true';
+
+    [document.getElementById('method1'),document.getElementById('method2')].forEach(group=>{
+      group.querySelectorAll('.method').forEach(m=>{
+        if(m.dataset.good==='true')m.classList.add('correct');
+        else if(m.classList.contains('selected'))m.classList.add('wrong');
+      });
+    });
+
+    if(good){
+      if(!awarded[6]){score++;awarded[6]=true;}
+      hypothesisSkill++;
+      feedback('fb6','ok','Верно. Для срочности нужны реальные кейсы, а для «данные появляются позже» полезно соединить формы и короткие интервью по конкретным ситуациям. Так вы проверяете предположение, а не мнение о нем.');
+    }else{
+      feedback('fb6','bad','Старайтесь проверять гипотезу на реальных случаях. Общий опрос или мнение руководителя редко показывают, что происходило в конкретном обходном запросе.');
+    }
+    return true;
+  }
+
+  function showFinal(){
+    checked[8]=true;
+    const factPct=Math.round(factSkill/3*100);
+    const hypPct=Math.round(hypothesisSkill/4*100);
+
+    const k1=document.getElementById('kpi1');
+    const k2=document.getElementById('kpi2');
+    k1.classList.remove('good','warn');
+    k2.classList.remove('good','warn');
+
+    document.getElementById('v1').textContent=factPct+'%';
+    document.getElementById('v2').textContent=hypPct+'%';
+
+    if(factPct>=67){
+      k1.classList.add('good');
+      document.getElementById('t1').textContent='Вы в основном отделяли наблюдаемые факты от объяснений и оценок.';
+    }else{
+      k1.classList.add('warn');
+      document.getElementById('t1').textContent='Вы несколько раз приняли интерпретацию за факт.';
+    }
+
+    if(hypPct>=75){
+      k2.classList.add('good');
+      document.getElementById('t2').textContent='Вы дошли до проверяемых предположений и подобрали способы их проверки.';
+    }else{
+      k2.classList.add('warn');
+      document.getElementById('t2').textContent='Часть работы осталась на уровне взглядов и догадок.';
+    }
+
+    if(factPct>=67 && hypPct>=75){
+      feedback('fb8','ok','Метод сработал: вы не просто описали конфликт с разных сторон, а нашли гипотезы, проверили их и получили новую постановку задачи.');
+    }else if(factPct>=67){
+      feedback('fb8','neutral','Факты вы отделяете хорошо. Следующий шаг — чаще доводить зеркальные версии до конкретного предположения и способа проверки.');
+    }else if(hypPct>=75){
+      feedback('fb8','neutral','Гипотезы вы умеете проверять. Следующая зона внимания — не подменять исходные наблюдения оценками и объяснениями.');
+    }else{
+      feedback('fb8','bad','Пока метод больше описывает конфликт, чем помогает его проверить. Сильнее разделяйте: наблюдение → гипотеза → способ проверки → новая формулировка.');
+    }
+
+    document.getElementById('finalNote').classList.remove('hidden');
+    return true;
+  }
+
+  checkBtn.addEventListener('click',()=>{
+    let done=false;
+    if(current===1)done=checkSort1();
+    if(current===2)done=checkCards2();
+
+    if(current===3){
+      done=checkSingle(
+        'q3',3,'fb3',
+        'Верно. Здесь другая сторона описана через свою задачу и ограничения: нужно быстро начать работу, а часть данных действительно появляется позже.',
+        'Эта формулировка снова приписывает мотивы или отношение. Позиция другой стороны полезнее, когда описывает ее задачу, ограничения и данные.',
+        'fact'
+      );
+    }
+
+    if(current===4)done=checkMirror();
+    if(current===5)done=checkPriorities();
+    if(current===6)done=checkMethods();
+
+    if(current===7){
+      done=checkSingle(
+        'q7',7,'fb7',
+        'Да. Новая формулировка сохраняет обязательные данные, но признает, что в срочном запросе часть информации появляется позже. Теперь можно проектировать другой маршрут входа.',
+        'Эта версия снова объясняет проблему через дисциплину или сопротивление. Проверка показала другое: маршрут требует данных, которых в срочном случае еще нет.',
+        'hyp'
+      );
+    }
+
+    if(current===8)done=showFinal();
+    if(done)update();
+  });
+
+  nextBtn.addEventListener('click',()=>{
+    if(current<8){current++;update();window.scrollTo({top:0,behavior:'smooth'});}
+  });
+
+  backBtn.addEventListener('click',()=>{
+    if(current>1){current--;update();window.scrollTo({top:0,behavior:'smooth'});}
+  });
+
+  resetBtn.addEventListener('click',()=>{
+    current=1;score=0;factSkill=0;hypothesisSkill=0;
+    Object.keys(checked).forEach(k=>checked[k]=false);
+    Object.keys(awarded).forEach(k=>awarded[k]=false);
+
+    document.querySelectorAll('.option').forEach(o=>o.classList.remove('selected','correct','wrong'));
+    document.querySelectorAll('.feedback').forEach(f=>{f.className='feedback';f.innerHTML='';});
+
+    Object.keys(sortState1).forEach(k=>sortState1[k]=null);
+    sortItems1.forEach(i=>i.classList.remove('assigned','correct','wrong'));
+    renderSort1();
+
+    cards2.forEach(c=>c.classList.remove('selected','correct','wrong'));
+
+    Object.keys(mirrorState).forEach(k=>mirrorState[k]=null);
+    mirrorItems.forEach(i=>i.classList.remove('assigned'));
+    renderMirror();
+
+    priorities.forEach(p=>p.classList.remove('selected','correct','wrong'));
+
+    document.querySelectorAll('.method').forEach(m=>m.classList.remove('selected','correct','wrong'));
+
+    document.getElementById('v1').textContent='—';
+    document.getElementById('v2').textContent='—';
+    document.getElementById('t1').textContent='Покажет, не превратили ли вы интерпретации в «факты».';
+    document.getElementById('t2').textContent='Покажет, дошла ли работа до проверяемого предположения.';
+    document.getElementById('kpi1').classList.remove('good','warn');
+    document.getElementById('kpi2').classList.remove('good','warn');
+    document.getElementById('finalNote').classList.add('hidden');
+
+    update();
+    window.scrollTo({top:0,behavior:'smooth'});
+  });
+
+  renderSort1();
+  renderMirror();
+  update();
+})();
+</script>
+</body>
+</html>

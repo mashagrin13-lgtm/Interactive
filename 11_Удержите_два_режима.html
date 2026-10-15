@@ -1,0 +1,595 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Удержите два режима</title>
+<style>
+:root{
+  --bg:#f4f6f8; --card:#fff; --text:#1f2933; --muted:#667085; --line:#d9dee7;
+  --soft:#eef2f6; --accent:#2f5d62; --accent-soft:#e7f0f1;
+  --ok:#1f6b45; --okbg:#e9f5ee; --bad:#913b35; --badbg:#faeceb;
+  --warn:#7b5719; --warnbg:#fff5dc; --shadow:0 14px 40px rgba(31,41,51,.08);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;line-height:1.55}
+button{font:inherit}
+.app{width:min(100% - 28px,720px);margin:28px auto}
+.shell{background:var(--card);border:1px solid var(--line);border-radius:22px;box-shadow:var(--shadow);overflow:hidden}
+header{padding:22px 22px 18px;border-bottom:1px solid var(--line);background:#fff}
+.eyebrow{margin:0 0 6px;color:var(--accent);font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:.03em}
+h1{margin:0;font-size:clamp(27px,5vw,35px);line-height:1.12;letter-spacing:-.02em}
+.subtitle{margin:10px 0 0;color:var(--muted);font-size:15px}
+.progress-meta{display:flex;justify-content:space-between;gap:12px;margin:18px 0 7px;color:var(--muted);font-size:13px}
+.progress{height:8px;background:var(--soft);border-radius:999px;overflow:hidden}
+.progress span{display:block;height:100%;background:var(--accent);width:12.5%;transition:width .2s ease}
+main{padding:24px 22px 18px}
+.screen{display:none}.screen.active{display:block}
+.step{display:inline-flex;align-items:center;min-height:30px;padding:0 11px;border-radius:999px;background:var(--accent-soft);color:var(--accent);font-size:13px;font-weight:800;margin-bottom:12px}
+h2{margin:0 0 10px;font-size:23px;line-height:1.25}
+.lead{margin:0 0 18px;color:#3b4652}
+.case{margin:16px 0 18px;padding:15px 16px;background:#f8fafb;border:1px solid var(--line);border-radius:14px}
+.case strong{display:block;margin-bottom:6px}
+.instruction{margin:16px 0;padding:14px 15px;background:var(--accent-soft);border-left:4px solid var(--accent);border-radius:0 12px 12px 0;font-size:14px}
+.instructions-list{margin:8px 0 0;padding-left:20px}
+.options{display:grid;gap:10px;margin-top:14px}
+.option{width:100%;text-align:left;border:1px solid var(--line);background:#fff;color:var(--text);border-radius:13px;padding:14px;cursor:pointer;transition:.15s ease}
+.option:hover{border-color:#aeb7c4;background:#fafbfc}
+.option.selected{border-color:var(--accent);background:var(--accent-soft)}
+.option.correct{border-color:#7fb395;background:var(--okbg)}
+.option.wrong{border-color:#d29a95;background:var(--badbg)}
+.feedback{display:none;margin-top:16px;padding:15px 16px;border-radius:13px;font-size:14px}
+.feedback.show{display:block}
+.feedback.ok{background:var(--okbg);border:1px solid #b9dcc8;color:#174c33}
+.feedback.bad{background:var(--badbg);border:1px solid #edc3c0;color:#742c27}
+.feedback.neutral{background:var(--warnbg);border:1px solid #ead7a2;color:#66470e}
+.consequence{margin-top:10px;padding:11px 12px;border:1px solid var(--line);border-radius:10px;background:#fff;color:#3f4b56}
+.consequence b{display:block;margin-bottom:4px}
+
+.modebar{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0 18px}
+.mode{border:1px solid var(--line);border-radius:12px;padding:11px 12px;background:#fff}
+.mode b{display:block;margin-bottom:4px}
+.mode.active{border-color:var(--accent);background:var(--accent-soft)}
+.mode .mini{font-size:12px;color:var(--muted)}
+
+.sort-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px}
+.bucket{border:1px solid var(--line);border-radius:14px;background:#fafbfc;padding:12px}
+.bucket h3{margin:0 0 8px;font-size:15px}
+.sort-item{margin:8px 0;padding:11px;border:1px solid var(--line);border-radius:10px;background:#fff;cursor:pointer;font-size:14px}
+.sort-item.assigned{background:var(--accent-soft);border-color:var(--accent)}
+.sort-item.correct{background:var(--okbg);border-color:#7fb395}
+.sort-item.wrong{background:var(--badbg);border-color:#d29a95}
+
+.quota{display:flex;align-items:center;gap:10px;margin-top:12px;padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:#fff}
+.quota strong{font-size:24px;color:var(--accent)}
+.transition{padding:14px 15px;border:1px solid var(--line);border-radius:13px;background:#f8fafb;margin-top:14px}
+.transition b{display:block;margin-bottom:5px}
+
+.idea-table{display:grid;grid-template-columns:1.35fr .7fr .85fr .9fr;gap:1px;background:var(--line);border:1px solid var(--line);border-radius:12px;overflow:hidden;margin-top:16px}
+.idea-table > div{background:#fff;padding:11px 12px;font-size:13px}
+.idea-table .head{background:#5f7474;color:#fff;font-weight:800}
+.pick{border:1px solid var(--line);border-radius:10px;padding:10px;background:#fff;cursor:pointer}
+.pick.selected{border-color:var(--accent);background:var(--accent-soft)}
+.pick.correct{border-color:#7fb395;background:var(--okbg)}
+.pick.wrong{border-color:#d29a95;background:var(--badbg)}
+
+.final-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px}
+.kpi{border:1px solid var(--line);border-radius:14px;padding:14px;background:#fff}
+.kpi b{display:block;margin-bottom:4px}
+.kpi .value{font-size:26px;font-weight:900;color:var(--accent)}
+.kpi.good{border-color:#b9dcc8;background:var(--okbg)}
+.kpi.warn{border-color:#ead7a2;background:var(--warnbg)}
+
+.flow{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:14px}
+.node{padding:8px 10px;border:1px solid var(--line);border-radius:9px;background:#fff;font-size:13px}
+.arrow{color:var(--muted);font-weight:900}
+.final-note{margin-top:16px;padding:16px;border:1px solid var(--line);border-radius:14px;background:#f8fafb}
+.final-note h3{margin:0 0 8px;font-size:17px}
+.formula{margin-top:10px;font-weight:800;color:var(--accent)}
+
+footer{padding:16px 22px 22px;border-top:1px solid var(--line);display:flex;gap:10px;flex-wrap:wrap;align-items:center;background:#fff}
+footer .spacer{flex:1}
+.ctrl{border-radius:12px;padding:11px 15px;cursor:pointer;font-weight:750;border:1px solid var(--line)}
+.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+.secondary{background:#fff;color:var(--text)}
+.muted{background:#fff;color:var(--muted)}
+button[disabled]{opacity:.42;cursor:not-allowed}
+.hidden{display:none!important}
+
+@media(max-width:620px){
+  .app{width:min(100% - 16px,720px);margin:8px auto 18px}
+  .shell{border-radius:16px}
+  header,main,footer{padding-left:16px;padding-right:16px}
+  .sort-grid,.final-grid,.modebar{grid-template-columns:1fr}
+  .idea-table{grid-template-columns:1.2fr .65fr .8fr .8fr}
+  .idea-table > div{padding:8px;font-size:12px}
+  footer .spacer{display:none}
+  footer button{flex:1 1 calc(50% - 6px)}
+}
+</style>
+</head>
+<body>
+<div class="app">
+<div class="shell">
+<header>
+  <p class="eyebrow">Проверочный интерактив</p>
+  <h1>Удержите два режима</h1>
+  <p class="subtitle">Мини-симуляция модератора: сначала расширьте поле идей, затем вовремя переключите команду на выбор.</p>
+  <div class="progress-meta">
+    <span id="progressText">Шаг 1 из 8</span>
+    <span id="scoreText">Верных решений: 0</span>
+  </div>
+  <div class="progress"><span id="progressBar"></span></div>
+</header>
+
+<main>
+<section class="screen active" data-screen="1">
+  <div class="step">Шаг 1</div>
+  <h2>Задайте два режима еще до старта</h2>
+  <div class="case"><strong>Задача команды</strong>Найти способы снизить число просроченных задач без увеличения численности.</div>
+  <div class="instruction">
+    Выберите вводную руководителя. Хорошая инструкция сразу отвечает на четыре вопроса:
+    <ol class="instructions-list">
+      <li>сколько времени идет генерация;</li>
+      <li>какая минимальная квота идей;</li>
+      <li>что в первой фазе запрещено делать;</li>
+      <li>как команда поймет, что пора переходить к отбору.</li>
+    </ol>
+  </div>
+  <div class="modebar">
+    <div class="mode active"><b>Режим 1. Генерация</b><span class="mini">Расширяем поле, не выбираем.</span></div>
+    <div class="mode"><b>Режим 2. Отбор</b><span class="mini">Сравниваем по критериям.</span></div>
+  </div>
+  <div class="options" data-q="q1">
+    <button class="option">«Предлагайте идеи, а я сразу буду говорить, какие из них реалистичны».</button>
+    <button class="option">«У нас 40 минут. Давайте найдем лучший вариант».</button>
+    <button class="option" data-correct="true">«Первые 12 минут собираем минимум десять вариантов и ничего не выбираем. Затем переключимся на два критерия и отберем идеи для проверки».</button>
+    <button class="option">«Предлагайте только те варианты, которые можем реализовать прямо сейчас».</button>
+  </div>
+  <div class="feedback" id="fb1"></div>
+</section>
+
+<section class="screen" data-screen="2">
+  <div class="step">Шаг 2</div>
+  <h2>Не превращайте ограничение в преждевременный отбор</h2>
+  <div class="modebar">
+    <div class="mode active"><b>Сейчас: генерация</b><span class="mini">Ограничения фиксируем, но не разбираем.</span></div>
+    <div class="mode"><b>Отбор — позже</b><span class="mini">Там проверим реализуемость.</span></div>
+  </div>
+  <div class="case">
+    <strong>Идея команды</strong>
+    «Автоматически напоминать о задачах за два дня до срока».
+    <div class="consequence"><b>Реплика сотрудника</b>«Система этого сейчас не умеет».</div>
+  </div>
+  <div class="instruction">Что делает модератор, чтобы сохранить первую фазу?</div>
+  <div class="options" data-q="q2">
+    <button class="option">Отказывается от идеи.</button>
+    <button class="option">Начинает выяснять стоимость доработки.</button>
+    <button class="option" data-correct="true">Записывает техническое ограничение в парковку и просит следующий вариант.</button>
+    <button class="option">Просит автора защитить предложение.</button>
+  </div>
+  <div class="feedback" id="fb2"></div>
+</section>
+
+<section class="screen" data-screen="3">
+  <div class="step">Шаг 3</div>
+  <h2>Отправьте реплику в правильный режим</h2>
+  <p class="lead">Полезная мысль может быть высказана не вовремя. Содержательность реплики не определяет, когда ее нужно обсуждать.</p>
+  <div class="instruction">Нажимайте на карточку: первое нажатие отправляет ее в «Генерацию», второе — в «Отбор».</div>
+  <div id="sortPool">
+    <div class="sort-item" data-right="gen" data-id="s1">1. «Можно сократить количество одновременно открытых задач».</div>
+    <div class="sort-item" data-right="select" data-id="s2">2. «Этот вариант займет минимум три месяца».</div>
+    <div class="sort-item" data-right="gen" data-id="s3">3. «Что, если приоритет задачи меняется автоматически при приближении срока?»</div>
+    <div class="sort-item" data-right="select" data-id="s4">4. «Из всех вариантов мне пока больше нравится первый».</div>
+  </div>
+  <div class="sort-grid">
+    <div class="bucket"><h3>Генерация</h3><div id="genBucket"></div></div>
+    <div class="bucket"><h3>Отбор</h3><div id="selectBucket"></div></div>
+  </div>
+  <div class="feedback" id="fb3"></div>
+</section>
+
+<section class="screen" data-screen="4">
+  <div class="step">Шаг 4</div>
+  <h2>Не заканчивайте только потому, что стало тихо</h2>
+  <div class="quota"><strong>7 / 10</strong><span>вариантов уже есть</span></div>
+  <div class="case"><strong>Что происходит</strong>После седьмой идеи команда замолчала. Несколько секунд никто ничего не предлагает.</div>
+  <div class="instruction">Как удержать генерацию, не превращая квоту в формальность?</div>
+  <div class="options" data-q="q4">
+    <button class="option">Завершить генерацию: семь вариантов достаточно.</button>
+    <button class="option">Начать выбирать лучший из семи.</button>
+    <button class="option" data-correct="true">Дать участникам две минуты индивидуально и задать новый угол: «Как решить задачу без новых инструментов?»</button>
+    <button class="option">Самому предложить оставшиеся три варианта.</button>
+  </div>
+  <div class="feedback" id="fb4"></div>
+</section>
+
+<section class="screen" data-screen="5">
+  <div class="step">Шаг 5</div>
+  <h2>Переключите режим явно</h2>
+  <div class="quota"><strong>10 / 10</strong><span>квота выполнена</span></div>
+  <div class="transition"><b>Почему нужен явный переход</b>Если просто сказать «ну, теперь выберем», часть участников продолжит генерировать, а часть уже начнет спорить о реализуемости. Команде нужен заметный сигнал смены правил.</div>
+  <div class="instruction">Что делает руководитель?</div>
+  <div class="options" data-q="q5">
+    <button class="option">Сразу проводит голосование.</button>
+    <button class="option">Продолжает генерировать до конца встречи.</button>
+    <button class="option" data-correct="true">Явно завершает генерацию, читает весь список, объединяет дубли и объявляет критерии отбора.</button>
+    <button class="option">Удаляет самые странные идеи.</button>
+  </div>
+  <div class="feedback" id="fb5"></div>
+</section>
+
+<section class="screen" data-screen="6">
+  <div class="step">Шаг 6</div>
+  <h2>Теперь ограничения можно обсуждать</h2>
+  <div class="modebar">
+    <div class="mode"><b>Генерация завершена</b><span class="mini">Новые идеи больше не добираем.</span></div>
+    <div class="mode active"><b>Сейчас: отбор</b><span class="mini">Сравниваем варианты по критериям.</span></div>
+  </div>
+  <div class="case"><strong>Критерии</strong>1. Влияние на число просроченных задач.<br>2. Возможность проверить решение в течение месяца.</div>
+  <div class="instruction">Изучите данные и выберите <b>два варианта</b>, которые стоит проверить первыми.</div>
+  <div class="idea-table">
+    <div class="head">Вариант</div><div class="head">Влияние</div><div class="head">Проверка за месяц</div><div class="head">Ограничение</div>
+    <div class="pick" data-id="auto" data-good="true">Автоматические напоминания</div>
+    <div>Высокое</div><div>Да, на одном типе задач</div><div>Нужна простая настройка уведомлений</div>
+    <div class="pick" data-id="limit" data-good="true">Ограничение числа одновременно открытых задач</div>
+    <div>Среднее–высокое</div><div>Да, в одной проектной группе</div><div>Нужно договориться о лимите и исключениях</div>
+    <div class="pick" data-id="report" data-good="false">Ежедневный дополнительный отчет руководителю</div>
+    <div>Низкое</div><div>Да</div><div>Добавляет ручную работу и не меняет само управление задачами</div>
+  </div>
+  <div class="feedback" id="fb6"></div>
+</section>
+
+<section class="screen" data-screen="7">
+  <div class="step">Шаг 7</div>
+  <h2>Закройте встречу не идеей, а проверкой</h2>
+  <div class="case"><strong>Выбраны две гипотезы</strong>Автоматические напоминания и ограничение числа одновременно открытых задач.</div>
+  <div class="instruction">Что должно появиться до завершения сессии?</div>
+  <div class="options" data-q="q7">
+    <button class="option">Только название победившей идеи.</button>
+    <button class="option">Итоговое голосование.</button>
+    <button class="option" data-correct="true">Следующий шаг, ответственный за проверку и признак, по которому команда поймет результат.</button>
+    <button class="option">Еще одна генерация альтернатив.</button>
+  </div>
+  <div class="feedback" id="fb7"></div>
+</section>
+
+<section class="screen" data-screen="8">
+  <div class="step">Шаг 8</div>
+  <h2>Посмотрите на свою модерацию целиком</h2>
+  <p class="lead">Хорошая сессия удерживает два противоположных движения: сначала расширяет поле, затем осмысленно его сужает.</p>
+  <div class="flow">
+    <span class="node">Задача</span><span class="arrow">→</span>
+    <span class="node">правила генерации</span><span class="arrow">→</span>
+    <span class="node">расширение поля</span><span class="arrow">→</span>
+    <span class="node">явное переключение</span><span class="arrow">→</span>
+    <span class="node">критерии</span><span class="arrow">→</span>
+    <span class="node">сравнение</span><span class="arrow">→</span>
+    <span class="node">2–3 гипотезы</span><span class="arrow">→</span>
+    <span class="node">следующий шаг</span>
+  </div>
+  <div class="final-grid">
+    <div class="kpi" id="kpi1">
+      <b>Ранняя оценка</b>
+      <div class="value" id="earlyValue">—</div>
+      <div id="earlyText">Покажет, удалось ли не схлопнуть генерацию раньше времени.</div>
+    </div>
+    <div class="kpi" id="kpi2">
+      <b>Переход к выбору</b>
+      <div class="value" id="switchValue">—</div>
+      <div id="switchText">Покажет, удалось ли после генерации действительно перейти к решению.</div>
+    </div>
+  </div>
+  <div class="instruction">Нажмите «Проверить», чтобы получить итог по своей модерации.</div>
+  <div class="feedback" id="fb8"></div>
+  <div class="final-note hidden" id="finalNote">
+    <h3>Памятка</h3>
+    <div>Если команда только генерирует, встреча заканчивается длинным списком без решения. Если сразу оценивает, она получает решение без достаточного выбора. Роль модератора — вовремя менять правила обсуждения.</div>
+    <div class="formula">Задача → правила генерации → расширение поля → явное переключение → критерии → сравнение → 2–3 гипотезы → следующий шаг</div>
+  </div>
+</section>
+</main>
+
+<footer>
+  <button class="ctrl muted" id="resetBtn">Сбросить</button>
+  <div class="spacer"></div>
+  <button class="ctrl secondary" id="backBtn" disabled>Назад</button>
+  <button class="ctrl primary" id="checkBtn">Проверить</button>
+  <button class="ctrl secondary hidden" id="nextBtn">Дальше</button>
+</footer>
+</div>
+</div>
+
+<script>
+(function(){
+  let current=1, score=0;
+  let earlyDiscipline=0, switchDiscipline=0;
+  const checked={1:false,2:false,3:false,4:false,5:false,6:false,7:false,8:false};
+  const awarded={1:false,2:false,3:false,4:false,5:false,6:false,7:false};
+
+  const screens=[...document.querySelectorAll('.screen')];
+  const progressText=document.getElementById('progressText');
+  const progressBar=document.getElementById('progressBar');
+  const scoreText=document.getElementById('scoreText');
+  const backBtn=document.getElementById('backBtn');
+  const nextBtn=document.getElementById('nextBtn');
+  const checkBtn=document.getElementById('checkBtn');
+  const resetBtn=document.getElementById('resetBtn');
+
+  function update(){
+    screens.forEach(s=>s.classList.toggle('active',Number(s.dataset.screen)===current));
+    progressText.textContent=`Шаг ${current} из 8`;
+    progressBar.style.width=`${current/8*100}%`;
+    scoreText.textContent=`Верных решений: ${score}`;
+    backBtn.disabled=current===1;
+    nextBtn.classList.toggle('hidden',!checked[current]||current===8);
+    checkBtn.classList.toggle('hidden',checked[current]&&current!==8);
+    checkBtn.textContent=(current===8&&checked[8])?'Посмотреть итог еще раз':'Проверить';
+  }
+
+  function feedback(id,type,html){
+    const el=document.getElementById(id);
+    el.className=`feedback show ${type}`;
+    el.innerHTML=html;
+  }
+
+  document.querySelectorAll('.options').forEach(group=>{
+    group.addEventListener('click',e=>{
+      const btn=e.target.closest('.option');
+      if(!btn || checked[current])return;
+      group.querySelectorAll('.option').forEach(o=>o.classList.remove('selected'));
+      btn.classList.add('selected');
+    });
+  });
+
+  function checkSingle(q,screen,fbId,ok,bad,metric=null){
+    const group=document.querySelector(`[data-q="${q}"]`);
+    const sel=group.querySelector('.option.selected');
+    if(!sel){feedback(fbId,'neutral','Сначала выберите один вариант.');return false;}
+    checked[screen]=true;
+    const good=sel.dataset.correct==='true';
+
+    group.querySelectorAll('.option').forEach(o=>{
+      if(o.dataset.correct==='true')o.classList.add('correct');
+      else if(o.classList.contains('selected'))o.classList.add('wrong');
+    });
+
+    if(good){
+      if(!awarded[screen]){score++;awarded[screen]=true;}
+      if(metric==='early')earlyDiscipline++;
+      if(metric==='switch')switchDiscipline++;
+      feedback(fbId,'ok',ok);
+    }else{
+      feedback(fbId,'bad',bad);
+    }
+    return true;
+  }
+
+  const sortItems=[...document.querySelectorAll('.sort-item')];
+  const sortState={};
+  sortItems.forEach(item=>{
+    sortState[item.dataset.id]=null;
+    item.addEventListener('click',()=>{
+      if(checked[3])return;
+      const id=item.dataset.id;
+      sortState[id]=sortState[id]===null?'gen':sortState[id]==='gen'?'select':'gen';
+      renderSort();
+    });
+  });
+
+  function renderSort(){
+    const gen=document.getElementById('genBucket');
+    const sel=document.getElementById('selectBucket');
+    gen.innerHTML=''; sel.innerHTML='';
+    sortItems.forEach(item=>{
+      item.classList.remove('assigned');
+      const st=sortState[item.dataset.id];
+      if(st){
+        item.classList.add('assigned');
+        const clone=item.cloneNode(true);
+        clone.classList.remove('assigned','correct','wrong');
+        clone.style.cursor='default';
+        (st==='gen'?gen:sel).appendChild(clone);
+      }
+    });
+  }
+
+  function checkSort(){
+    if(Object.values(sortState).some(v=>!v)){
+      feedback('fb3','neutral','Распределите все четыре реплики.');
+      return false;
+    }
+    checked[3]=true;
+    let good=true;
+    sortItems.forEach(item=>{
+      const ok=sortState[item.dataset.id]===item.dataset.right;
+      if(!ok)good=false;
+      item.classList.add(ok?'correct':'wrong');
+    });
+    if(good){
+      if(!awarded[3]){score++;awarded[3]=true;}
+      earlyDiscipline++;
+      feedback('fb3','ok','Верно. Реплики 1 и 3 расширяют поле идей. Реплики 2 и 4 относятся к оценке: срок реализации и личное предпочтение важны, но обсуждать их стоит после переключения режима.');
+    }else{
+      feedback('fb3','bad','Посмотрите на функцию реплики. Если она добавляет новый вариант — это генерация. Если сравнивает, оценивает реализуемость или выражает предпочтение — это уже отбор.');
+    }
+    return true;
+  }
+
+  const picks=[...document.querySelectorAll('.pick')];
+  picks.forEach(p=>{
+    p.addEventListener('click',()=>{
+      if(checked[6])return;
+      p.classList.toggle('selected');
+      if(picks.filter(x=>x.classList.contains('selected')).length>2){
+        p.classList.remove('selected');
+      }
+    });
+  });
+
+  function checkPicks(){
+    const selected=picks.filter(x=>x.classList.contains('selected'));
+    if(selected.length!==2){
+      feedback('fb6','neutral','Выберите ровно два варианта.');
+      return false;
+    }
+    checked[6]=true;
+    const good=selected.every(x=>x.dataset.good==='true');
+    picks.forEach(p=>{
+      if(p.dataset.good==='true')p.classList.add('correct');
+      else if(p.classList.contains('selected'))p.classList.add('wrong');
+    });
+
+    if(good){
+      if(!awarded[6]){score++;awarded[6]=true;}
+      switchDiscipline++;
+      feedback('fb6','ok','Да. Оба варианта заметно влияют на проблему и их можно проверить в течение месяца. Дополнительный отчет тоже легко запустить, но он добавляет ручную работу и почти не меняет сам механизм просрочки.');
+    }else{
+      feedback('fb6','bad','В отборе уже нужно учитывать ограничения. «Легко внедрить» недостаточно: вариант должен еще и заметно влиять на исходную проблему.');
+    }
+    return true;
+  }
+
+  function showFinal(){
+    checked[8]=true;
+    const earlyMax=4;
+    const switchMax=3;
+    const earlyPct=Math.round(earlyDiscipline/earlyMax*100);
+    const switchPct=Math.round(switchDiscipline/switchMax*100);
+
+    const earlyKpi=document.getElementById('kpi1');
+    const switchKpi=document.getElementById('kpi2');
+
+    document.getElementById('earlyValue').textContent=earlyPct+'%';
+    document.getElementById('switchValue').textContent=switchPct+'%';
+
+    earlyKpi.classList.remove('good','warn');
+    switchKpi.classList.remove('good','warn');
+
+    if(earlyPct>=75){
+      earlyKpi.classList.add('good');
+      document.getElementById('earlyText').textContent='Вы в основном удерживали генерацию от преждевременной оценки.';
+    }else{
+      earlyKpi.classList.add('warn');
+      document.getElementById('earlyText').textContent='Вы несколько раз начали оценивать идеи раньше, чем поле успело расшириться.';
+    }
+
+    if(switchPct>=67){
+      switchKpi.classList.add('good');
+      document.getElementById('switchText').textContent='Вы сумели переключить команду с генерации на сравнение и следующий шаг.';
+    }else{
+      switchKpi.classList.add('warn');
+      document.getElementById('switchText').textContent='После генерации вы не всегда доводили обсуждение до выбора и проверки.';
+    }
+
+    if(earlyPct>=75 && switchPct>=67){
+      feedback('fb8','ok','Баланс выдержан: вы не схлопнули поле идей слишком рано и при этом довели встречу до осмысленного выбора.');
+    }else if(earlyPct>=75){
+      feedback('fb8','neutral','Генерацию вы удерживаете хорошо. Следующая зона внимания — явный переход к критериям, сравнению и конкретному следующему шагу.');
+    }else if(switchPct>=67){
+      feedback('fb8','neutral','Сужать поле и выбирать вы умеете. Следующая зона внимания — не запускать этот режим раньше времени.');
+    }else{
+      feedback('fb8','bad','Оба режима пока смешиваются. Попробуйте жестче разделять правила: сначала идеи без оценки, потом критерии без новой генерации.');
+    }
+
+    document.getElementById('finalNote').classList.remove('hidden');
+    return true;
+  }
+
+  checkBtn.addEventListener('click',()=>{
+    let done=false;
+
+    if(current===1){
+      done=checkSingle(
+        'q1',1,'fb1',
+        'Верно. Такая вводная заранее разделяет встречу на две фазы и не оставляет команде сомнений, когда можно оценивать идеи.',
+        'Инструкция смешивает поиск и оценку. В итоге участники будут фильтровать идеи еще до того, как поле решений расширится.',
+        'early'
+      );
+    }
+
+    if(current===2){
+      done=checkSingle(
+        'q2',2,'fb2',
+        'Да. Ограничение не исчезает: оно попадает в парковку и возвращается на этапе отбора. Сейчас важнее не прерывать генерацию.',
+        'Вы уже переключились на реализуемость. Это полезный вопрос, но не в первой фазе: обсуждение стоимости или защита идеи быстро превращают генерацию в спор.',
+        'early'
+      );
+    }
+
+    if(current===3)done=checkSort();
+
+    if(current===4){
+      done=checkSingle(
+        'q4',4,'fb4',
+        'Верно. Индивидуальная пауза и новый угол помогают продолжить поиск, не превращая квоту в механическое добивание цифры.',
+        'Пауза не означает, что идеи закончились. Если сразу перейти к выбору, команда остановится на первых очевидных вариантах.',
+        'early'
+      );
+    }
+
+    if(current===5){
+      done=checkSingle(
+        'q5',5,'fb5',
+        'Да. Явное завершение первой фазы важно само по себе: команда видит весь пул, убирает дубли и только затем начинает сравнивать.',
+        'После квоты нужно не голосовать и не продолжать генерацию, а сначала переключить правила обсуждения.',
+        'switch'
+      );
+    }
+
+    if(current===6)done=checkPicks();
+
+    if(current===7){
+      done=checkSingle(
+        'q7',7,'fb7',
+        'Верно. Встреча заканчивается не «победившей идеей», а понятной проверкой: кто делает, что именно проверяет и по какому признаку команда поймет результат.',
+        'Итог без следующего шага почти гарантирует, что идеи останутся в протоколе. Нужна проверяемая гипотеза и ответственный.',
+        'switch'
+      );
+    }
+
+    if(current===8)done=showFinal();
+
+    if(done)update();
+  });
+
+  nextBtn.addEventListener('click',()=>{
+    if(current<8){current++;update();window.scrollTo({top:0,behavior:'smooth'});}
+  });
+
+  backBtn.addEventListener('click',()=>{
+    if(current>1){current--;update();window.scrollTo({top:0,behavior:'smooth'});}
+  });
+
+  resetBtn.addEventListener('click',()=>{
+    current=1;score=0;earlyDiscipline=0;switchDiscipline=0;
+    Object.keys(checked).forEach(k=>checked[k]=false);
+    Object.keys(awarded).forEach(k=>awarded[k]=false);
+
+    document.querySelectorAll('.option').forEach(o=>o.classList.remove('selected','correct','wrong'));
+    document.querySelectorAll('.feedback').forEach(f=>{f.className='feedback';f.innerHTML='';});
+
+    Object.keys(sortState).forEach(k=>sortState[k]=null);
+    sortItems.forEach(i=>i.classList.remove('assigned','correct','wrong'));
+    renderSort();
+
+    picks.forEach(p=>p.classList.remove('selected','correct','wrong'));
+
+    document.getElementById('earlyValue').textContent='—';
+    document.getElementById('switchValue').textContent='—';
+    document.getElementById('earlyText').textContent='Покажет, удалось ли не схлопнуть генерацию раньше времени.';
+    document.getElementById('switchText').textContent='Покажет, удалось ли после генерации действительно перейти к решению.';
+    document.getElementById('kpi1').classList.remove('good','warn');
+    document.getElementById('kpi2').classList.remove('good','warn');
+    document.getElementById('finalNote').classList.add('hidden');
+
+    update();
+    window.scrollTo({top:0,behavior:'smooth'});
+  });
+
+  renderSort();
+  update();
+})();
+</script>
+</body>
+</html>

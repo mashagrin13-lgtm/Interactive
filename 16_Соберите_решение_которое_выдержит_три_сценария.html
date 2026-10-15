@@ -1,0 +1,745 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Соберите решение, которое выдержит три сценария</title>
+<style>
+:root{
+  --bg:#f4f6f8; --card:#ffffff; --text:#1f2933; --muted:#667085; --line:#d9dee7;
+  --soft:#eef2f6; --accent:#2f5d62; --accent-soft:#e7f0f1;
+  --ok:#1f6b45; --okbg:#e9f5ee; --bad:#913b35; --badbg:#faeceb;
+  --warn:#7b5719; --warnbg:#fff5dc; --shadow:0 14px 40px rgba(31,41,51,.08);
+}
+*{box-sizing:border-box}
+body{
+  margin:0;background:var(--bg);color:var(--text);
+  font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  line-height:1.55;
+}
+button,input,textarea{font:inherit}
+.app{width:min(100% - 28px,760px);margin:28px auto}
+.shell{background:var(--card);border:1px solid var(--line);border-radius:22px;box-shadow:var(--shadow);overflow:hidden}
+header{padding:22px 22px 18px;border-bottom:1px solid var(--line);background:#fff}
+.eyebrow{margin:0 0 6px;color:var(--accent);font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:.03em}
+h1{margin:0;font-size:clamp(27px,5vw,35px);line-height:1.12;letter-spacing:-.02em}
+.subtitle{margin:10px 0 0;color:var(--muted);font-size:15px}
+.progress-meta{display:flex;justify-content:space-between;gap:12px;margin:18px 0 7px;color:var(--muted);font-size:13px}
+.progress{height:8px;background:var(--soft);border-radius:999px;overflow:hidden}
+.progress span{display:block;height:100%;background:var(--accent);width:11.11%;transition:width .2s ease}
+main{padding:24px 22px 18px}
+.screen{display:none}.screen.active{display:block}
+.step{display:inline-flex;align-items:center;min-height:30px;padding:0 11px;border-radius:999px;background:var(--accent-soft);color:var(--accent);font-size:13px;font-weight:800;margin-bottom:12px}
+h2{margin:0 0 10px;font-size:23px;line-height:1.25}
+.lead{margin:0 0 18px;color:#3b4652}
+.case{margin:16px 0 18px;padding:15px 16px;background:#f8fafb;border:1px solid var(--line);border-radius:14px}
+.case strong{display:block;margin-bottom:6px}
+.instruction{margin:16px 0;padding:14px 15px;background:var(--accent-soft);border-left:4px solid var(--accent);border-radius:0 12px 12px 0;font-size:14px}
+.instructions-list{margin:8px 0 0;padding-left:20px}
+.options{display:grid;gap:10px;margin-top:14px}
+.option{
+  width:100%;text-align:left;border:1px solid var(--line);background:#fff;color:var(--text);
+  border-radius:13px;padding:14px;cursor:pointer;transition:.15s ease
+}
+.option:hover{border-color:#aeb7c4;background:#fafbfc}
+.option.selected{border-color:var(--accent);background:var(--accent-soft)}
+.option.correct{border-color:#7fb395;background:var(--okbg)}
+.option.wrong{border-color:#d29a95;background:var(--badbg)}
+.feedback{display:none;margin-top:16px;padding:15px 16px;border-radius:13px;font-size:14px}
+.feedback.show{display:block}
+.feedback.ok{background:var(--okbg);border:1px solid #b9dcc8;color:#174c33}
+.feedback.bad{background:var(--badbg);border:1px solid #edc3c0;color:#742c27}
+.feedback.neutral{background:var(--warnbg);border:1px solid #ead7a2;color:#66470e}
+
+.scenario-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:14px}
+.scenario{
+  border:1px solid var(--line);border-radius:13px;padding:13px;background:#fff;cursor:pointer
+}
+.scenario.selected{border-color:var(--accent);background:var(--accent-soft)}
+.scenario.correct{border-color:#7fb395;background:var(--okbg)}
+.scenario.wrong{border-color:#d29a95;background:var(--badbg)}
+
+.sort-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px}
+.bucket{border:1px solid var(--line);border-radius:14px;background:#fafbfc;padding:12px;min-height:92px}
+.bucket h3{margin:0 0 8px;font-size:15px}
+.sort-item{margin:8px 0;padding:11px;border:1px solid var(--line);border-radius:10px;background:#fff;cursor:pointer;font-size:14px}
+.sort-item.assigned{background:var(--accent-soft);border-color:var(--accent)}
+.sort-item.correct{background:var(--okbg);border-color:#7fb395}
+.sort-item.wrong{background:var(--badbg);border-color:#d29a95}
+
+.core-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px}
+.core-card{border:1px solid var(--line);border-radius:14px;padding:12px;background:#fafbfc}
+.core-card h3{margin:0 0 8px;font-size:15px}
+
+.builder{margin-top:16px}
+.pool-title{font-size:13px;color:var(--muted);font-weight:800;margin-bottom:8px}
+.pool{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
+.block{
+  border:1px solid var(--line);background:#fff;border-radius:999px;padding:9px 12px;cursor:pointer;font-size:14px
+}
+.block.used{opacity:.38;cursor:default}
+.slots{display:grid;gap:10px}
+.slot-row{display:grid;grid-template-columns:30px 1fr;gap:10px;align-items:start}
+.num{
+  width:30px;height:30px;border-radius:8px;background:var(--soft);color:var(--muted);
+  display:flex;align-items:center;justify-content:center;font-weight:800;font-size:12px
+}
+.slot{
+  min-height:48px;border:1px dashed #aab4c1;border-radius:11px;background:#fafbfc;
+  display:flex;align-items:center;padding:10px 12px;color:var(--muted);cursor:pointer
+}
+.slot.filled{border-style:solid;border-color:var(--accent);background:var(--accent-soft);color:var(--text);font-weight:700}
+
+.trigger-card{
+  margin-top:14px;padding:14px;border:1px solid var(--line);border-radius:13px;background:#fff
+}
+.trigger-card b{display:block;margin-bottom:4px}
+
+.field-grid{display:grid;gap:12px;margin-top:16px}
+.field label{display:block;font-weight:750;font-size:14px;margin-bottom:6px}
+.field input,.field textarea{
+  width:100%;border:1px solid var(--line);border-radius:12px;padding:12px 13px;background:#fff;color:var(--text)
+}
+.field textarea{min-height:84px;resize:vertical}
+.field input:focus,.field textarea:focus{outline:3px solid rgba(47,93,98,.16);border-color:var(--accent)}
+.checklist{display:grid;gap:9px;margin-top:16px}
+.checkitem{
+  display:grid;grid-template-columns:24px 1fr;gap:10px;padding:12px 13px;border:1px solid var(--line);border-radius:12px;background:#fff
+}
+.checkitem .mark{
+  width:24px;height:24px;border-radius:50%;background:var(--soft);color:var(--muted);
+  display:flex;align-items:center;justify-content:center;font-weight:800;font-size:12px
+}
+.checkitem.good{border-color:#b9dcc8;background:var(--okbg)}
+.checkitem.good .mark{background:#d6ecdf;color:var(--ok)}
+.checkitem.warn{border-color:#ead7a2;background:var(--warnbg)}
+.checkitem.warn .mark{background:#f5e8bd;color:var(--warn)}
+.small{font-size:13px;color:var(--muted)}
+
+.flow{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:14px}
+.node{padding:8px 10px;border:1px solid var(--line);border-radius:9px;background:#fff;font-size:13px}
+.arrow{color:var(--muted);font-weight:900}
+.final-note{margin-top:16px;padding:16px;border:1px solid var(--line);border-radius:14px;background:#f8fafb}
+.final-note h3{margin:0 0 8px;font-size:17px}
+.formula{margin-top:10px;font-weight:800;color:var(--accent)}
+
+footer{padding:16px 22px 22px;border-top:1px solid var(--line);display:flex;gap:10px;flex-wrap:wrap;align-items:center;background:#fff}
+footer .spacer{flex:1}
+.ctrl{border-radius:12px;padding:11px 15px;cursor:pointer;font-weight:750;border:1px solid var(--line)}
+.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+.secondary{background:#fff;color:var(--text)}
+.muted{background:#fff;color:var(--muted)}
+button[disabled]{opacity:.42;cursor:not-allowed}
+.hidden{display:none!important}
+
+@media(max-width:650px){
+  .app{width:min(100% - 16px,760px);margin:8px auto 18px}
+  .shell{border-radius:16px}
+  header,main,footer{padding-left:16px;padding-right:16px}
+  .scenario-grid,.sort-grid,.core-grid{grid-template-columns:1fr}
+  footer .spacer{display:none}
+  footer button{flex:1 1 calc(50% - 6px)}
+}
+</style>
+</head>
+<body>
+<div class="app">
+<div class="shell">
+<header>
+  <p class="eyebrow">Проверочный интерактив</p>
+  <h1>Соберите решение, которое выдержит три сценария</h1>
+  <p class="subtitle">Не угадывайте будущее. Определите, что должно оставаться неизменным, а что команда будет переключать при разных условиях.</p>
+  <div class="progress-meta">
+    <span id="progressText">Шаг 1 из 9</span>
+    <span id="scoreText">Верных решений: 0</span>
+  </div>
+  <div class="progress"><span id="progressBar"></span></div>
+</header>
+
+<main>
+<section class="screen active" data-screen="1">
+  <div class="step">Шаг 1</div>
+  <h2>Выберите одну неопределенность, которая реально меняет решение</h2>
+
+  <div class="case">
+    <strong>Исходное решение</strong>
+    Отдел из 12 человек получает входящие запросы и одновременно ведет внутренние проекты. Руководитель собирается постоянно выделить четырех сотрудников только на входящий поток. Прогноз на следующий квартал неточный.
+  </div>
+
+  <div class="instruction">
+    Для первой сценарной развилки выберите фактор, от которого действительно зависит конфигурация работы. Хорошая неопределенность может изменить ресурсы, маршрут или приоритеты.
+  </div>
+
+  <div class="options" data-q="q1">
+    <button class="option">Настроение сотрудников.</button>
+    <button class="option" data-correct="true">Объем входящих запросов.</button>
+    <button class="option">Количество совещаний руководителя.</button>
+    <button class="option">Формат ежемесячного отчета.</button>
+  </div>
+  <div class="feedback" id="fb1"></div>
+</section>
+
+<section class="screen" data-screen="2">
+  <div class="step">Шаг 2</div>
+  <h2>Постройте три рабочие версии будущего</h2>
+
+  <div class="instruction">
+    Выберите ровно три сценария: низкий, базовый и высокий. Они должны быть достаточно различными, чтобы проверить решение, но достаточно реалистичными, чтобы по ним можно было готовить действия.
+  </div>
+
+  <div class="scenario-grid" id="scenarioGrid">
+    <div class="scenario" data-good="true">Поток на 20% ниже прогноза.</div>
+    <div class="scenario" data-good="true">Поток около прогноза.</div>
+    <div class="scenario" data-good="true">Поток на 40% выше прогноза.</div>
+    <div class="scenario" data-good="false">Полное исчезновение запросов.</div>
+    <div class="scenario" data-good="false">Рост запросов в десять раз.</div>
+  </div>
+
+  <div class="feedback" id="fb2"></div>
+</section>
+
+<section class="screen" data-screen="3">
+  <div class="step">Шаг 3</div>
+  <h2>Не держите постоянную конфигурацию при низком потоке</h2>
+
+  <div class="case">
+    <strong>Сценарий: низкий поток</strong>
+    Запросов меньше прогноза на 20%. Четыре выделенных сотрудника загружены примерно наполовину.
+  </div>
+
+  <div class="instruction">Как изменить решение, не разрушая саму систему обработки входящих запросов?</div>
+
+  <div class="options" data-q="q3">
+    <button class="option">Ничего: решение принято на квартал.</button>
+    <button class="option">Полностью отказаться от выделенной команды.</button>
+    <button class="option" data-correct="true">Оставить минимальное дежурное покрытие, а часть сотрудников вернуть к плановым задачам.</button>
+    <button class="option">Искусственно увеличить количество входящих задач.</button>
+  </div>
+
+  <div class="feedback" id="fb3"></div>
+</section>
+
+<section class="screen" data-screen="4">
+  <div class="step">Шаг 4</div>
+  <h2>Сделайте условным то, что должно масштабироваться</h2>
+
+  <div class="case">
+    <strong>Сценарий: высокий поток</strong>
+    Поток выше прогноза на 40%. Очередь растет пять дней подряд. Доля просроченных запросов увеличивается.
+  </div>
+
+  <div class="instruction">Какой элемент решения лучше всего перевести из постоянного в условный?</div>
+
+  <div class="options" data-q="q4">
+    <button class="option">Единая очередь.</button>
+    <button class="option">Классификация приоритетов.</button>
+    <button class="option" data-correct="true">Количество сотрудников на входящем потоке.</button>
+    <button class="option">Сам факт обработки запросов.</button>
+  </div>
+
+  <div class="feedback" id="fb4"></div>
+</section>
+
+<section class="screen" data-screen="5">
+  <div class="step">Шаг 5</div>
+  <h2>Отделите устойчивое ядро от переключаемых элементов</h2>
+
+  <div class="instruction">
+    Нажимайте на карточку: первое нажатие отправляет ее в «Устойчивое ядро», второе — в «Условные элементы». Ядро работает во всех трех сценариях; условные элементы меняются вместе с нагрузкой.
+  </div>
+
+  <div id="sortPool5">
+    <div class="sort-item" data-right="core" data-id="k1">Единая очередь.</div>
+    <div class="sort-item" data-right="core" data-id="k2">Классификация запросов.</div>
+    <div class="sort-item" data-right="core" data-id="k3">Дежурный координатор.</div>
+    <div class="sort-item" data-right="conditional" data-id="k4">Всегда четыре сотрудника.</div>
+    <div class="sort-item" data-right="conditional" data-id="k5">Возможность временно переносить несрочные задачи.</div>
+  </div>
+
+  <div class="core-grid">
+    <div class="core-card"><h3>Устойчивое ядро</h3><div id="coreBucket"></div></div>
+    <div class="core-card"><h3>Условные элементы</h3><div id="conditionalBucket"></div></div>
+  </div>
+
+  <div class="feedback" id="fb5"></div>
+</section>
+
+<section class="screen" data-screen="6">
+  <div class="step">Шаг 6</div>
+  <h2>Задайте наблюдаемый триггер перехода</h2>
+
+  <div class="instruction">
+    Хороший триггер отличает устойчивое изменение условий от случайного всплеска. Он должен быть измеримым и заранее понятным команде.
+  </div>
+
+  <div class="options" data-q="q6">
+    <button class="option">Один сотрудник сказал, что задач стало много.</button>
+    <button class="option">В понедельник пришло необычно много запросов.</button>
+    <button class="option" data-correct="true">Объем превышает 120% прогноза пять рабочих дней подряд, а очередь продолжает расти.</button>
+    <button class="option">Руководителю кажется, что команда перестала справляться.</button>
+  </div>
+
+  <div class="feedback" id="fb6"></div>
+</section>
+
+<section class="screen" data-screen="7">
+  <div class="step">Шаг 7</div>
+  <h2>Привяжите триггер к заранее согласованной реакции</h2>
+
+  <div class="trigger-card">
+    <b>Триггер</b>
+    Поток &gt;120% прогноза пять рабочих дней подряд.
+  </div>
+
+  <div class="instruction">
+    Нажимайте на нужные карточки в правильном порядке. Реакция должна усиливать систему постепенно, а не перестраивать весь отдел из-за одного сценария.
+  </div>
+
+  <div class="builder">
+    <div class="pool-title">Карточки</div>
+    <div class="pool" id="pool7">
+      <button class="block" data-id="reserve">Подключить двух резервных сотрудников</button>
+      <button class="block" data-id="priority">Усилить приоритизацию</button>
+      <button class="block" data-id="move">Временно перенести часть несрочных задач</button>
+      <button class="block" data-id="review">Проверить показатели через неделю</button>
+      <button class="block" data-id="rebuild">Полностью перестроить отдел</button>
+      <button class="block" data-id="hire">Срочно нанять новую команду</button>
+      <button class="block" data-id="wait">Ждать конца квартала</button>
+      <button class="block" data-id="cancel">Отменить все плановые задачи</button>
+    </div>
+
+    <div class="slots">
+      <div class="slot-row"><div class="num">1</div><div class="slot" data-slot="0">...</div></div>
+      <div class="slot-row"><div class="num">2</div><div class="slot" data-slot="1">...</div></div>
+      <div class="slot-row"><div class="num">3</div><div class="slot" data-slot="2">...</div></div>
+      <div class="slot-row"><div class="num">4</div><div class="slot" data-slot="3">...</div></div>
+    </div>
+  </div>
+
+  <div class="feedback" id="fb7"></div>
+</section>
+
+<section class="screen" data-screen="8">
+  <div class="step">Шаг 8</div>
+  <h2>Переключайте ветку, когда изменились условия</h2>
+
+  <div class="case">
+    <strong>Через месяц</strong>
+    Поток падает до 75% прогноза и держится на этом уровне три недели.
+  </div>
+
+  <div class="instruction">Что делает руководитель, если сценарий высокой нагрузки больше не соответствует наблюдаемым условиям?</div>
+
+  <div class="options" data-q="q8">
+    <button class="option">Ничего: высокий сценарий все еще возможен.</button>
+    <button class="option" data-correct="true">Переходит в ветку низкого потока и возвращает часть людей к плановым задачам, сохраняя базовое покрытие.</button>
+    <button class="option">Отменяет новую систему целиком.</button>
+    <button class="option">Строит совершенно новый процесс.</button>
+  </div>
+
+  <div class="feedback" id="fb8"></div>
+</section>
+
+<section class="screen" data-screen="9">
+  <div class="step">Шаг 9</div>
+  <h2>Постройте свою сценарную развилку</h2>
+
+  <div class="instruction">
+    Заполните поля по порядку. Не пытайтесь предсказать «правильное» будущее. Сформулируйте три реалистичные ветки и покажите, что в решении останется неизменным, а что будет переключаться.
+  </div>
+
+  <div class="field-grid">
+    <div class="field"><label for="f1">Мое решение</label><textarea id="f1" placeholder="Что вы планируете внедрить или изменить?"></textarea></div>
+    <div class="field"><label for="f2">Ключевая неопределенность</label><input id="f2" placeholder="Какой фактор сильнее всего меняет решение?"></div>
+    <div class="field"><label for="f3">Горизонт</label><input id="f3" placeholder="Например: 3 месяца"></div>
+
+    <div class="field"><label for="f4">Сценарий 1</label><textarea id="f4" placeholder="Низкая / неблагоприятная или иная реалистичная ветка"></textarea></div>
+    <div class="field"><label for="f5">Что меняем в сценарии 1</label><textarea id="f5" placeholder="Как перестраивается решение?"></textarea></div>
+
+    <div class="field"><label for="f6">Сценарий 2</label><textarea id="f6" placeholder="Базовая ветка"></textarea></div>
+    <div class="field"><label for="f7">Что меняем в сценарии 2</label><textarea id="f7" placeholder="Что остается базовой конфигурацией?"></textarea></div>
+
+    <div class="field"><label for="f8">Сценарий 3</label><textarea id="f8" placeholder="Высокая / перегруженная или иная реалистичная ветка"></textarea></div>
+    <div class="field"><label for="f9">Что меняем в сценарии 3</label><textarea id="f9" placeholder="Что усиливается, сокращается или переносится?"></textarea></div>
+
+    <div class="field"><label for="f10">Что работает во всех трех</label><textarea id="f10" placeholder="Устойчивое ядро"></textarea></div>
+    <div class="field"><label for="f11">Триггер перехода</label><textarea id="f11" placeholder="Измеримое условие перехода между ветками"></textarea></div>
+    <div class="field"><label for="f12">Действие при триггере</label><textarea id="f12" placeholder="Что команда сделает, когда условие выполнится?"></textarea></div>
+  </div>
+
+  <div class="checklist">
+    <div class="checkitem" data-check="uncertainty"><div class="mark">1</div><div><b>Выбрана одна ключевая неопределенность</b><div class="small">Она действительно меняет конфигурацию решения.</div></div></div>
+    <div class="checkitem" data-check="scenarios"><div class="mark">2</div><div><b>Есть три различимые сценария</b><div class="small">Это не три формулировки одного и того же будущего.</div></div></div>
+    <div class="checkitem" data-check="core"><div class="mark">3</div><div><b>Выделено устойчивое ядро</b><div class="small">Понятно, что не нужно перестраивать при каждом колебании.</div></div></div>
+    <div class="checkitem" data-check="trigger"><div class="mark">4</div><div><b>Есть триггер и заранее согласованное действие</b><div class="small">Команда знает, когда и как переключать ветку.</div></div></div>
+  </div>
+
+  <div class="feedback" id="fb9"></div>
+
+  <div class="final-note hidden" id="finalNote">
+    <h3>Памятка</h3>
+    <div>Хороший сценарный план не сообщает, какое будущее наступит. Он делает решение устойчивым к нескольким версиям будущего и заранее задает правила переключения.</div>
+    <div class="flow">
+      <span class="node">Решение</span><span class="arrow">→</span>
+      <span class="node">неопределенность</span><span class="arrow">→</span>
+      <span class="node">3 сценария</span><span class="arrow">→</span>
+      <span class="node">устойчивое ядро</span><span class="arrow">→</span>
+      <span class="node">условные ветки</span><span class="arrow">→</span>
+      <span class="node">триггер</span><span class="arrow">→</span>
+      <span class="node">действие</span>
+    </div>
+    <div class="formula">Не угадывать будущее → заранее определить, что останется неизменным и что команда переключит при изменении условий.</div>
+  </div>
+</section>
+</main>
+
+<footer>
+  <button class="ctrl muted" id="resetBtn">Сбросить</button>
+  <div class="spacer"></div>
+  <button class="ctrl secondary" id="backBtn" disabled>Назад</button>
+  <button class="ctrl primary" id="checkBtn">Проверить</button>
+  <button class="ctrl secondary hidden" id="nextBtn">Дальше</button>
+</footer>
+</div>
+</div>
+
+<script>
+(function(){
+  let current=1, score=0;
+  const checked={1:false,2:false,3:false,4:false,5:false,6:false,7:false,8:false,9:false};
+  const awarded={1:false,2:false,3:false,4:false,5:false,6:false,7:false,8:false,9:false};
+
+  const screens=[...document.querySelectorAll('.screen')];
+  const progressText=document.getElementById('progressText');
+  const progressBar=document.getElementById('progressBar');
+  const scoreText=document.getElementById('scoreText');
+  const backBtn=document.getElementById('backBtn');
+  const nextBtn=document.getElementById('nextBtn');
+  const checkBtn=document.getElementById('checkBtn');
+  const resetBtn=document.getElementById('resetBtn');
+
+  function update(){
+    screens.forEach(s=>s.classList.toggle('active',Number(s.dataset.screen)===current));
+    progressText.textContent=`Шаг ${current} из 9`;
+    progressBar.style.width=`${current/9*100}%`;
+    scoreText.textContent=`Верных решений: ${score}`;
+    backBtn.disabled=current===1;
+    nextBtn.classList.toggle('hidden',!checked[current]||current===9);
+    checkBtn.classList.toggle('hidden',checked[current]&&current!==9);
+    checkBtn.textContent=(current===9&&checked[9])?'Проверить еще раз':'Проверить';
+  }
+
+  function feedback(id,type,html){
+    const el=document.getElementById(id);
+    el.className=`feedback show ${type}`;
+    el.innerHTML=html;
+  }
+
+  document.querySelectorAll('.options').forEach(group=>{
+    group.addEventListener('click',e=>{
+      const btn=e.target.closest('.option');
+      if(!btn || checked[current])return;
+      group.querySelectorAll('.option').forEach(o=>o.classList.remove('selected'));
+      btn.classList.add('selected');
+    });
+  });
+
+  function checkSingle(q,screen,fbId,ok,bad){
+    const group=document.querySelector(`[data-q="${q}"]`);
+    const sel=group.querySelector('.option.selected');
+    if(!sel){feedback(fbId,'neutral','Сначала выберите один вариант.');return false;}
+    checked[screen]=true;
+    const good=sel.dataset.correct==='true';
+    group.querySelectorAll('.option').forEach(o=>{
+      if(o.dataset.correct==='true')o.classList.add('correct');
+      else if(o.classList.contains('selected'))o.classList.add('wrong');
+    });
+    if(good){
+      if(!awarded[screen]){score++;awarded[screen]=true;}
+      feedback(fbId,'ok',ok);
+    }else feedback(fbId,'bad',bad);
+    return true;
+  }
+
+  // screen 2
+  const scenarios=[...document.querySelectorAll('.scenario')];
+  scenarios.forEach(s=>{
+    s.addEventListener('click',()=>{
+      if(checked[2])return;
+      s.classList.toggle('selected');
+      if(scenarios.filter(x=>x.classList.contains('selected')).length>3)s.classList.remove('selected');
+    });
+  });
+
+  function checkScenarios(){
+    const selected=scenarios.filter(x=>x.classList.contains('selected'));
+    if(selected.length!==3){feedback('fb2','neutral','Выберите ровно три сценария.');return false;}
+    checked[2]=true;
+    const good=selected.every(x=>x.dataset.good==='true');
+    scenarios.forEach(s=>{
+      if(s.dataset.good==='true')s.classList.add('correct');
+      else if(s.classList.contains('selected'))s.classList.add('wrong');
+    });
+    if(good){
+      if(!awarded[2]){score++;awarded[2]=true;}
+      feedback('fb2','ok','Верно. Низкий, базовый и высокий поток дают три рабочие ветки. Полное исчезновение запросов и десятикратный рост слишком крайние: под них трудно проектировать обычное квартальное решение.');
+    }else{
+      feedback('fb2','bad','Сценарии должны заметно различаться, но оставаться правдоподобными. Экстремальные варианты полезны только если действительно входят в рабочий диапазон риска.');
+    }
+    return true;
+  }
+
+  // screen 5
+  const state5={};
+  const items5=[...document.querySelectorAll('#sortPool5 .sort-item')];
+  items5.forEach(item=>{
+    state5[item.dataset.id]=null;
+    item.addEventListener('click',()=>{
+      if(checked[5])return;
+      state5[item.dataset.id]=state5[item.dataset.id]===null?'core':state5[item.dataset.id]==='core'?'conditional':'core';
+      render5();
+    });
+  });
+
+  function render5(){
+    const core=document.getElementById('coreBucket');
+    const conditional=document.getElementById('conditionalBucket');
+    core.innerHTML='';conditional.innerHTML='';
+    items5.forEach(item=>{
+      item.classList.remove('assigned');
+      const st=state5[item.dataset.id];
+      if(st){
+        item.classList.add('assigned');
+        const clone=item.cloneNode(true);
+        clone.classList.remove('assigned','correct','wrong');
+        clone.style.cursor='default';
+        (st==='core'?core:conditional).appendChild(clone);
+      }
+    });
+  }
+
+  function checkSort5(){
+    if(Object.values(state5).some(v=>!v)){feedback('fb5','neutral','Распределите все пять элементов.');return false;}
+    checked[5]=true;
+    let good=true;
+    items5.forEach(item=>{
+      const ok=state5[item.dataset.id]===item.dataset.right;
+      if(!ok)good=false;
+      item.classList.add(ok?'correct':'wrong');
+    });
+    if(good){
+      if(!awarded[5]){score++;awarded[5]=true;}
+      feedback('fb5','ok','Да. Очередь, классификация и координатор полезны при любом уровне потока. Число выделенных людей и перенос несрочных задач должны меняться вместе с нагрузкой.');
+    }else{
+      feedback('fb5','bad','Спросите себя: этот элемент нужен во всех сценариях или должен масштабироваться вместе с потоком? Устойчивое ядро не стоит менять при каждом колебании.');
+    }
+    return true;
+  }
+
+  // screen 7 builder
+  const blocks=[...document.querySelectorAll('#pool7 .block')];
+  const slots=[...document.querySelectorAll('.slot')];
+  const state7=[null,null,null,null];
+  let selectedBlock=null;
+
+  blocks.forEach(b=>{
+    b.addEventListener('click',()=>{
+      if(checked[7]||b.classList.contains('used'))return;
+      blocks.forEach(x=>x.style.outline='');
+      selectedBlock=b;
+      b.style.outline='3px solid rgba(47,93,98,.22)';
+    });
+  });
+
+  slots.forEach((s,i)=>{
+    s.addEventListener('click',()=>{
+      if(checked[7])return;
+      if(s.dataset.item){
+        const old=blocks.find(b=>b.dataset.id===s.dataset.item);
+        if(old){old.classList.remove('used');old.style.outline='';}
+        s.dataset.item='';
+        s.textContent='...';
+        s.classList.remove('filled');
+        state7[i]=null;
+        return;
+      }
+      if(!selectedBlock)return;
+      s.dataset.item=selectedBlock.dataset.id;
+      s.textContent=selectedBlock.textContent;
+      s.classList.add('filled');
+      selectedBlock.classList.add('used');
+      selectedBlock.style.outline='';
+      state7[i]=selectedBlock.dataset.id;
+      selectedBlock=null;
+    });
+  });
+
+  function checkBuilder7(){
+    if(state7.some(x=>!x)){feedback('fb7','neutral','Заполните все четыре шага реакции.');return false;}
+    const expected=['reserve','priority','move','review'];
+    const good=state7.join('|')===expected.join('|');
+    checked[7]=true;
+    if(good){
+      if(!awarded[7]){score++;awarded[7]=true;}
+      feedback('fb7','ok','Получилась пропорциональная реакция: усилить ресурс, уточнить приоритеты, освободить емкость и через неделю проверить, помогло ли переключение.');
+    }else{
+      feedback('fb7','bad','Реакция должна усиливать текущую систему, а не разрушать ее. Логика: резерв → приоритизация → перенос несрочного → контроль результата.');
+    }
+    return true;
+  }
+
+  function setCheck(name,good,goodText,warnText){
+    const el=document.querySelector(`[data-check="${name}"]`);
+    el.classList.remove('good','warn');
+    el.classList.add(good?'good':'warn');
+    el.querySelector('.mark').textContent=good?'✓':'!';
+    el.querySelector('.small').textContent=good?goodText:warnText;
+  }
+
+  function val(id){return document.getElementById(id).value.trim();}
+
+  function checkFinal(){
+    const v={};
+    for(let i=1;i<=12;i++)v[i]=val('f'+i);
+    if(Object.values(v).filter(Boolean).length<12){
+      feedback('fb9','neutral','Заполните все поля. Можно коротко, но конкретно.');
+      return false;
+    }
+
+    const uncertaintyGood=v[2].length>=10;
+    const scenariosGood=v[4].length>=12 && v[6].length>=12 && v[8].length>=12 &&
+                        new Set([v[4],v[6],v[8]].map(x=>x.toLowerCase())).size===3;
+    const coreGood=v[10].length>=15;
+    const triggerGood=v[11].length>=15 && v[12].length>=12;
+
+    setCheck('uncertainty',uncertaintyGood,
+      'Есть одна ключевая неопределенность, от которой зависит решение.',
+      'Сделайте неопределенность конкретнее: что именно может измениться и заставить перестроить решение?');
+    setCheck('scenarios',scenariosGood,
+      'Три сценария различаются и задают разные условия работы.',
+      'Сценарии должны быть действительно разными, а не повторять одну и ту же ветку другими словами.');
+    setCheck('core',coreGood,
+      'Устойчивое ядро сформулировано отдельно от условных веток.',
+      'Добавьте, что должно работать во всех трех сценариях без перестройки.');
+    setCheck('trigger',triggerGood,
+      'Есть наблюдаемый триггер и заранее определенное действие.',
+      'Уточните измеримое условие перехода и конкретную реакцию команды.');
+
+    checked[9]=true;
+    const passed=[uncertaintyGood,scenariosGood,coreGood,triggerGood].filter(Boolean).length;
+
+    if(passed===4){
+      if(!awarded[9]){score++;awarded[9]=true;}
+      feedback('fb9','ok','Сценарная развилка собрана: есть неопределенность, три ветки, устойчивое ядро и правило переключения между режимами.');
+    }else if(passed>=2){
+      feedback('fb9','neutral','Основа есть. Уточните один-два элемента по подсказкам ниже, чтобы сценарный план можно было реально использовать.');
+    }else{
+      feedback('fb9','bad','Пока это скорее три версии будущего без механизма переключения. Доведите схему до ядра, триггера и заранее согласованного действия.');
+    }
+
+    document.getElementById('finalNote').classList.remove('hidden');
+    return true;
+  }
+
+  checkBtn.addEventListener('click',()=>{
+    let done=false;
+
+    if(current===1){
+      done=checkSingle(
+        'q1',1,'fb1',
+        'Верно. Именно объем входящих запросов напрямую определяет, сколько людей нужно выделять на поток и сколько ресурсов останется у внутренних проектов.',
+        'Эта неопределенность почти не меняет конфигурацию решения. Для сценарной развилки нужен фактор, который действительно заставит перераспределять ресурсы или менять маршрут.'
+      );
+    }
+
+    if(current===2)done=checkScenarios();
+
+    if(current===3){
+      done=checkSingle(
+        'q3',3,'fb3',
+        'Да. Базовое покрытие сохраняется, но лишняя емкость возвращается в плановые задачи. Система остается рабочей и не простаивает.',
+        'Вы либо делаете решение слишком жестким, либо полностью отменяете его. Сценарная логика предполагает адаптацию, а не крайности.'
+      );
+    }
+
+    if(current===4){
+      done=checkSingle(
+        'q4',4,'fb4',
+        'Верно. Единая очередь и классификация полезны при любом объеме. А число людей должно масштабироваться вместе с потоком.',
+        'Сделайте условным тот элемент, который должен расти или сокращаться вместе с нагрузкой. Ядро процесса лучше оставить стабильным.'
+      );
+    }
+
+    if(current===5)done=checkSort5();
+
+    if(current===6){
+      done=checkSingle(
+        'q6',6,'fb6',
+        'Да. Такой триггер наблюдаем, устойчив во времени и учитывает не только сам объем, но и рост очереди. Он отличает новый режим от разового всплеска.',
+        'Сигнал слишком субъективный или краткосрочный. Триггер должен быть измеримым и достаточно устойчивым.'
+      );
+    }
+
+    if(current===7)done=checkBuilder7();
+
+    if(current===8){
+      done=checkSingle(
+        'q8',8,'fb8',
+        'Верно. Сценарный план нужен именно для переключения. Если условия устойчиво ушли в низкую ветку, ресурсы возвращаются к плановым задачам, а базовое покрытие сохраняется.',
+        'Сценарий не должен превращаться в постоянный режим. Если факты изменились, команда переключает ветку вместо того, чтобы держаться за прежнюю конфигурацию.'
+      );
+    }
+
+    if(current===9)done=checkFinal();
+
+    if(done)update();
+  });
+
+  nextBtn.addEventListener('click',()=>{
+    if(current<9){current++;update();window.scrollTo({top:0,behavior:'smooth'});}
+  });
+
+  backBtn.addEventListener('click',()=>{
+    if(current>1){current--;update();window.scrollTo({top:0,behavior:'smooth'});}
+  });
+
+  resetBtn.addEventListener('click',()=>{
+    current=1;score=0;selectedBlock=null;
+    Object.keys(checked).forEach(k=>checked[k]=false);
+    Object.keys(awarded).forEach(k=>awarded[k]=false);
+
+    document.querySelectorAll('.option').forEach(o=>o.classList.remove('selected','correct','wrong'));
+    document.querySelectorAll('.feedback').forEach(f=>{f.className='feedback';f.innerHTML='';});
+
+    scenarios.forEach(s=>s.classList.remove('selected','correct','wrong'));
+
+    Object.keys(state5).forEach(k=>state5[k]=null);
+    items5.forEach(i=>i.classList.remove('assigned','correct','wrong'));
+    render5();
+
+    blocks.forEach(b=>{b.classList.remove('used');b.style.outline='';});
+    slots.forEach(s=>{s.dataset.item='';s.textContent='...';s.classList.remove('filled');});
+    state7.fill(null);
+
+    for(let i=1;i<=12;i++)document.getElementById('f'+i).value='';
+
+    document.querySelectorAll('.checkitem').forEach((el,i)=>{
+      el.classList.remove('good','warn');
+      el.querySelector('.mark').textContent=String(i+1);
+    });
+    document.querySelector('[data-check="uncertainty"] .small').textContent='Она действительно меняет конфигурацию решения.';
+    document.querySelector('[data-check="scenarios"] .small').textContent='Это не три формулировки одного и того же будущего.';
+    document.querySelector('[data-check="core"] .small').textContent='Понятно, что не нужно перестраивать при каждом колебании.';
+    document.querySelector('[data-check="trigger"] .small').textContent='Команда знает, когда и как переключать ветку.';
+    document.getElementById('finalNote').classList.add('hidden');
+
+    update();
+    window.scrollTo({top:0,behavior:'smooth'});
+  });
+
+  render5();
+  update();
+})();
+</script>
+</body>
+</html>

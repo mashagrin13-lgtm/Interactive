@@ -1,0 +1,701 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Соберите аргумент выбора</title>
+<style>
+:root{
+  --bg:#f4f6f8; --card:#fff; --text:#1f2933; --muted:#667085; --line:#d9dee7;
+  --soft:#eef2f6; --accent:#2f5d62; --accent-soft:#e7f0f1;
+  --ok:#1f6b45; --okbg:#e9f5ee; --bad:#913b35; --badbg:#faeceb;
+  --warn:#7b5719; --warnbg:#fff5dc; --shadow:0 14px 40px rgba(31,41,51,.08);
+}
+*{box-sizing:border-box}
+body{
+  margin:0;background:var(--bg);color:var(--text);
+  font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  line-height:1.55;
+}
+button,input,textarea{font:inherit}
+.app{width:min(100% - 28px,760px);margin:28px auto}
+.shell{background:var(--card);border:1px solid var(--line);border-radius:22px;box-shadow:var(--shadow);overflow:hidden}
+header{padding:22px 22px 18px;border-bottom:1px solid var(--line);background:#fff}
+.eyebrow{margin:0 0 6px;color:var(--accent);font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:.03em}
+h1{margin:0;font-size:clamp(27px,5vw,35px);line-height:1.12;letter-spacing:-.02em}
+.subtitle{margin:10px 0 0;color:var(--muted);font-size:15px}
+.progress-meta{display:flex;justify-content:space-between;gap:12px;margin:18px 0 7px;color:var(--muted);font-size:13px}
+.progress{height:8px;background:var(--soft);border-radius:999px;overflow:hidden}
+.progress span{display:block;height:100%;background:var(--accent);width:12.5%;transition:width .2s ease}
+main{padding:24px 22px 18px}
+.screen{display:none}.screen.active{display:block}
+.step{display:inline-flex;align-items:center;min-height:30px;padding:0 11px;border-radius:999px;background:var(--accent-soft);color:var(--accent);font-size:13px;font-weight:800;margin-bottom:12px}
+h2{margin:0 0 10px;font-size:23px;line-height:1.25}
+.lead{margin:0 0 18px;color:#3b4652}
+.case{margin:16px 0 18px;padding:15px 16px;background:#f8fafb;border:1px solid var(--line);border-radius:14px}
+.case strong{display:block;margin-bottom:6px}
+.instruction{margin:16px 0;padding:14px 15px;background:var(--accent-soft);border-left:4px solid var(--accent);border-radius:0 12px 12px 0;font-size:14px}
+.options{display:grid;gap:10px;margin-top:14px}
+.option{
+  width:100%;text-align:left;border:1px solid var(--line);background:#fff;color:var(--text);
+  border-radius:13px;padding:14px;cursor:pointer;transition:.15s ease
+}
+.option:hover{border-color:#aeb7c4;background:#fafbfc}
+.option.selected{border-color:var(--accent);background:var(--accent-soft)}
+.option.correct{border-color:#7fb395;background:var(--okbg)}
+.option.wrong{border-color:#d29a95;background:var(--badbg)}
+.feedback{display:none;margin-top:16px;padding:15px 16px;border-radius:13px;font-size:14px}
+.feedback.show{display:block}
+.feedback.ok{background:var(--okbg);border:1px solid #b9dcc8;color:#174c33}
+.feedback.bad{background:var(--badbg);border:1px solid #edc3c0;color:#742c27}
+.feedback.neutral{background:var(--warnbg);border:1px solid #ead7a2;color:#66470e}
+
+.idea-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:14px}
+.idea{border:1px solid var(--line);border-radius:13px;background:#fff;padding:13px}
+.idea b{display:block;margin-bottom:5px}
+.idea.excluded{opacity:.58;text-decoration:line-through}
+.tag{display:inline-block;margin-top:7px;padding:4px 8px;border-radius:999px;font-size:12px;background:var(--soft);color:var(--muted)}
+.tag.bad{background:var(--badbg);color:var(--bad)}
+
+.matrix{
+  display:grid;grid-template-columns:1.35fr .8fr .8fr;gap:1px;background:var(--line);
+  border:1px solid var(--line);border-radius:12px;overflow:hidden;margin-top:16px
+}
+.matrix > div{background:#fff;padding:11px 12px}
+.matrix .head{background:#5f7474;color:#fff;font-weight:800;font-size:13px}
+.rating{display:flex;gap:5px;flex-wrap:wrap}
+.rating button{
+  width:32px;height:32px;border-radius:8px;border:1px solid var(--line);background:#fff;cursor:pointer
+}
+.rating button.selected{background:var(--accent);color:#fff;border-color:var(--accent)}
+.range-note{font-size:12px;color:var(--muted);margin-top:5px}
+.reason-box{margin-top:12px}
+.reason-box textarea{
+  width:100%;min-height:80px;border:1px solid var(--line);border-radius:11px;padding:11px 12px;resize:vertical
+}
+.reason-box textarea:focus{outline:3px solid rgba(47,93,98,.16);border-color:var(--accent)}
+
+.data-card{margin-top:12px;padding:13px 14px;border:1px solid var(--line);border-radius:12px;background:#fff}
+.data-card b{display:block;margin-bottom:4px}
+
+.profile{
+  display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px
+}
+.profile-card{border:1px solid var(--line);border-radius:14px;background:#fff;padding:14px}
+.profile-card h3{margin:0 0 8px;font-size:17px}
+.bar-row{display:grid;grid-template-columns:1.1fr 1.8fr 30px;gap:8px;align-items:center;margin:8px 0;font-size:13px}
+.bar{height:8px;background:var(--soft);border-radius:999px;overflow:hidden}
+.bar span{display:block;height:100%;background:var(--accent)}
+.choice-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:14px}
+.choice{border:1px solid var(--line);border-radius:12px;background:#fff;padding:13px;cursor:pointer;text-align:center;font-weight:750}
+.choice.selected{border-color:var(--accent);background:var(--accent-soft)}
+
+.criteria-pills{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.pill{padding:7px 10px;border:1px solid var(--line);border-radius:999px;background:#fff;cursor:pointer;font-size:13px}
+.pill.selected{border-color:var(--accent);background:var(--accent-soft)}
+
+.field-grid{display:grid;gap:12px;margin-top:16px}
+.field label{display:block;font-weight:750;font-size:14px;margin-bottom:6px}
+.field input,.field textarea{
+  width:100%;border:1px solid var(--line);border-radius:12px;padding:12px 13px;background:#fff;color:var(--text)
+}
+.field textarea{min-height:86px;resize:vertical}
+.field input:focus,.field textarea:focus{outline:3px solid rgba(47,93,98,.16);border-color:var(--accent)}
+
+.checklist{display:grid;gap:9px;margin-top:16px}
+.checkitem{
+  display:grid;grid-template-columns:24px 1fr;gap:10px;padding:12px 13px;border:1px solid var(--line);border-radius:12px;background:#fff
+}
+.checkitem .mark{
+  width:24px;height:24px;border-radius:50%;background:var(--soft);color:var(--muted);
+  display:flex;align-items:center;justify-content:center;font-weight:800;font-size:12px
+}
+.checkitem.good{border-color:#b9dcc8;background:var(--okbg)}
+.checkitem.good .mark{background:#d6ecdf;color:var(--ok)}
+.checkitem.warn{border-color:#ead7a2;background:var(--warnbg)}
+.checkitem.warn .mark{background:#f5e8bd;color:var(--warn)}
+.small{font-size:13px;color:var(--muted)}
+
+.final-note{margin-top:16px;padding:16px;border:1px solid var(--line);border-radius:14px;background:#f8fafb}
+.final-note h3{margin:0 0 8px;font-size:17px}
+.formula{margin-top:10px;font-weight:800;color:var(--accent)}
+
+footer{padding:16px 22px 22px;border-top:1px solid var(--line);display:flex;gap:10px;flex-wrap:wrap;align-items:center;background:#fff}
+footer .spacer{flex:1}
+.ctrl{border-radius:12px;padding:11px 15px;cursor:pointer;font-weight:750;border:1px solid var(--line)}
+.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+.secondary{background:#fff;color:var(--text)}
+.muted{background:#fff;color:var(--muted)}
+button[disabled]{opacity:.42;cursor:not-allowed}
+.hidden{display:none!important}
+
+@media(max-width:650px){
+  .app{width:min(100% - 16px,760px);margin:8px auto 18px}
+  .shell{border-radius:16px}
+  header,main,footer{padding-left:16px;padding-right:16px}
+  .idea-grid,.profile,.choice-grid{grid-template-columns:1fr}
+  .matrix{grid-template-columns:1.2fr .8fr .8fr}
+  .matrix > div{padding:8px;font-size:12px}
+  footer .spacer{display:none}
+  footer button{flex:1 1 calc(50% - 6px)}
+}
+</style>
+</head>
+<body>
+<div class="app">
+<div class="shell">
+<header>
+  <p class="eyebrow">Проверочный интерактив</p>
+  <h1>Соберите аргумент выбора</h1>
+  <p class="subtitle">Оцените идеи по восьми критериям, обновляйте оценки по мере появления данных и объясните итоговый выбор.</p>
+  <div class="progress-meta">
+    <span id="progressText">Шаг 1 из 8</span>
+    <span id="scoreText">Верных решений: 0</span>
+  </div>
+  <div class="progress"><span id="progressBar"></span></div>
+</header>
+
+<main>
+<section class="screen active" data-screen="1">
+  <div class="step">Шаг 1</div>
+  <h2>Сначала отсекайте то, что нарушает обязательные условия</h2>
+
+  <div class="case">
+    <strong>Задача</strong>
+    Сократить срок адаптации новых сотрудников с восьми до пяти недель.
+    <br><br>
+    <b>Ограничения:</b> нельзя увеличивать число наставников; требования к качеству сохраняются; первые изменения нужно проверить в течение двух месяцев.
+  </div>
+
+  <div class="idea-grid">
+    <div class="idea"><b>А. Чек-лист первых десяти рабочих дней</b>Контрольные точки и понятная последовательность действий.</div>
+    <div class="idea"><b>Б. Полностью самостоятельный онлайн-курс</b>Вся адаптация переносится в асинхронный формат.</div>
+    <div class="idea"><b>В. Второй наставник для каждого новичка</b>У каждого новичка появляется еще один сопровождающий.</div>
+  </div>
+
+  <div class="instruction">Какой вариант нельзя оценивать наравне с остальными, пока он не переработан?</div>
+
+  <div class="options" data-q="q1">
+    <button class="option">Вариант А.</button>
+    <button class="option">Вариант Б.</button>
+    <button class="option" data-correct="true">Вариант В.</button>
+  </div>
+  <div class="feedback" id="fb1"></div>
+</section>
+
+<section class="screen" data-screen="2">
+  <div class="step">Шаг 2</div>
+  <h2>Оцените эффект и соответствие задаче</h2>
+
+  <div class="instruction">
+    Поставьте оценки от 1 до 5 для двух идей. Здесь нет «магически правильной цифры»: после проверки система покажет допустимый диапазон и попросит обоснование, если оценка сильно выбивается.
+  </div>
+
+  <div class="matrix">
+    <div class="head">Критерий</div><div class="head">А. Чек-лист</div><div class="head">Б. Онлайн-курс</div>
+
+    <div>Эффект</div>
+    <div><div class="rating" data-step="2" data-idea="A" data-crit="effect"></div></div>
+    <div><div class="rating" data-step="2" data-idea="B" data-crit="effect"></div></div>
+
+    <div>Соответствие задаче</div>
+    <div><div class="rating" data-step="2" data-idea="A" data-crit="fit"></div></div>
+    <div><div class="rating" data-step="2" data-idea="B" data-crit="fit"></div></div>
+  </div>
+
+  <div class="reason-box hidden" id="reason2">
+    <label><b>Одна из оценок сильно отличается от диапазона.</b> Коротко укажите, на каком основании вы ее поставили.</label>
+    <textarea id="reason2text" placeholder="Например: считаю эффект выше, потому что..."></textarea>
+  </div>
+
+  <div class="feedback" id="fb2"></div>
+</section>
+
+<section class="screen" data-screen="3">
+  <div class="step">Шаг 3</div>
+  <h2>Обновите оценки после новых данных</h2>
+
+  <div class="data-card"><b>Новые условия</b>
+    Чек-лист можно подготовить за неделю. Онлайн-курс потребует переработки 18 учебных блоков. Команда может выделить на разработку ограниченное время.
+  </div>
+
+  <div class="instruction">Теперь оцените реализуемость и ресурсы. Смысл шага — увидеть, что профиль идеи меняется по мере появления информации.</div>
+
+  <div class="matrix">
+    <div class="head">Критерий</div><div class="head">А. Чек-лист</div><div class="head">Б. Онлайн-курс</div>
+
+    <div>Реализуемость</div>
+    <div><div class="rating" data-step="3" data-idea="A" data-crit="feas"></div></div>
+    <div><div class="rating" data-step="3" data-idea="B" data-crit="feas"></div></div>
+
+    <div>Ресурсы</div>
+    <div><div class="rating" data-step="3" data-idea="A" data-crit="resource"></div></div>
+    <div><div class="rating" data-step="3" data-idea="B" data-crit="resource"></div></div>
+  </div>
+
+  <div class="feedback" id="fb3"></div>
+</section>
+
+<section class="screen" data-screen="4">
+  <div class="step">Шаг 4</div>
+  <h2>Добавьте риски и скорость результата</h2>
+
+  <div class="data-card"><b>Риск варианта А</b>Чек-лист может устареть после изменения рабочих процедур.</div>
+  <div class="data-card"><b>Риск варианта Б</b>При полностью самостоятельном обучении практические ошибки могут обнаруживаться слишком поздно.</div>
+
+  <div class="instruction">Оцените управляемость рисков и скорость получения результата.</div>
+
+  <div class="matrix">
+    <div class="head">Критерий</div><div class="head">А. Чек-лист</div><div class="head">Б. Онлайн-курс</div>
+
+    <div>Управляемость рисков</div>
+    <div><div class="rating" data-step="4" data-idea="A" data-crit="risk"></div></div>
+    <div><div class="rating" data-step="4" data-idea="B" data-crit="risk"></div></div>
+
+    <div>Скорость результата</div>
+    <div><div class="rating" data-step="4" data-idea="A" data-crit="speed"></div></div>
+    <div><div class="rating" data-step="4" data-idea="B" data-crit="speed"></div></div>
+  </div>
+
+  <div class="feedback" id="fb4"></div>
+</section>
+
+<section class="screen" data-screen="5">
+  <div class="step">Шаг 5</div>
+  <h2>Завершите профиль двумя последними критериями</h2>
+
+  <div class="instruction">
+    Оцените понятность механизма и степень отличия от текущего подхода. Высокое отличие само по себе не делает идею лучше — это лишь одна характеристика профиля.
+  </div>
+
+  <div class="matrix">
+    <div class="head">Критерий</div><div class="head">А. Чек-лист</div><div class="head">Б. Онлайн-курс</div>
+
+    <div>Понятность</div>
+    <div><div class="rating" data-step="5" data-idea="A" data-crit="clarity"></div></div>
+    <div><div class="rating" data-step="5" data-idea="B" data-crit="clarity"></div></div>
+
+    <div>Отличие от текущего подхода</div>
+    <div><div class="rating" data-step="5" data-idea="A" data-crit="novelty"></div></div>
+    <div><div class="rating" data-step="5" data-idea="B" data-crit="novelty"></div></div>
+  </div>
+
+  <div class="feedback" id="fb5"></div>
+</section>
+
+<section class="screen" data-screen="6">
+  <div class="step">Шаг 6</div>
+  <h2>Сравните профили, а не суммы</h2>
+  <p class="lead">Матрица нужна, чтобы сделать логику выбора видимой. Итог не сводится к арифметике: важнее понять, где каждая идея сильна и где уступает.</p>
+
+  <div class="profile">
+    <div class="profile-card">
+      <h3>А. Чек-лист</h3>
+      <div id="profileA"></div>
+    </div>
+    <div class="profile-card">
+      <h3>Б. Онлайн-курс</h3>
+      <div id="profileB"></div>
+    </div>
+  </div>
+
+  <div class="instruction">
+    Выберите решение и отметьте минимум <b>три критерия</b>, на которые вы опираетесь.
+  </div>
+
+  <div class="choice-grid">
+    <div class="choice" data-choice="A">Проверить чек-лист</div>
+    <div class="choice" data-choice="B">Доработать онлайн-модель</div>
+    <div class="choice" data-choice="mix">Соединить несколько элементов</div>
+  </div>
+
+  <div class="criteria-pills" id="criteriaPills"></div>
+
+  <div class="feedback" id="fb6"></div>
+</section>
+
+<section class="screen" data-screen="7">
+  <div class="step">Шаг 7</div>
+  <h2>Обновите вывод после ключевой информации</h2>
+
+  <div class="case">
+    <strong>Новые данные</strong>
+    Основная задержка возникает в первые две недели: новичкам непонятна последовательность действий. Нехватка учебного контента не является основной причиной задержки.
+  </div>
+
+  <div class="instruction">Как эта информация должна повлиять на оценку соответствия задаче?</div>
+
+  <div class="options" data-q="q7">
+    <button class="option">Не влияет: оценки уже выставлены.</button>
+    <button class="option" data-correct="true">Соответствие чек-листа повышается, а ценность полной перестройки обучения может снизиться.</button>
+    <button class="option">Онлайн-курс автоматически становится лучшим вариантом.</button>
+    <button class="option">Нужно удалить критерий «соответствие задаче» из матрицы.</button>
+  </div>
+
+  <div class="feedback" id="fb7"></div>
+</section>
+
+<section class="screen" data-screen="8">
+  <div class="step">Шаг 8</div>
+  <h2>Сформулируйте финальный аргумент</h2>
+
+  <div class="instruction">
+    Заполните поля так, чтобы из текста было понятно не только <b>что</b> вы выбрали, но и <b>почему</b>, где вариант уступает и что вы будете проверять дальше.
+  </div>
+
+  <div class="field-grid">
+    <div class="field"><label for="f1">Выбираю</label><input id="f1" placeholder="Например: чек-лист как первую гипотезу"></div>
+    <div class="field"><label for="f2">Потому что</label><textarea id="f2" placeholder="Свяжите выбор с задачей и ограничениями"></textarea></div>
+    <div class="field"><label for="f3">Основные преимущества по критериям</label><textarea id="f3" placeholder="Назовите не менее трех критериев"></textarea></div>
+    <div class="field"><label for="f4">Где вариант уступает</label><textarea id="f4" placeholder="Что у выбранного варианта слабее?"></textarea></div>
+    <div class="field"><label for="f5">Что нужно проверить</label><textarea id="f5" placeholder="Какую гипотезу или риск нужно подтвердить?"></textarea></div>
+    <div class="field"><label for="f6">Первый следующий шаг</label><textarea id="f6" placeholder="Что команда сделает первым?"></textarea></div>
+  </div>
+
+  <div class="checklist">
+    <div class="checkitem" data-check="choice"><div class="mark">1</div><div><b>Выбор связан с исходной задачей</b><div class="small">Не просто «нравится больше», а отвечает на нужный результат.</div></div></div>
+    <div class="checkitem" data-check="criteria"><div class="mark">2</div><div><b>Есть минимум три критерия</b><div class="small">Логика выбора видна, а не скрыта за общей формулировкой.</div></div></div>
+    <div class="checkitem" data-check="tradeoff"><div class="mark">3</div><div><b>Указана слабая сторона</b><div class="small">Вы не превратили выбранную идею в «идеальную».</div></div></div>
+    <div class="checkitem" data-check="test"><div class="mark">4</div><div><b>Есть проверяемый следующий шаг</b><div class="small">Понятно, что именно команда проверит первой.</div></div></div>
+  </div>
+
+  <div class="feedback" id="fb8"></div>
+
+  <div class="final-note hidden" id="finalNote">
+    <h3>Памятка</h3>
+    <div>Карта оценки не должна превращать решение в арифметику. Ее задача — сделать видимой логику выбора и не позволить одной привлекательной характеристике затмить остальные.</div>
+    <div class="formula">Обязательные условия → 8 критериев → профиль каждой идеи → сильные и слабые стороны → выбор или комбинация → проверка</div>
+  </div>
+</section>
+</main>
+
+<footer>
+  <button class="ctrl muted" id="resetBtn">Сбросить</button>
+  <div class="spacer"></div>
+  <button class="ctrl secondary" id="backBtn" disabled>Назад</button>
+  <button class="ctrl primary" id="checkBtn">Проверить</button>
+  <button class="ctrl secondary hidden" id="nextBtn">Дальше</button>
+</footer>
+</div>
+</div>
+
+<script>
+(function(){
+  let current=1, score=0;
+  const checked={1:false,2:false,3:false,4:false,5:false,6:false,7:false,8:false};
+  const awarded={1:false,2:false,3:false,4:false,5:false,6:false,7:false,8:false};
+
+  const labels={
+    effect:'Эффект', fit:'Соответствие', feas:'Реализуемость', resource:'Ресурсы',
+    risk:'Управляемость рисков', speed:'Скорость', clarity:'Понятность', novelty:'Отличие'
+  };
+
+  const ranges={
+    effect:{A:[3,5],B:[3,5]},
+    fit:{A:[3,4],B:[2,4]},
+    feas:{A:[4,5],B:[1,3]},
+    resource:{A:[4,5],B:[1,2]},
+    risk:{A:[3,4],B:[2,3]},
+    speed:{A:[4,5],B:[1,3]},
+    clarity:{A:[4,5],B:[3,4]},
+    novelty:{A:[2,3],B:[4,5]}
+  };
+
+  const ratings={A:{},B:{}};
+  const screens=[...document.querySelectorAll('.screen')];
+  const progressText=document.getElementById('progressText');
+  const progressBar=document.getElementById('progressBar');
+  const scoreText=document.getElementById('scoreText');
+  const backBtn=document.getElementById('backBtn');
+  const nextBtn=document.getElementById('nextBtn');
+  const checkBtn=document.getElementById('checkBtn');
+  const resetBtn=document.getElementById('resetBtn');
+
+  function update(){
+    screens.forEach(s=>s.classList.toggle('active',Number(s.dataset.screen)===current));
+    progressText.textContent=`Шаг ${current} из 8`;
+    progressBar.style.width=`${current/8*100}%`;
+    scoreText.textContent=`Верных решений: ${score}`;
+    backBtn.disabled=current===1;
+    nextBtn.classList.toggle('hidden',!checked[current]||current===8);
+    checkBtn.classList.toggle('hidden',checked[current]&&current!==8);
+    checkBtn.textContent=(current===8&&checked[8])?'Проверить еще раз':'Проверить';
+  }
+
+  function feedback(id,type,html){
+    const el=document.getElementById(id);
+    el.className=`feedback show ${type}`;
+    el.innerHTML=html;
+  }
+
+  document.querySelectorAll('.options').forEach(group=>{
+    group.addEventListener('click',e=>{
+      const btn=e.target.closest('.option');
+      if(!btn || checked[current])return;
+      group.querySelectorAll('.option').forEach(o=>o.classList.remove('selected'));
+      btn.classList.add('selected');
+    });
+  });
+
+  function checkSingle(q,screen,fbId,ok,bad){
+    const group=document.querySelector(`[data-q="${q}"]`);
+    const sel=group.querySelector('.option.selected');
+    if(!sel){feedback(fbId,'neutral','Сначала выберите один вариант.');return false;}
+    checked[screen]=true;
+    const good=sel.dataset.correct==='true';
+    group.querySelectorAll('.option').forEach(o=>{
+      if(o.dataset.correct==='true')o.classList.add('correct');
+      else if(o.classList.contains('selected'))o.classList.add('wrong');
+    });
+
+    if(good){
+      if(!awarded[screen]){score++;awarded[screen]=true;}
+      feedback(fbId,'ok',ok);
+    }else{
+      feedback(fbId,'bad',bad);
+    }
+    return true;
+  }
+
+  // ratings
+  document.querySelectorAll('.rating').forEach(r=>{
+    for(let i=1;i<=5;i++){
+      const b=document.createElement('button');
+      b.type='button';b.textContent=i;
+      b.addEventListener('click',()=>{
+        if(checked[current])return;
+        r.querySelectorAll('button').forEach(x=>x.classList.remove('selected'));
+        b.classList.add('selected');
+        r.dataset.value=String(i);
+        ratings[r.dataset.idea][r.dataset.crit]=i;
+      });
+      r.appendChild(b);
+    }
+  });
+
+  function checkRatings(step,critList,fbId){
+    const relevant=[...document.querySelectorAll(`.rating[data-step="${step}"]`)];
+    if(relevant.some(r=>!r.dataset.value)){
+      feedback(fbId,'neutral','Поставьте оценки по всем четырем ячейкам.');
+      return false;
+    }
+
+    let far=false;
+    let text=[];
+    relevant.forEach(r=>{
+      const val=Number(r.dataset.value);
+      const [lo,hi]=ranges[r.dataset.crit][r.dataset.idea];
+      if(val<lo-1 || val>hi+1)far=true;
+      text.push(`${r.dataset.idea}: ${labels[r.dataset.crit]} — ваш балл ${val}, ориентир ${lo}–${hi}`);
+    });
+
+    if(step===2 && far){
+      document.getElementById('reason2').classList.remove('hidden');
+      const reason=document.getElementById('reason2text').value.trim();
+      if(reason.length<15){
+        feedback(fbId,'neutral','Одна из оценок заметно отличается от ориентировочного диапазона. Добавьте короткое основание — после этого можно продолжить.');
+        return false;
+      }
+    }
+
+    checked[step]=true;
+    let good=true;
+    relevant.forEach(r=>{
+      const val=Number(r.dataset.value);
+      const [lo,hi]=ranges[r.dataset.crit][r.dataset.idea];
+      if(val<lo-1 || val>hi+1)good=false;
+    });
+
+    if(good){
+      if(!awarded[step]){score++;awarded[step]=true;}
+      feedback(fbId,'ok','Оценки лежат в разумном диапазоне. Здесь важна не точная цифра, а объяснимая логика. <br><br>'+text.join('<br>'));
+    }else{
+      feedback(fbId,'neutral','Оценки отличаются от ориентиров, но вы дали основание. Сохраните эту логику — дальше профиль может измениться после новых данных.<br><br>'+text.join('<br>'));
+    }
+    return true;
+  }
+
+  // step 6
+  let choice=null;
+  document.querySelectorAll('.choice').forEach(c=>{
+    c.addEventListener('click',()=>{
+      if(checked[6])return;
+      document.querySelectorAll('.choice').forEach(x=>x.classList.remove('selected'));
+      c.classList.add('selected');
+      choice=c.dataset.choice;
+    });
+  });
+
+  const pillBox=document.getElementById('criteriaPills');
+  Object.keys(labels).forEach(k=>{
+    const p=document.createElement('div');
+    p.className='pill';p.dataset.crit=k;p.textContent=labels[k];
+    p.addEventListener('click',()=>{if(!checked[6])p.classList.toggle('selected');});
+    pillBox.appendChild(p);
+  });
+
+  function profileHTML(idea){
+    const keys=Object.keys(labels);
+    return keys.map(k=>{
+      const val=ratings[idea][k]||0;
+      return `<div class="bar-row"><span>${labels[k]}</span><div class="bar"><span style="width:${val*20}%"></span></div><b>${val}</b></div>`;
+    }).join('');
+  }
+
+  function checkChoice(){
+    if(!choice){
+      feedback('fb6','neutral','Сначала выберите решение.');
+      return false;
+    }
+    const selected=[...document.querySelectorAll('.pill.selected')];
+    if(selected.length<3){
+      feedback('fb6','neutral','Отметьте минимум три критерия, на которые вы опираетесь.');
+      return false;
+    }
+    checked[6]=true;
+    if(!awarded[6]){score++;awarded[6]=true;}
+    feedback('fb6','ok','Аргумент собран правильно: вы выбрали не «победителя по сумме», а решение и явно показали, через какие критерии его обосновываете. Допустимы и чек-лист, и доработка онлайн-модели, и комбинация — если логика выбора прозрачна.');
+    return true;
+  }
+
+  function setCheck(name,good,goodText,warnText){
+    const el=document.querySelector(`[data-check="${name}"]`);
+    el.classList.remove('good','warn');
+    el.classList.add(good?'good':'warn');
+    el.querySelector('.mark').textContent=good?'✓':'!';
+    el.querySelector('.small').textContent=good?goodText:warnText;
+  }
+
+  function val(id){return document.getElementById(id).value.trim();}
+
+  function checkFinal(){
+    const vals=[1,2,3,4,5,6].map(i=>val('f'+i));
+    if(vals.filter(Boolean).length<6){
+      feedback('fb8','neutral','Заполните все шесть полей. Можно коротко, но конкретно.');
+      return false;
+    }
+
+    const choiceGood=vals[0].length>=8 && vals[1].length>=20;
+    const criteriaCount=vals[2].split(/[,;\n•]+/).map(x=>x.trim()).filter(Boolean).length;
+    const criteriaGood=criteriaCount>=3;
+    const tradeoffGood=vals[3].length>=15;
+    const testGood=vals[4].length>=15 && vals[5].length>=12;
+
+    setCheck('choice',choiceGood,
+      'Выбор связан с задачей и ограничениями.',
+      'Добавьте, почему этот вариант отвечает на исходную задачу, а не просто выглядит привлекательнее.');
+    setCheck('criteria',criteriaGood,
+      'Названы минимум три критерия.',
+      'Перечислите минимум три критерия, на которых держится выбор.');
+    setCheck('tradeoff',tradeoffGood,
+      'Вы указали, где выбранный вариант уступает.',
+      'Добавьте слабую сторону, ограничение или компромисс выбранного решения.');
+    setCheck('test',testGood,
+      'Есть конкретная проверка и следующий шаг.',
+      'Уточните, что именно команда проверит и какое действие сделает первым.');
+
+    checked[8]=true;
+    const passed=[choiceGood,criteriaGood,tradeoffGood,testGood].filter(Boolean).length;
+
+    if(passed===4){
+      if(!awarded[8]){score++;awarded[8]=true;}
+      feedback('fb8','ok','Финальный аргумент собран: выбор связан с задачей, опирается на несколько критериев, учитывает слабую сторону и заканчивается проверкой.');
+    }else if(passed>=2){
+      feedback('fb8','neutral','Логика уже видна, но один-два элемента стоит уточнить. Посмотрите подсказки в критериях ниже.');
+    }else{
+      feedback('fb8','bad','Пока выбор звучит слишком общо. Вернитесь к профилю идеи и покажите: почему выбираете, где она уступает и что будете проверять первой.');
+    }
+
+    document.getElementById('finalNote').classList.remove('hidden');
+    return true;
+  }
+
+  checkBtn.addEventListener('click',()=>{
+    let done=false;
+
+    if(current===1){
+      done=checkSingle(
+        'q1',1,'fb1',
+        'Верно. Второй наставник нарушает обязательное ограничение по численности. Такой вариант нужно исключить или переработать до дальнейшего сравнения.',
+        'Сначала проверьте жесткие ограничения. Если идея требует дополнительного наставника, она не может оцениваться наравне с вариантами, которые укладываются в условия.'
+      );
+    }
+
+    if(current===2)done=checkRatings(2,['effect','fit'],'fb2');
+    if(current===3)done=checkRatings(3,['feas','resource'],'fb3');
+    if(current===4)done=checkRatings(4,['risk','speed'],'fb4');
+
+    if(current===5){
+      done=checkRatings(5,['clarity','novelty'],'fb5');
+      if(done){
+        document.getElementById('profileA').innerHTML=profileHTML('A');
+        document.getElementById('profileB').innerHTML=profileHTML('B');
+      }
+    }
+
+    if(current===6)done=checkChoice();
+
+    if(current===7){
+      done=checkSingle(
+        'q7',7,'fb7',
+        'Да. Новые данные меняют критерий «соответствие задаче»: чек-лист напрямую отвечает на непонятную последовательность действий, а полная перестройка обучения решает более широкую проблему, которая сейчас не выглядит основной.',
+        'Новая информация должна менять оценку, если она уточняет реальную причину задержки. Матрица не высечена в камне.'
+      );
+    }
+
+    if(current===8)done=checkFinal();
+
+    if(done)update();
+  });
+
+  nextBtn.addEventListener('click',()=>{
+    if(current<8){current++;update();window.scrollTo({top:0,behavior:'smooth'});}
+  });
+
+  backBtn.addEventListener('click',()=>{
+    if(current>1){current--;update();window.scrollTo({top:0,behavior:'smooth'});}
+  });
+
+  resetBtn.addEventListener('click',()=>{
+    current=1;score=0;choice=null;
+    Object.keys(checked).forEach(k=>checked[k]=false);
+    Object.keys(awarded).forEach(k=>awarded[k]=false);
+    ratings.A={};ratings.B={};
+
+    document.querySelectorAll('.option').forEach(o=>o.classList.remove('selected','correct','wrong'));
+    document.querySelectorAll('.feedback').forEach(f=>{f.className='feedback';f.innerHTML='';});
+
+    document.querySelectorAll('.rating').forEach(r=>{
+      r.dataset.value='';
+      r.querySelectorAll('button').forEach(b=>b.classList.remove('selected'));
+    });
+
+    document.getElementById('reason2').classList.add('hidden');
+    document.getElementById('reason2text').value='';
+
+    document.querySelectorAll('.choice').forEach(c=>c.classList.remove('selected'));
+    document.querySelectorAll('.pill').forEach(p=>p.classList.remove('selected'));
+    document.getElementById('profileA').innerHTML='';
+    document.getElementById('profileB').innerHTML='';
+
+    [1,2,3,4,5,6].forEach(i=>document.getElementById('f'+i).value='');
+
+    document.querySelectorAll('.checkitem').forEach((el,i)=>{
+      el.classList.remove('good','warn');
+      el.querySelector('.mark').textContent=String(i+1);
+    });
+    document.querySelector('[data-check="choice"] .small').textContent='Не просто «нравится больше», а отвечает на нужный результат.';
+    document.querySelector('[data-check="criteria"] .small').textContent='Логика выбора видна, а не скрыта за общей формулировкой.';
+    document.querySelector('[data-check="tradeoff"] .small').textContent='Вы не превратили выбранную идею в «идеальную».';
+    document.querySelector('[data-check="test"] .small').textContent='Понятно, что именно команда проверит первой.';
+    document.getElementById('finalNote').classList.add('hidden');
+
+    update();
+    window.scrollTo({top:0,behavior:'smooth'});
+  });
+
+  update();
+})();
+</script>
+</body>
+</html>
