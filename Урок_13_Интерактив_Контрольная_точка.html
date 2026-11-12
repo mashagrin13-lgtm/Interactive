@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Контрольная точка — практикум руководителя</title>
+<style>
+:root{--ink:#182334;--secondary:#617084;--line:#e3e7ec;--accent:#c53645;--accent-light:#fff0f2;--good:#267254;--good-light:#ebf7f0;--bad:#b32939;--bad-light:#fff0f2;--blue:#ebf0f8;--card:#fff;--bg:#f4f6f9}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);font-family:Inter,'Segoe UI',Arial,sans-serif;color:var(--ink);font-size:16px;line-height:1.55}
+button{font:inherit;cursor:pointer}button:focus-visible{outline:3px solid #e38490;outline-offset:3px}
+.shell{max-width:1120px;margin:26px auto;padding:0 20px 26px}
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px}
+.ghost{border:1px solid var(--line);background:#fff;color:var(--ink);border-radius:12px;padding:10px 15px;font-weight:650}.ghost:hover{background:#f8e8eb}
+.brand{color:var(--secondary);font-weight:750;font-size:12px;letter-spacing:.12em;text-transform:uppercase;text-align:center}
+.card{background:var(--card);border:1px solid var(--line);border-radius:22px;box-shadow:0 14px 35px #1b253012;overflow:hidden}
+.head{padding:30px 34px 25px;background:linear-gradient(120deg,#19273a,#31455d);color:#fff}
+.kicker{font-size:12px;text-transform:uppercase;letter-spacing:.12em;color:#f3c7cb;font-weight:750}
+h1{font-size:clamp(26px,4vw,38px);line-height:1.18;margin:8px 0 12px;letter-spacing:-.02em}
+.head p{max-width:750px;margin:0;color:#e5edf4}
+.progresswrap{padding:18px 34px;border-bottom:1px solid var(--line)}
+.progresstop{display:flex;justify-content:space-between;gap:14px;font-weight:650;color:var(--secondary);font-size:13px;margin-bottom:9px}
+.track{background:#e9edf2;height:8px;border-radius:100px;overflow:hidden}.bar{background:var(--accent);height:100%;width:0;transition:width .3s}
+.inner{padding:24px 34px 30px}
+.context{background:var(--blue);border-radius:14px;padding:16px 19px;color:#27394e;margin-bottom:24px}
+h2{font-size:24px;letter-spacing:-.012em;margin:0 0 9px;line-height:1.28}
+.question{margin:0 0 19px;color:#314156}
+.choices{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.choice{border:1.6px solid #dce2e9;text-align:left;background:#fff;border-radius:13px;padding:16px 16px;display:flex;gap:12px;min-height:94px;align-items:flex-start;transition:border-color .1s,background .1s;color:var(--ink)}
+.choice:hover{border-color:#9baabd;background:#f8fafc}.choice .bullet{flex:none;width:26px;height:26px;border-radius:8px;background:#f1f3f7;color:#526279;display:grid;place-items:center;font-weight:750;font-size:12px}
+.choice.selected{border-color:var(--accent);background:var(--accent-light)}.choice.wrong{border-color:var(--bad);background:var(--bad-light)}.choice.correct{border-color:var(--good);background:var(--good-light)}
+.choice.correct .bullet{background:#cce9db;color:#125c3c}.choice.wrong .bullet{background:#f7cdd2;color:#9b172b}
+.feedback{border:1px solid var(--line);border-radius:14px;padding:15px 17px;margin:18px 0 0;display:none}
+.feedback.show{display:block}.feedback.ok{background:var(--good-light);border-color:#b7dfcb}.feedback.err{background:var(--bad-light);border-color:#f1c6cc}
+.feedback strong{display:block;margin-bottom:4px}.feedback p{margin:0}
+.actions{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:22px;flex-wrap:wrap}
+.primary{background:var(--accent);border:1px solid var(--accent);border-radius:12px;color:white;font-weight:750;padding:12px 22px;min-width:170px}.primary:disabled{opacity:.45;cursor:not-allowed}.primary:hover:not(:disabled){background:#a82534}
+.sub{color:var(--secondary);font-size:13px}
+.result{display:none}.result h2{font-size:27px}.recap{border:1px solid var(--line);border-radius:15px;overflow:hidden;margin:22px 0}
+.recap-row{display:grid;grid-template-columns:150px 1fr;gap:18px;padding:13px 17px;border-bottom:1px solid var(--line)}.recap-row:last-child{border-bottom:0}.recap-row strong{font-size:13px;color:var(--accent)}
+.result-actions{display:flex;gap:12px;flex-wrap:wrap}
+.modal{position:fixed;inset:0;background:#0a1725ba;display:flex;align-items:center;justify-content:center;padding:20px;z-index:50}.modal.hidden{display:none}
+.dialog{max-width:560px;background:#fff;padding:28px;border-radius:20px;box-shadow:0 28px 70px #0004}.dialog h2{margin:0 0 14px}.dialog p{margin:0 0 14px}.dialog ul{padding-left:20px;margin:0 0 24px}.dialog li{margin-bottom:6px}
+@media(max-width:700px){.shell{margin:0;padding:0}.topbar{padding:12px}.brand{display:none}.card{border-radius:0}.head{padding:24px 20px}.progresswrap{padding:16px 20px}.inner{padding:20px}.choices{grid-template-columns:1fr}.choice{min-height:unset}.recap-row{grid-template-columns:1fr;gap:3px}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="shell">
+  <div class="topbar">
+    <button class="ghost" id="back" type="button">← Вернуться назад</button>
+    <span class="brand">Курс «Энергия команды» · Практическое задание</span>
+    <button class="ghost" id="fullscreen" type="button">⛶ На весь экран</button>
+  </div>
+  <main class="card">
+    <div class="head"><div class="kicker">Интерактивный кейс / «Контур»</div><h1>Контрольная точка</h1><p>Сопоставьте ход работы с планом и помогите руководителю скорректировать действия, не превращая контроль в бесконечные отчёты.</p></div>
+    <div class="progresswrap"><div class="progresstop"><span id="stageLabel">Решение 1 из 5</span><span id="stageTopic">Выбор показателя</span></div><div class="track" aria-hidden="true"><div class="bar" id="progress"></div></div></div>
+    <section class="inner" id="stageArea" aria-live="polite">
+      <div class="context" id="context"></div>
+      <h2 id="stageTitle"></h2><p class="question" id="question"></p>
+      <div class="choices" id="choices" role="group" aria-label="Варианты решения"></div>
+      <div id="feedback" class="feedback" role="status"></div>
+      <div class="actions"><span class="sub" id="hint">Выберите решение и нажмите «Проверить».</span><button class="primary" type="button" id="check" disabled>Проверить</button></div>
+    </section>
+    <section class="inner result" id="result" aria-live="polite">
+      <h2>Пятёрка управленческих решений — пройдена</h2>
+      <p>Вы помогли Дарье определить проверяемые промежуточные результаты и увидеть, где работа требует помощи. Важен не объём проведённых мероприятий, а фактическая готовность специалистов выполнять работу.</p>
+      <div class="recap" id="recap"></div>
+      <div class="result-actions"><button class="primary" id="download" type="button">Сохранить итог</button><button class="ghost" id="restart" type="button">Начать заново</button></div>
+    </section>
+  </main>
+</div>
+<div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="dialogTitle"><div class="dialog">
+  <div class="kicker" style="color:#bc3341">Перед началом</div><h2 id="dialogTitle">Проведите пять контрольных отсечек</h2>
+  <p>В «Контуре» восемь новых сервисных специалистов осваивают оформление отчётов. За четыре недели все должны научиться выполнять эту операцию самостоятельно и без критичных ошибок.</p>
+  <ul><li>Выбирайте управленческое решение на каждом этапе.</li><li>После проверки появится пояснение, которое поможет продолжить работу.</li><li>В конце получите сводку решений для собственной практики.</li></ul>
+  <button class="primary" id="start" type="button">Начать практику</button>
+</div></div>
+<script>
+'use strict';
+const steps=[
+{topic:'Выбор показателя',title:'Что считать прогрессом?',context:'Дарья, HR-партнёр «Контура», организует подготовку восьми новых сервисных специалистов. Через четыре недели они должны самостоятельно оформлять сервисный отчёт без критичных ошибок.',question:'Какой показатель Дарье лучше фиксировать на промежуточных отсечках?',answers:[
+'Сколько часов преподаватели потратили на обучение.',
+'Сколько специалистов самостоятельно выполнили контрольный отчёт без критичных ошибок.',
+'Сколько методичек получили участники.',
+'Сколько сообщений об обучении отправила HR-команда.'
+],correct:1,explain:'Часы занятий и выданные материалы отражают затраты на обучение, но не готовность к работе. Нужна проверка того, сколько сотрудников уже способны выполнить операцию самостоятельно.',summary:'Считать сотрудников, которые подтвердили навык на практической работе.'},
+{topic:'Ритм проверок',title:'Когда назначать отсечки?',context:'Вводный блок занимает неделю, после него сотрудники каждую неделю выполняют практическое задание. Итоговая проверка назначена на четвёртую неделю.',question:'Как организовать промежуточные проверки, чтобы вовремя замечать трудности?',answers:[
+'Проверять каждого специалиста по нескольку раз в день.',
+'Провести одну проверку только в конце месяца.',
+'После каждой недельной практики сверять число подтверждённых результатов с планом.',
+'Проверять только тогда, когда кто-то пожалуется на обучение.'
+],correct:2,explain:'Отсечка должна совпадать с моментом, когда появляется проверяемый результат. Еженедельная практика даёт для этого данные, а ежедневный контроль только увеличил бы нагрузку.',summary:'Проверять прогресс еженедельно после практической работы.'},
+{topic:'Отклонение от плана',title:'Что делать с отставанием?',context:'На второй неделе план — пять подготовленных специалистов. Фактически самостоятельную проверку прошли только трое; ещё двое не получили доступ к учебной системе.',question:'Какая реакция руководителя поможет продвинуть работу?',answers:[
+'Зафиксировать отставание, обеспечить доступ и назначить следующую проверку.',
+'Срочно заменить программу обучения на другую.',
+'Потребовать от всех сотрудников увеличить время обучения после работы.',
+'Отказаться от промежуточных отсечек, чтобы не демотивировать группу.'
+],correct:0,explain:'Отклонение показывает, что следующему этапу мешает конкретное препятствие. Сначала нужно устранить его, а не менять весь план или увеличивать нагрузку без оснований.',summary:'Устранить проблему доступа и проверить результат снова.'},
+{topic:'Качество результата',title:'Какие цифры сообщить?',context:'К третьей неделе шесть специалистов подготовили отчёты. Но только четыре выполнили задание без критичных замечаний; два отчёта требуют доработки.',question:'Как корректно описать прогресс команды?',answers:[
+'Готовы все шесть: каждый ведь уже подготовил отчёт.',
+'Ни один не готов: до конца программы ещё неделя.',
+'Четыре подтвердили навык; двое выполнили работу, но результат пока не принят.',
+'Лучше не сообщать результат до финала программы.'
+],correct:2,explain:'Подготовленный документ ещё не означает освоенный навык. На контрольной точке нужно отделять выполненные действия от результатов, соответствующих согласованным критериям.',summary:'Подтверждены четыре результата; ещё два требуют доработки.'},
+{topic:'Обратная связь',title:'Как завершить отсечку?',context:'Дарья знает, какие задания вызывают затруднения. Двое специалистов всё ещё ошибаются в типовом случае, хотя общие материалы изучили.',question:'Как лучше завершить обсуждение прогресса?',answers:[
+'Попросить самих специалистов разобрать затруднение, организовать практическую помощь и назначить повторную проверку.',
+'Ограничиться сообщением общего процента выполнения.',
+'Сравнить отстающих с лучшими сотрудниками на общем собрании.',
+'Передать проблему в HR и не возвращаться к ней до финала.'
+],correct:0,explain:'Промежуточная отсечка нужна для выбора следующего действия. Когда сотрудники рассказывают, что именно не получается, руководитель может назначить адресную помощь и проверить её эффект.',summary:'Обсудить затруднение, назначить практическую помощь и срок проверки.'}
+];
+let index=0;let picked=null;let passed=Array(steps.length).fill(false);let choicesMade=Array(steps.length).fill(null);
+const $=id=>document.getElementById(id);
+function render(){const s=steps[index];$('stageArea').style.display='block';$('result').style.display='none';$('stageLabel').textContent=`Решение ${index+1} из ${steps.length}`;$('stageTopic').textContent=s.topic;$('progress').style.width=`${(index+1)/steps.length*100}%`;$('context').textContent=s.context;$('stageTitle').textContent=s.title;$('question').textContent=s.question;$('choices').innerHTML='';picked=passed[index]?choicesMade[index]:null;
+ s.answers.forEach((a,i)=>{let btn=document.createElement('button');btn.className='choice';btn.type='button';btn.setAttribute('aria-pressed',String(picked===i));btn.innerHTML=`<span class="bullet">${'АБВГ'[i]}</span><span></span>`;btn.lastElementChild.textContent=a;btn.onclick=()=>{if(passed[index])return;picked=i;for(const c of $('choices').children){c.classList.remove('selected','wrong');c.setAttribute('aria-pressed','false')}btn.classList.add('selected');btn.setAttribute('aria-pressed','true');$('check').disabled=false;$('check').textContent='Проверить';$('feedback').className='feedback';$('feedback').textContent=''};if(passed[index]&&i===picked){btn.classList.add('correct')} $('choices').appendChild(btn)});
+ $('check').textContent=passed[index]?(index===steps.length-1?'Посмотреть итог':'Следующий этап'):'Проверить';$('check').disabled=!passed[index]&&picked===null;$('hint').textContent=passed[index]?'Решение зафиксировано.': 'Выберите решение и нажмите «Проверить».';$('feedback').className=passed[index]?'feedback show ok':'feedback';$('feedback').innerHTML=passed[index]?`<strong>Решение принято</strong><p>${s.explain}</p>`:'';$('back').disabled=index===0;
+}
+function showResult(){ $('stageArea').style.display='none';$('result').style.display='block';$('stageLabel').textContent='Практика завершена';$('stageTopic').textContent='Итог';$('progress').style.width='100%';$('recap').innerHTML='';steps.forEach((s,i)=>{const d=document.createElement('div');d.className='recap-row';const name=document.createElement('strong');name.textContent=`${i+1}. ${s.topic}`;const value=document.createElement('span');value.textContent=s.summary;d.append(name,value);$('recap').appendChild(d)});$('back').disabled=false;}
+$('check').onclick=()=>{if(passed[index]){if(index===steps.length-1)showResult();else{index++;render()}return}const s=steps[index];const card=$('choices').children[picked];if(picked===s.correct){passed[index]=true;choicesMade[index]=picked;card.classList.remove('selected');card.classList.add('correct');$('feedback').className='feedback show ok';$('feedback').innerHTML=`<strong>Решение принято</strong><p>${s.explain}</p>`;$('hint').textContent='Можно переходить к следующему этапу.';$('check').textContent=index===steps.length-1?'Посмотреть итог':'Следующий этап';}else{card.classList.remove('selected');card.classList.add('wrong');$('feedback').className='feedback show err';$('feedback').innerHTML='<strong>Так решение может исказить картину прогресса.</strong><p>Пересмотрите, какие данные действительно показывают готовность сотрудников и помогают выбрать следующее действие.</p>';}};
+$('back').onclick=()=>{if($('result').style.display==='block'){$('result').style.display='none';index=steps.length-1;render()}else if(index>0){index--;render()}};
+$('restart').onclick=()=>{index=0;picked=null;passed=Array(steps.length).fill(false);choicesMade=Array(steps.length).fill(null);render()};
+$('fullscreen').onclick=()=>{if(document.fullscreenElement){document.exitFullscreen?.()}else{document.documentElement.requestFullscreen?.()}};
+$('start').onclick=()=>{$('modal').classList.add('hidden');render();$('check').focus()};
+$('download').onclick=()=>{const lines=['КОНТРОЛЬНАЯ ТОЧКА — итоги практикума','Компания «Контур» / адаптация специалистов','',...steps.map((s,i)=>`${i+1}. ${s.topic}\n${s.summary}`),'','Для своей команды: определите конечный результат, контрольные даты, подтверждённый факт, препятствия и ближайшее действие.'];const blob=new Blob([lines.join('\n')],{type:'text/plain;charset=utf-8'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='kontrolnaya_tochka_itogi.txt';a.click();setTimeout(()=>URL.revokeObjectURL(url),1500)};
+render();
+</script>
+</body>
+</html>
