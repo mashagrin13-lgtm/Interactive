@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Командная встреча — от недовольства к решению</title>
+<style>
+:root{--ink:#192b40;--sub:#5f7080;--border:#dce5ec;--bg:#f1f5f8;--white:#fff;--teal:#087e83;--light:#e8f6f3;--red:#bd3a42;--redbg:#fff0f0;--green:#187853;--greenbg:#ebf7ef}
+*{box-sizing:border-box}html,body{margin:0;min-height:100%;font-family:Inter,'Segoe UI',system-ui,-apple-system,Arial,sans-serif;background:var(--bg);color:var(--ink);line-height:1.48}
+button{font:inherit;cursor:pointer}button:focus-visible{outline:3px solid #6db9c8;outline-offset:2px}
+header{padding:16px 25px;border-bottom:1px solid var(--border);background:var(--white);display:flex;align-items:center;justify-content:space-between;gap:12px}
+.hbtn{border:1px solid var(--border);background:var(--white);border-radius:9px;padding:10px 15px;font-size:13px;font-weight:600;color:var(--ink)}.hbtn:hover{background:#f5f8f9}
+main{max-width:920px;margin:28px auto;padding:0 17px 38px}.eyebrow{font-size:12px;letter-spacing:.09em;font-weight:800;text-transform:uppercase;color:var(--teal)}
+h1{font-size:clamp(23px,3.2vw,34px);line-height:1.18;letter-spacing:-.025em;margin:7px 0 11px}p{margin:8px 0 12px} .muted{color:var(--sub)}
+.panel{margin-top:19px;background:var(--white);border:1px solid var(--border);border-radius:18px;overflow:hidden;box-shadow:0 8px 35px rgba(20,44,61,.045)}.topline{padding:16px 23px;background:#f8fbfc;border-bottom:1px solid var(--border)}.progress{height:7px;background:#e6ebed;border-radius:12px;overflow:hidden;margin-top:12px}.progressfill{height:100%;background:var(--teal);width:20%;transition:width .2s}.stepchips{display:flex;gap:6px;flex-wrap:wrap;margin-top:9px}.chip{font-size:11px;font-weight:700;border:1px solid var(--border);border-radius:999px;padding:4px 9px;background:white;color:#657684}.chip.done{background:var(--light);color:var(--green);border-color:#bbe2d4}.chip.active{background:var(--ink);color:white;border-color:var(--ink)}
+.content{padding:24px}.stephead{display:flex;align-items:center;gap:9px;margin-bottom:12px}.number{display:inline-flex;width:30px;height:30px;justify-content:center;align-items:center;background:var(--teal);color:white;border-radius:9px;font-size:13px;font-weight:800}.steptitle{font-size:22px;font-weight:800;letter-spacing:-.02em;margin:0}
+.scene{background:#f2f7f9;border-left:3px solid var(--teal);padding:14px 16px;border-radius:0 9px 9px 0;margin:13px 0 18px}.scene b{color:#11364d}.question{font-size:16px;font-weight:750;margin:18px 0 11px}
+.choices{display:grid;gap:9px}.choice{display:flex;align-items:flex-start;gap:10px;text-align:left;width:100%;padding:14px 15px;border-radius:11px;background:white;border:1.5px solid var(--border);color:var(--ink);line-height:1.46}.choice:hover:not([disabled]){border-color:#8cbbc1;background:#fbfdfd}.letter{width:25px;height:25px;flex:0 0 25px;display:inline-flex;align-items:center;justify-content:center;border-radius:7px;background:#eef3f6;color:#455f70;font-size:12px;font-weight:800}.choice.selected{border-color:#437e86;background:#f1faf9}.choice.wrong{border-color:var(--red);background:var(--redbg)}.choice.correct{border-color:var(--green);background:var(--greenbg)}.choice.wrong .letter{background:#f6d6da;color:var(--red)}.choice.correct .letter{background:#ceeedc;color:var(--green)}
+.feedback{margin-top:16px;padding:13px 15px;border-radius:10px;font-size:14px}.feedback.error{background:var(--redbg);color:#8a2730;border:1px solid #f4c7cc}.feedback.success{background:var(--greenbg);color:#13593e;border:1px solid #c6e5d1}
+.actions{display:flex;justify-content:space-between;align-items:center;gap:11px;flex-wrap:wrap;margin-top:22px}.primary{border:0;border-radius:10px;background:var(--ink);color:white;padding:12px 19px;font-size:14px;font-weight:750}.primary:hover{background:#293f55}.primary[disabled]{background:#a5b0ba;cursor:not-allowed}.secondary{background:white;border:1px solid var(--border);color:var(--ink);border-radius:10px;padding:11px 15px;font-size:14px;font-weight:650}
+.summary{padding:25px}.sumcard{border:1px solid var(--border);border-radius:11px;padding:14px 15px;margin:12px 0}.sumcard strong{display:block;margin-bottom:4px}.sumcard p{margin:0;color:#435464;font-size:14px}.note{font-size:13px;color:var(--sub);margin-top:13px}
+.modalcover{position:fixed;inset:0;background:rgba(18,31,44,.58);display:flex;align-items:center;justify-content:center;padding:16px;z-index:20}.modal{width:100%;max-width:610px;background:white;border-radius:17px;padding:26px;box-shadow:0 30px 100px rgba(0,0,0,.3)}.modal h2{margin:0 0 13px;font-size:23px}.modal p{color:#405366}.modal .primary{margin-top:10px}.hidden{display:none!important}
+@media(max-width:640px){header{padding:11px}.hbtn{font-size:12px;padding:9px 10px}main{margin-top:21px}.content{padding:16px}.topline{padding:14px 16px}.steptitle{font-size:19px}.choice{padding:12px}.modal{padding:21px}}
+@media print{header,.actions,.modalcover,.choices,.progress,.stepchips{display:none!important}body{background:white}main,.panel{max-width:none;margin:0;box-shadow:none} .sumcard{break-inside:avoid}}
+</style>
+</head>
+<body>
+<header>
+<button class="hbtn" id="backTop" type="button">← Вернуться назад</button>
+<button class="hbtn" id="fullscreen" type="button">⛶ На весь экран</button>
+</header>
+<main>
+<div class="eyebrow">Практическое задание · командная встреча</div>
+<h1>От накопившихся проблем — к решениям</h1>
+<p class="muted">Проведите обсуждение за руководителя «Контура». На каждом этапе выберите одну реплику или действие, которое поможет команде продвинуться к результату.</p>
+<div class="panel">
+<div class="topline"><div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap"><b id="pTitle">Этап 1 из 5</b><span class="muted" id="pSub">Начало разговора</span></div><div class="progress"><div class="progressfill" id="progress"></div></div><div class="stepchips" id="chips"></div></div>
+<div class="content" id="screen"></div>
+</div>
+</main>
+<div class="modalcover" id="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+<div class="modal"><h2 id="modalTitle">Как выполнять задание</h2><p>В компании «Контур» несколько сотрудников контрольного участка недовольны тем, что правила проверки оборудования постоянно меняются. Руководитель собирает команду, чтобы выслушать людей и договориться о действиях.</p><p>Вас ждут пять этапов встречи. Выберите вариант ответа и нажмите <b>«Проверить»</b>. Если решение не подходит, вы сможете выбрать другое. Правильный вариант откроет следующий этап. При необходимости можно возвращаться к предыдущим решениям.</p><p>В конце вы получите краткий протокол и сможете сохранить его в текстовом файле.</p><button class="primary" id="start" type="button">Понятно, начать</button></div></div>
+<script>
+'use strict';
+const steps=[
+{title:'Обозначьте правила разговора',sub:'Начало разговора',scene:'Сотрудники участка контроля качества пришли на встречу раздражёнными. Один говорит: «Мы уже три раза объясняли, что правила проверки меняют в последний момент. Смысла говорить снова нет». Остальные поддерживают его.',question:'Как руководителю лучше начать обсуждение?',choices:[
+'Сначала подробно объяснить, какие ошибки допускают сотрудники и почему они сами создали проблемы.',
+'Сказать, что сегодня каждый сможет назвать конкретную трудность без перебиваний; сначала соберём факты, а затем выберем вопросы для решения.',
+'Попросить участников оставить негатив за дверью и сразу перейти к предложениям по улучшению.'
+],correct:1,why:'Руководитель задаёт безопасные рамки, признаёт право сотрудников назвать трудности и при этом объясняет, что встреча должна завершиться выбором конкретных действий.',result:'Согласовали правила: выслушиваем всех, обсуждаем рабочие ситуации, не переходим на личности.'},
+{title:'Отделите проблему от оценки',sub:'Сбор трудностей',scene:'Сотрудник говорит: «Соседняя смена вообще ничего не понимает. После них каждый раз приходится переделывать проверки». Остальные начинают спорить, чья смена работает хуже.',question:'Какой вопрос вернёт разговор к рабочей ситуации?',choices:[
+'«В каком конкретном случае проверку пришлось повторить? Какой документ или требование отличались?»',
+'«Кто из соседней смены допускает ошибки чаще всех? Давайте сразу назовём фамилии»',
+'«Давайте не будем обсуждать это неприятное обстоятельство, чтобы не портить атмосферу»'
+],correct:0,why:'Вопрос помогает перейти от взаимных оценок к наблюдаемому случаю. Если выявится повторяющееся нарушение, его можно будет разобрать без публичного обвинения.',result:'Уточнили факт: две смены использовали разные версии контрольного перечня.'},
+{title:'Выберите вопрос для работы',sub:'Приоритет и полномочия',scene:'Сотрудники назвали три темы: (1) разные версии перечня для проверки, (2) отсутствие решения о закупке нового стенда, (3) общие претензии к системе премирования. Встреча рассчитана на 40 минут, а все три вопроса быстро не решить.',question:'С какого вопроса разумнее начать поиск решения прямо сейчас?',choices:[
+'Сразу обсуждать всю систему премирования: тема самая эмоциональная, поэтому её нельзя откладывать.',
+'Объявить, что все три вопроса команда должна решить сегодня, даже если потребуется несколько часов.',
+'Начать с единой актуальной версии перечня, а два других вопроса записать с отдельными ответственными за их рассмотрение.'
+],correct:2,why:'Единая версия перечня — повторяющаяся проблема, на которую участники способны повлиять. Остальные вопросы нельзя замалчивать, но они требуют другого состава участников или отдельного решения.',result:'В работу взяли единый перечень проверок. Закупку стенда и премирование внесли в список вопросов для отдельного ответа.'},
+{title:'Поручите проверить решение',sub:'Поиск вариантов',scene:'Команда предложила создать единую папку с действующей версией перечня, но ещё неясно, кто будет утверждать обновления. Один участник предлагает просто разослать новую таблицу всем сотрудникам.',question:'Как перевести предложение в проверяемое действие?',choices:[
+'Утвердить одну рабочую версию, назначить ответственного за изменения и проверить её использование обеими сменами в течение недели.',
+'Попросить всех сотрудников самостоятельно следить за письмами и выбирать самый новый документ.',
+'Объявить, что теперь никаких изменений в правилах проверки не будет, независимо от требований к продукции.'
+],correct:0,why:'У предложения появились понятный владелец, пробный период и условие проверки. Простая рассылка не устранила бы причину появления разных версий.',result:'Договорились о едином перечне, ответственном за обновления и недельной проверке в двух сменах.'},
+{title:'Закройте встречу без потери вопросов',sub:'Договорённости и возврат',scene:'В конце сотрудница спрашивает: «А что с закупкой нового стенда и премиями? Мы опять поговорили только о том, что удобно руководству?» Участники ждут ответа.',question:'Как завершить встречу?',choices:[
+'Напомнить, что тема встречи была другой, и попросить не поднимать лишние вопросы.',
+'Повторить принятое решение, назвать владельцев двух отложенных вопросов и конкретную дату, когда команда получит по ним ответ.',
+'Пообещать, что новый стенд обязательно купят в следующем месяце и премии скоро повысят.'
+],correct:1,why:'Даже если руководитель не может сразу принять все решения, важно показать, что вопросы услышаны и не исчезнут после встречи. Дата возврата и ответственный делают это обещание проверяемым.',result:'Зафиксировали решение по перечню и дату ответа по двум вопросам, требующим отдельного рассмотрения.'}
+];
+let index=0, picked=Array(steps.length).fill(null), passed=Array(steps.length).fill(false), tries=Array(steps.length).fill(0), flag='';
+const $=id=>document.getElementById(id);
+function htmlEscape(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function render(){const isEnd=index>=steps.length; $('pTitle').textContent=isEnd?'Завершено':`Этап ${index+1} из ${steps.length}`;$('pSub').textContent=isEnd?'Ваш протокол':steps[index].sub;
+$('progress').style.width=(isEnd?100:((index+1)/steps.length*100))+'%';$('chips').innerHTML=steps.map((s,i)=>`<span class="chip ${isEnd||passed[i]?'done':i===index?'active':''}">${i+1}. ${htmlEscape(s.sub)}</span>`).join('');
+if(isEnd){$('screen').innerHTML=`<div class="summary"><div class="eyebrow">Встреча завершена</div><h2>Ваш краткий протокол</h2><p>Вы последовательно дали команде возможность высказаться, уточнили факты, выбрали вопрос для решения и закрепили договорённости.</p>${steps.map((s,i)=>`<div class="sumcard"><strong>${i+1}. ${htmlEscape(s.sub)}</strong><p>${htmlEscape(s.result)}</p></div>`).join('')}<div class="actions"><button class="secondary" id="summaryBack">← Вернуться к последнему этапу</button><div style="display:flex;gap:9px;flex-wrap:wrap"><button class="secondary" id="restart">Начать заново</button><button class="primary" id="save">Сохранить протокол</button></div></div><p class="note">Это учебная ситуация. В реальной встрече решения и сроки необходимо согласовать с участниками.</p></div>`;$('summaryBack').onclick=()=>{index=4;flag='';render()};$('restart').onclick=reset;$('save').onclick=save;return;}
+const s=steps[index];const content=`<div class="stephead"><span class="number">${index+1}</span><h2 class="steptitle">${htmlEscape(s.title)}</h2></div><div class="scene">${htmlEscape(s.scene)}</div><div class="question">${htmlEscape(s.question)}</div><div class="choices">${s.choices.map((c,i)=>`<button type="button" class="choice ${picked[index]===i?'selected':''} ${flag==='wrong'&&picked[index]===i?'wrong':''} ${passed[index]&&picked[index]===i?'correct':''}" data-i="${i}" aria-pressed="${picked[index]===i}"><span class="letter">${'АБВ'[i]}</span><span>${htmlEscape(c)}</span></button>`).join('')}</div><div id="feedback" aria-live="polite">${flag==='wrong'?'<div class="feedback error">Такой подход не поможет разобраться с рабочей проблемой. Попробуйте другой вариант, сохранив возможность для диалога и конкретных решений.</div>':''}${passed[index]?`<div class="feedback success"><b>Подходящее решение.</b> ${htmlEscape(s.why)}</div>`:''}</div><div class="actions"><button type="button" class="secondary" id="prev" ${index===0?'disabled':''}>← Предыдущий этап</button><button type="button" class="primary" id="verify" ${picked[index]===null?'disabled':''}>${passed[index]?'Далее →':'Проверить'}</button></div>`;
+$('screen').innerHTML=content;document.querySelectorAll('.choice').forEach(b=>b.onclick=()=>{picked[index]=Number(b.dataset.i);passed[index]=false;flag='';render()});$('prev').onclick=()=>{if(index>0){index--;flag='';render()}};$('verify').onclick=()=>{if(passed[index]){index++;flag='';render();window.scrollTo({top:0,behavior:'smooth'});return}if(picked[index]===null)return;tries[index]++;if(picked[index]===s.correct){passed[index]=true;flag='';}else{flag='wrong'}render()};}
+function reset(){index=0;picked=Array(5).fill(null);passed=Array(5).fill(false);tries=Array(5).fill(0);flag='';render()}
+function save(){const lines=['КОМАНДНАЯ ВСТРЕЧА · УЧЕБНЫЙ ПРОТОКОЛ','Контур — участок контроля качества','',...steps.flatMap((s,i)=>[`${i+1}. ${s.sub}`,s.result,'']), 'Для реальной встречи: добавить исполнителей, даты проверки и решения по отложенным вопросам.'];const blob=new Blob(['\ufeff'+lines.join('\r\n')],{type:'text/plain;charset=utf-8'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='Протокол_командной_встречи.txt';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),800)}
+$('start').onclick=()=>{$('modal').classList.add('hidden');render()};$('backTop').onclick=()=>{if(index>0){index--;flag='';render()}else if(history.length>1){history.back()}else {$('modal').classList.remove('hidden')}};$('fullscreen').onclick=()=>{if(!document.fullscreenElement){document.documentElement.requestFullscreen?.()}else{document.exitFullscreen?.()}};
+render();
+</script>
+</body>
+</html>
