@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#132c38">
+  <title>Первая победа — практикум руководителя</title>
+  <style>
+    :root{--ink:#183440;--ink2:#435d68;--paper:#f6f5f1;--white:#fff;--aqua:#d9eee9;--mint:#157b65;--red:#b44844;--redbg:#fff1ee;--border:#d7e3e3;--gold:#efa95d;--shadow:0 16px 48px rgba(20,46,54,.11)}
+    *{box-sizing:border-box}
+    html{font-family:Inter,'Segoe UI',Arial,sans-serif;background:var(--paper);color:var(--ink)}
+    body{margin:0;min-height:100vh}
+    button{font:inherit;cursor:pointer}
+    button:focus-visible{outline:3px solid var(--gold);outline-offset:3px}
+    .header{background:#142f3c;color:#fff;display:flex;align-items:center;gap:12px;padding:16px max(22px,calc((100vw - 1090px)/2));min-height:72px;box-shadow:0 3px 13px rgba(0,0,0,.12)}
+    .brand{font-size:12px;text-transform:uppercase;letter-spacing:.15em;color:#b8dad4;font-weight:800}
+    .headname{font-size:17px;font-weight:750;letter-spacing:-.02em}
+    .head-left{display:flex;flex-direction:column;gap:3px;flex:1}
+    .topbutton{border:1px solid rgba(255,255,255,.28);background:transparent;color:#fff;padding:9px 13px;border-radius:9px;font-size:13px;white-space:nowrap}
+    .topbutton:hover{background:rgba(255,255,255,.11)}
+    main{max-width:1090px;margin:auto;padding:30px 20px 56px}
+    .progress-head{display:flex;justify-content:space-between;gap:16px;align-items:center;color:var(--ink2);font-weight:700;font-size:13px;margin-bottom:10px}
+    .progress{display:flex;gap:7px;margin-bottom:23px}
+    .pip{height:7px;flex:1;background:#d9e4e4;border-radius:10px;transition:background .2s}
+    .pip.active{background:var(--gold)}.pip.done{background:var(--mint)}
+    .layout{display:grid;grid-template-columns:minmax(260px,.83fr) minmax(360px,1.3fr);gap:20px;align-items:start}
+    .panel{border:1px solid var(--border);border-radius:19px;background:var(--white);box-shadow:var(--shadow)}
+    .case{padding:26px;position:sticky;top:18px}
+    .eyebrow{display:inline-block;background:var(--aqua);padding:6px 10px;font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:#176a5d;border-radius:7px;font-weight:800}
+    h1{font-size:clamp(25px,3.2vw,35px);line-height:1.12;letter-spacing:-.035em;margin:14px 0 16px}
+    h2{font-size:clamp(22px,2.5vw,28px);line-height:1.22;margin:10px 0 16px;letter-spacing:-.03em}
+    p{line-height:1.6;margin:0 0 12px;color:var(--ink2);font-size:15px}
+    .stats{border-radius:12px;background:#f2f6f5;padding:15px 17px;display:flex;flex-direction:column;gap:8px;margin:18px 0}
+    .stat{display:flex;align-items:baseline;justify-content:space-between;gap:12px;font-size:13px;color:var(--ink2)}
+    .stat strong{color:var(--ink);font-size:20px}
+    .quiet{font-size:12px;color:#667b82;line-height:1.55}
+    .task{padding:27px}
+    .stage{font-size:12px;text-transform:uppercase;letter-spacing:.12em;font-weight:850;color:var(--mint)}
+    .question{font-size:17px;line-height:1.48;margin:0 0 18px;font-weight:600;color:var(--ink)}
+    .choices{display:grid;gap:11px}
+    .choice{background:white;border:2px solid var(--border);border-radius:13px;padding:15px 16px;display:flex;align-items:flex-start;gap:12px;text-align:left;color:var(--ink);line-height:1.48;transition:border-color .16s,background .16s;cursor:pointer}
+    .choice:hover{border-color:#8fb7b0;background:#f9fcfb}
+    .choice.selected{border-color:#2f7d72;background:#eff8f5}
+    .choice.bad{border-color:var(--red);background:var(--redbg)}
+    .choice.good{border-color:var(--mint);background:#edf8f3}
+    .letter{display:inline-flex;align-items:center;justify-content:center;flex:0 0 28px;height:28px;border-radius:8px;background:#edf2f2;color:var(--ink2);font-weight:750;font-size:13px}
+    .choice.selected .letter{background:#cceae3;color:#175f54}
+    .choice.bad .letter{background:#fad7d3;color:#993833}
+    .feedback{border-radius:13px;padding:14px 16px;margin-top:16px;font-size:14px;line-height:1.58;display:none}
+    .feedback.show{display:block}.feedback.err{background:var(--redbg);color:#803b36}.feedback.ok{background:#e9f6ef;color:#135c49}
+    .feedback b{display:block;margin-bottom:4px}
+    .buttons{display:flex;gap:11px;flex-wrap:wrap;align-items:center;margin-top:22px}
+    .primary{background:#163c48;border:0;border-radius:10px;color:#fff;padding:13px 20px;font-weight:800;min-width:138px}
+    .primary:hover{background:#285865}.primary:disabled{background:#aabfc0;cursor:not-allowed}
+    .secondary{background:white;color:var(--ink);border:1px solid var(--border);border-radius:10px;padding:12px 17px;font-weight:700}
+    .secondary:hover{background:#f2f8f6}
+    .hint{font-size:12px;color:#627780;margin-top:12px}
+    .summary{display:none;padding:31px}.summary.show{display:block}.summary .pill{display:inline-flex;background:#e3f2ed;color:var(--mint);font-size:12px;padding:8px 12px;border-radius:8px;font-weight:800}
+    .summary h1{margin-bottom:10px}
+    .summary-card{border:1px solid var(--border);background:#fbfdfc;border-radius:12px;padding:15px 17px;margin-top:11px}
+    .summary-card strong{font-size:14px}.summary-card p{font-size:14px;margin:7px 0 0}
+    .modal-bg{position:fixed;inset:0;background:rgba(12,31,40,.67);z-index:5;display:flex;justify-content:center;align-items:center;padding:16px}
+    .modal{background:#fff;border-radius:20px;max-width:550px;width:100%;padding:34px;box-shadow:0 30px 90px rgba(0,0,0,.22)}
+    .modal h1{font-size:29px}.modal p{font-size:15px}
+    .modal-bg.hidden{display:none}
+    footer{max-width:1090px;margin:auto;padding:0 20px 22px;color:#75858a;font-size:12px}
+    @media(max-width:760px){.header{padding:13px 15px;gap:7px}.headname{font-size:14px}.topbutton{padding:9px 8px;font-size:11px}.layout{grid-template-columns:1fr}.case{position:static;padding:20px}.task{padding:21px}.stats{margin:13px 0}.modal{padding:23px}main{padding:18px 12px 28px}h1{font-size:27px}.choice{padding:13px}.summary{padding:21px}}
+    @media(max-width:400px){.topbutton{font-size:10px}.brand{font-size:10px}.header{flex-wrap:wrap}.head-left{min-width:100%;margin-bottom:4px}}
+  </style>
+</head>
+<body>
+<header class="header">
+  <div class="head-left"><span class="brand">Командная энергия · Практика</span><span class="headname">Первая победа</span></div>
+  <button id="back" class="topbutton" title="Вернуться к предыдущему вопросу">← Вернуться назад</button>
+  <button id="fullscreen" class="topbutton">⛶ На весь экран</button>
+</header>
+<main>
+  <section id="game">
+    <div class="progress-head"><span id="progressLabel">Решение 1 из 5</span><span>«Контур» · служба сопровождения дилеров</span></div>
+    <div class="progress" id="progress"></div>
+    <div class="layout">
+      <aside class="panel case">
+        <span class="eyebrow">Рабочая ситуация</span>
+        <h1>Дилеры ждут понятных ответов</h1>
+        <p>Сотрудники «Контура» получили 14 запросов с уточнениями по монтажным инструкциям. Руководство планирует обновить весь каталог, но работа оказалась намного объёмнее, чем ожидали.</p>
+        <p>Команда устала от бесконечных правок и сомневается, что сможет закончить проект. Марина хочет помочь ей получить первый подтверждённый результат — без обещаний, что все трудности исчезнут.</p>
+        <div class="stats"><div class="stat"><span>Запросов с вопросами</span><strong>14</strong></div><div class="stat"><span>Готовность всего каталога</span><strong>неясна</strong></div><div class="stat"><span>Ближайшая цель</span><strong>1 шаг</strong></div></div>
+        <p class="quiet">Это учебный эпизод. Выбирайте решения руководителя с учётом текущей нагрузки и необходимости проверить результат.</p>
+      </aside>
+      <section class="panel task" aria-live="polite">
+        <div class="stage" id="stage"></div>
+        <h2 id="heading"></h2>
+        <p class="question" id="question"></p>
+        <div id="choices" class="choices" role="group" aria-label="Варианты решения"></div>
+        <div id="feedback" class="feedback" role="status"></div>
+        <div class="buttons"><button id="submit" class="primary" disabled>Проверить</button><button id="restart" class="secondary">Начать заново</button></div>
+        <p class="hint">Выберите решение, которое поможет получить реальный, проверяемый результат.</p>
+      </section>
+    </div>
+  </section>
+  <section class="panel summary" id="summary" aria-live="polite">
+    <span class="pill">Практикум завершён</span>
+    <h1>У команды появился первый проверяемый шаг</h1>
+    <p>Вы помогли Марине не подменить большую цель красивым обещанием, а выделить результат, для которого есть ресурсы и понятная проверка. Ниже — последовательность решений для переноса в рабочую карточку.</p>
+    <div id="resultCards"></div>
+    <div class="buttons"><button id="save" class="primary">Сохранить итог .txt</button><button id="restartFinal" class="secondary">Пройти ещё раз</button></div>
+  </section>
+</main>
+<footer>Учебная симуляция по принципу небольших побед из программы Натальи Красновой. Ситуация и варианты разработаны для практики.</footer>
+<div class="modal-bg" id="intro">
+ <section class="modal" role="dialog" aria-modal="true" aria-labelledby="introTitle">
+  <span class="eyebrow">5 решений · 1 рабочая ситуация</span>
+  <h1 id="introTitle">Проведите команду к первой победе</h1>
+  <p>Проект в «Контуре» затянулся, сотрудники устали. Вы будете выбирать решения за Марину Орлову: какую часть работы взять первой, как обеспечить её выполнение и по каким признакам признать результат.</p>
+  <p>На каждом этапе выбирайте один вариант и нажимайте «Проверить». После разбора переходите к следующей ситуации. В конце получите краткую карточку решений.</p>
+  <div class="buttons"><button id="start" class="primary">Начать практику</button></div>
+ </section>
+</div>
+<script>
+(function(){'use strict';
+ const steps=[
+  {label:'Определяем первую цель',title:'С чего начнём?',question:'Какую задачу Марина предложит команде на ближайшие три дня?',options:[
+   {text:'Обновить весь каталог инструкций за три дня.',why:'Масштаб задачи не изменился: команда снова берёт обязательство, в которое уже перестала верить.'},
+   {text:'Выбрать один часто задаваемый вопрос дилеров и подготовить проверенный ответ по одному типу оборудования.',why:'Это ограниченный результат, который действительно помогает решить часть реальной проблемы.',correct:true},
+   {text:'Провести общее собрание и пообещать, что через месяц все трудности закончатся.',why:'Обещание будущего результата не создаёт фактического изменения сегодня.'}
+  ],note:'Первая цель: проверить ответ на один повторяющийся вопрос по конкретному типу оборудования.'},
+  {label:'Защищаем время команды',title:'Что нужно для выполнения?',question:'Специалисты говорят, что их день уже занят срочными запросами. Как поступить?',options:[
+   {text:'Оставить прежние задачи и попросить дополнительно поработать вечером.',why:'Победа, достигнутая ценой дополнительных переработок, скорее усилит истощение.'},
+   {text:'Освободить двух специалистов на два часа от второстепенных поручений и согласовать помощь технического эксперта.',why:'Марина обеспечила ресурсы для первой цели, не увеличивая общую нагрузку.',correct:true},
+   {text:'Назначить всем сотрудникам одинаковое количество правок и сравнить скорость.',why:'Соревнование не снимает препятствие: у специалистов нет времени на сосредоточенную проверку.'}
+  ],note:'Поддержка: выделить рабочее время и привлечь технического эксперта, не добавляя неоплаченных переработок.'},
+  {label:'Проверяем результат',title:'Как понять, что получилось?',question:'Команда подготовила новую карточку ответа. Как проверить, решает ли она задачу?',options:[
+   {text:'Посчитать, сколько часов сотрудники потратили на подготовку карточки.',why:'Затраченное время показывает объём усилий, но не доказывает полезность ответа дилерам.'},
+   {text:'Спросить руководителя, нравится ли ему оформление текста.',why:'Внешний вид важен, но он не показывает, исчезла ли необходимость дополнительных уточнений.'},
+   {text:'Использовать карточку в трёх обращениях по той же проблеме и зафиксировать, потребовались ли повторные объяснения.',why:'Так команда увидит, помог ли подготовленный материал в реальных обращениях.',correct:true}
+  ],note:'Критерий: три обращения одного типа и запись о необходимости повторных пояснений.'},
+  {label:'Признаём масштаб достижения',title:'Что скажем команде?',question:'В трёх обращениях новая карточка помогла ответить на вопрос без повторных пояснений. Как Марине подвести итог?',options:[
+   {text:'«Каталог мы ещё не переделали, так что пока рано радоваться».',why:'Команда получила полезный результат, но руководитель полностью его обесценивает.'},
+   {text:'«Три обращения прошли без повторных уточнений. Спасибо специалистам за проверку с дилерами и инженеру за техническую точность. Теперь знаем, что этот формат стоит проверить шире».',why:'Здесь названы проверенный результат, вклад людей и границы вывода.',correct:true},
+   {text:'«Отлично! Проблему с монтажными инструкциями мы окончательно решили».',why:'Три случая не позволяют делать вывод обо всех товарах и всех дилерских запросах.'}
+  ],note:'Признание: назвать результат на трёх обращениях и конкретный вклад людей, не объявляя весь проект завершённым.'},
+  {label:'Выбираем следующий шаг',title:'Как продолжим?',question:'Что делать после первого полезного результата?',options:[
+   {text:'Раздать команде сразу все оставшиеся вопросы и потребовать подготовить ответы к утру.',why:'Резкое расширение задачи вновь создаст перегрузку и перечеркнёт пользу первого шага.'},
+   {text:'Сначала проверить карточку на большем числе обращений; затем выбрать следующий частый вопрос по результатам обращений.',why:'Это позволяет закрепить подход и постепенно расширять улучшение.',correct:true},
+   {text:'Остановить работу над инструкциями: один положительный результат уже получен.',why:'Первая победа — не замена большой задаче, а возможность продвинуться к ней.'}
+  ],note:'Следующий шаг: расширить проверку, затем выбрать следующий повторяющийся вопрос.'}
+ ];
+ let index=0;let answers=Array(steps.length).fill(null);let confirmed=Array(steps.length).fill(false);let chosen=null;let tried=false;
+ const $=id=>document.getElementById(id);
+ function draw(){
+  if(index>=steps.length){showFinal();return}
+  $('game').style.display='block';$('summary').classList.remove('show');
+  let s=steps[index];chosen=answers[index];tried=false;
+  $('progressLabel').textContent=`Решение ${index+1} из ${steps.length}`;
+  $('progress').innerHTML=steps.map((_,i)=>`<span class="pip ${i<index?'done':i===index?'active':''}"></span>`).join('');
+  $('stage').textContent=s.label;$('heading').textContent=s.title;$('question').textContent=s.question;
+  $('choices').innerHTML='';
+  s.options.forEach((opt,i)=>{
+    const b=document.createElement('button');b.className='choice'+(chosen===i?' selected':'');
+    b.type='button';b.setAttribute('aria-pressed',chosen===i?'true':'false');
+    const letter=document.createElement('span');letter.className='letter';letter.textContent=['А','Б','В','Г'][i];
+    const t=document.createElement('span');t.textContent=opt.text;
+    b.append(letter,t);b.addEventListener('click',()=>{if(confirmed[index])return;chosen=i;answers[index]=i;tried=false;renderSelection()});$('choices').append(b);
+  });
+  $('feedback').className='feedback';$('feedback').textContent='';
+  $('submit').disabled=chosen===null&&!confirmed[index];$('submit').textContent=confirmed[index]?'Дальше':'Проверить';
+  $('back').disabled=index===0;$('back').style.opacity=index===0?'.48':'1';
+  if(confirmed[index]){ $('feedback').className='feedback ok show';$('feedback').innerHTML='<b>Решение принято</b>'+s.options[answers[index]].why;renderSelection(); }
+ }
+ function renderSelection(){
+  let s=steps[index];Array.from($('choices').children).forEach((b,i)=>{b.className='choice'+(chosen===i?' selected':'');if(tried&&chosen===i)b.classList.add(s.options[i].correct?'good':'bad');b.disabled=confirmed[index];b.setAttribute('aria-pressed',chosen===i?'true':'false')});
+  if(!confirmed[index]){ $('submit').disabled=chosen===null;$('feedback').className='feedback';$('feedback').textContent=''; }
+ }
+ $('submit').addEventListener('click',()=>{
+  if(confirmed[index]){index++;draw();return}if(chosen===null)return;
+  const o=steps[index].options[chosen];tried=true;renderSelection();
+  const f=$('feedback');f.className='feedback '+(o.correct?'ok':'err')+' show';
+  f.innerHTML='<b>'+(o.correct?'Подходит для этой ситуации':'Подумайте ещё')+'</b>'+o.why;
+  if(o.correct){confirmed[index]=true;$('submit').textContent=index===steps.length-1?'Показать итог':'Дальше';Array.from($('choices').children).forEach(b=>b.disabled=true)}
+ });
+ $('back').addEventListener('click',()=>{if(index>0){index--;draw()}});
+ function showFinal(){ $('game').style.display='none';$('summary').classList.add('show');$('back').disabled=false;$('back').style.opacity='1';$('resultCards').innerHTML=''; steps.forEach((s,i)=>{const c=document.createElement('div');c.className='summary-card';const strong=document.createElement('strong');strong.textContent=`${i+1}. ${s.label}`;const p=document.createElement('p');p.textContent=s.note;c.append(strong,p);$('resultCards').append(c)});window.scrollTo({top:0,behavior:'smooth'}) }
+ function reset(){index=0;answers=Array(steps.length).fill(null);confirmed=Array(steps.length).fill(false);$('intro').classList.remove('hidden');draw();window.scrollTo(0,0)}
+ $('restart').addEventListener('click',reset);$('restartFinal').addEventListener('click',reset);
+ $('start').addEventListener('click',()=>{$('intro').classList.add('hidden');$('choices').querySelector('button')?.focus()});
+ $('save').addEventListener('click',()=>{
+  const result='ПЕРВАЯ ПОБЕДА. Итог учебного практикума «Контур»\n\n'+steps.map((s,i)=>(i+1)+'. '+s.label+'\n'+s.note).join('\n\n')+'\n\nВажно: действия и результаты иллюстрируют учебную ситуацию; перенесите принцип на реальную рабочую задачу.';
+  const blob=new Blob([result],{type:'text/plain;charset=utf-8'}); const url=URL.createObjectURL(blob); const a=document.createElement('a');a.href=url;a.download='Первая_победа_решения.txt';document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000)
+ });
+ $('fullscreen').addEventListener('click',async()=>{try{if(!document.fullscreenElement){await document.documentElement.requestFullscreen()}else{await document.exitFullscreen()}}catch(e){$('fullscreen').textContent='Полный экран недоступен'}});
+ draw();
+})();
+</script>
+</body>
+</html>
