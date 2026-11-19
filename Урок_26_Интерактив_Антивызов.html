@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Антивызов: как получить предложения от команды</title>
+<style>
+:root{--ink:#15314c;--muted:#62778a;--bg:#f1f5f8;--teal:#0d7890;--tint:#e9f7f9;--line:#d6e3e9;--good:#e6f7ed;--goodb:#16945c;--bad:#fff0f0;--badb:#d14c53;--orange:#f3bd68}
+*{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,-apple-system,"Segoe UI",Arial,sans-serif}
+.shell{max-width:1120px;margin:32px auto;padding:0 18px}.screen{background:white;border:1px solid var(--line);border-radius:22px;box-shadow:0 14px 48px #233a4b11;overflow:hidden}
+.top{background:linear-gradient(113deg,#133651,#0c7386);color:white;padding:24px 32px}.top small{letter-spacing:.09em;text-transform:uppercase;opacity:.88;font-weight:800}.top h1{font-size:clamp(23px,3vw,34px);line-height:1.2;margin:10px 0 10px}.top p{max-width:800px;margin:0;color:#d9eff3}
+.progress{display:flex;gap:8px;max-width:430px;margin-top:20px}.prog{height:5px;border-radius:9px;flex:1;background:#ffffff40}.prog.on{background:#aaf3e4}
+.main{padding:26px 32px 18px}.eyebrow{font-size:12px;letter-spacing:.1em;font-weight:800;text-transform:uppercase;color:var(--teal)} h2{font-size:24px;line-height:1.28;margin:8px 0 12px}p{margin:8px 0 13px}.hint{color:var(--muted)} .case{background:#f4f8fa;border-left:4px solid #2d93a0;padding:14px 18px;border-radius:0 10px 10px 0;margin:16px 0}
+.cards{display:grid;gap:10px}.card{padding:13px 15px;border:1px solid #cad9e2;border-radius:12px;background:white;cursor:grab;line-height:1.4;touch-action:none;transition:box-shadow .15s,border-color .15s;user-select:none}.card:focus-visible,.zone:focus-visible,button:focus-visible,.option:focus-within{outline:3px solid #81d6df;outline-offset:2px}.card.chosen{border:2px solid var(--teal);background:var(--tint)}.card.right{background:var(--good);border:2px solid var(--goodb)}.card.wrong{background:var(--bad);border:2px solid var(--badb)}
+.card small{font-weight:750;color:var(--teal)}.sorting{display:grid;grid-template-columns:1fr 1.18fr;gap:15px;margin:20px 0}.bank,.zone{min-width:0;border:1px dashed #acbdc7;border-radius:14px;padding:16px;min-height:210px}.bank{background:#f7fafc}.zone{background:#f8fcfc}.zones{display:grid;grid-template-columns:1fr 1fr;gap:12px}.zone h3,.bank h3{margin:0 0 12px;font-size:15px}.zone.hover{background:#d8f5f1;border-color:#1c8d98}.zone .cards,.bank .cards{min-height:120px}.zone .card,.bank .card{font-size:14px}.bank .cards{min-height:160px}
+.options{display:grid;gap:10px;margin-top:17px}.option{display:flex;gap:12px;align-items:flex-start;padding:15px 18px;border:1px solid var(--line);border-radius:13px;cursor:pointer}.option input{margin-top:5px;accent-color:var(--teal)}.option:has(input:checked){border-color:var(--teal);background:#eefbfc}.option.wrong{border-color:var(--badb);background:var(--bad)}.option.right{border-color:var(--goodb);background:var(--good)}
+.question{background:#f3f8fb;border-radius:13px;padding:17px;margin:16px 0}.question strong{display:block;margin-bottom:5px}
+.inputs{display:grid;gap:15px;margin:17px 0}.field label{font-weight:750;display:block;margin-bottom:7px}.field textarea{font:inherit;width:100%;min-height:86px;border:1px solid #c4d5df;border-radius:11px;resize:vertical;padding:12px;color:var(--ink)}.field textarea.invalid{border:2px solid var(--badb);background:var(--bad)}
+.actions{border-top:1px solid var(--line);display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:18px 32px;background:#fcfdfd}.btn{padding:11px 18px;background:var(--teal);border:1px solid var(--teal);color:white;border-radius:10px;font:inherit;font-weight:750;cursor:pointer}.btn:hover{filter:brightness(.95)}.btn.secondary{background:white;color:#19445a;border-color:#c4d6de}.btn.subtle{background:transparent;border-color:transparent;color:#496576}.push{margin-left:auto}.feedback{padding:13px 15px;border-radius:11px;margin:18px 0 0}.feedback.good{background:var(--good);color:#125e3a}.feedback.bad{background:var(--bad);color:#8b343a}.footer{padding:0 32px 24px;color:var(--muted);font-size:13px}
+.overlay{position:fixed;inset:0;background:#112b3ba8;display:grid;place-items:center;padding:20px;z-index:100}.modal{max-width:590px;background:white;border-radius:22px;padding:32px;box-shadow:0 18px 80px #0003}.modal h2{font-size:28px}.modal p{line-height:1.65}
+[hidden]{display:none!important}.dragclone{position:fixed;z-index:200;pointer-events:none;width:300px;box-shadow:0 14px 34px #1234;opacity:.9}.muted{color:#62778a}
+@media (max-width:790px){.shell{margin:10px auto}.top,.main{padding:22px 18px}.actions{padding:16px 18px}.footer{padding:0 18px 16px}.sorting{grid-template-columns:1fr}.zones{grid-template-columns:1fr 1fr}.bank,.zone{min-height:120px}}
+@media (max-width:500px){.zones{grid-template-columns:1fr}.top h1{font-size:25px}.modal{padding:22px}.btn{flex:1}.push{margin-left:0}}
+</style>
+</head>
+<body>
+<div class="shell"><section class="screen">
+<header class="top"><small>Практика · командная энергия</small><h1>Антивызов: помогите команде предложить изменения</h1><p>Разберите ситуации, выберите подходящую реплику руководителя и подготовьте собственный разговор.</p><div class="progress" id="progress"></div></header>
+<main class="main" id="content" aria-live="polite"></main>
+<div class="actions" id="actions"><button class="btn secondary" id="back">Вернуться назад</button><button class="btn subtle" id="fullscreen">На весь экран</button><div class="push"></div><button class="btn secondary" id="retry" hidden>Попробовать снова</button><button class="btn" id="check">Проверить</button><button class="btn" id="next" hidden>Далее</button></div>
+<div class="footer" id="footer">Обсуждать можно только те изменения, которые не затрагивают обязательные требования и безопасность.</div>
+</section></div>
+<div class="overlay" id="intro"><div class="modal"><span class="eyebrow">Учебный кейс «Контур»</span><h2>Как получить инициативу без прямого приказа?</h2><p>На производстве давно действуют привычные процессы. Сотрудники видят неудобства, но редко предлагают изменения первыми. Руководитель хочет использовать антивызов — предложить сохранить существующий порядок и дать команде возможность аргументированно возразить.</p><p class="muted">Вас ждут четыре этапа. На первом распределите ситуации по двум группам. Затем выберите реплики руководителя и составьте план разговора. На каждом этапе можно вернуться к предыдущему.</p><button class="btn" id="start">Начать</button></div></div>
+<script>
+'use strict';
+const $=id=>document.getElementById(id), content=$('content');
+const situations=[
+ {id:'a',t:'Сотрудники спокойно возражают руководителю и приводят свои аргументы.',correct:'yes'},
+ {id:'b',t:'За прежние предложения сотрудников публично критиковали; теперь на встречах молчат.',correct:'no'},
+ {id:'c',t:'Команда обсуждает обратимый порядок передачи обычных ремонтных заявок.',correct:'yes'},
+ {id:'d',t:'Необходимо немедленно изменить действия при опасной неисправности оборудования.',correct:'no'},
+ {id:'e',t:'Руководитель уже выбрал решение и хочет добиться согласия с ним.',correct:'no'},
+ {id:'f',t:'Сотрудники совместно приняли правила обсуждения разногласий и применяют их.',correct:'yes'}
+];
+let step=0,sort=Object.fromEntries(situations.map(x=>[x.id,'bank'])),selected=null,choice2=null,choice3=null,checked=false,passed=false;let notes={phrase:'',question:'',trial:''};
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function render(){ checked=false;passed=false;selected=null; $('progress').innerHTML=[0,1,2,3].map(i=>'<div class="prog '+(i<=step?'on':'')+'"></div>').join('');
+ $('back').disabled=step===0;$('retry').hidden=true;$('next').hidden=true;$('check').hidden=false;$('check').textContent=step===3?'Завершить':'Проверить';
+ if(step===0)drawSort();if(step===1)drawChoice2();if(step===2)drawChoice3();if(step===3)drawPlan();
+ $('footer').textContent='Этап '+(step+1)+' из 4 · Решения должны оставаться открытыми для обсуждения.';
+}
+function part(num,title,body){return `<div class="eyebrow">Этап ${num} из 4</div><h2>${title}</h2>${body}`}
+function cardHTML(x){return `<div class="card" draggable="true" tabindex="0" role="button" data-id="${x.id}" aria-label="${esc(x.t)}">${esc(x.t)}</div>`}
+function drawSort(){
+ content.innerHTML=part(1,'Когда антивызов уместен?',`<p>Антивызов предполагает, что сотрудник может не согласиться с руководителем. <b>Перетащите</b> карточки в подходящие области. Карточку можно также выбрать нажатием, а затем нажать на нужную область.</p><div class="sorting"><section class="bank zone" data-zone="bank" tabindex="0" aria-label="Нераспределённые карточки"><h3>Карточки для распределения</h3><div class="cards" id="bank"></div></section><div class="zones"><section class="zone" data-zone="yes" tabindex="0" role="button"><h3>Можно использовать антивызов</h3><div class="cards" id="yes"></div></section><section class="zone" data-zone="no" tabindex="0" role="button"><h3>Сначала нужен другой подход</h3><div class="cards" id="no"></div></section></div></div><p class="hint">Если передумали, верните карточку в исходный блок и распределите заново.</p><div id="feedback"></div>`);
+ situations.forEach(x=>$(sort[x.id]).insertAdjacentHTML('beforeend',cardHTML(x)));hookDrag();}
+function resetMarks(){document.querySelectorAll('.card').forEach(x=>x.classList.remove('right','wrong'));let f=$('feedback');if(f)f.innerHTML=''; checked=false; passed=false;$('next').hidden=true;$('check').hidden=false;$('retry').hidden=true;}
+function moveCard(id,target){if(!id||!target)return;sort[id]=target;let node=document.querySelector(`.card[data-id="${id}"]`);$(target).append(node);node.classList.remove('chosen','right','wrong');selected=null;resetMarks();}
+function hookDrag(){
+ document.querySelectorAll('.card').forEach(c=>{
+ c.addEventListener('click',()=>{if(c.dataset.suppress){delete c.dataset.suppress;return;}let id=c.dataset.id;selected=selected===id?null:id;document.querySelectorAll('.card').forEach(n=>n.classList.toggle('chosen',n.dataset.id===selected));});
+ c.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();c.click();}});
+ c.addEventListener('dragstart',e=>{e.dataTransfer.setData('text/plain',c.dataset.id);e.dataTransfer.effectAllowed='move';});
+ let drag=null;
+ c.addEventListener('pointerdown',e=>{if(e.pointerType==='mouse')return;drag={id:c.dataset.id,x:e.clientX,y:e.clientY,clone:null};});
+ c.addEventListener('pointermove',e=>{if(!drag)return;if(!drag.clone&&Math.hypot(e.clientX-drag.x,e.clientY-drag.y)>10){drag.clone=c.cloneNode(true);drag.clone.classList.add('dragclone');drag.clone.style.width=Math.min(340,c.getBoundingClientRect().width)+'px';document.body.append(drag.clone);}if(drag.clone){drag.clone.style.left=(e.clientX-40)+'px';drag.clone.style.top=(e.clientY-24)+'px';}});
+ c.addEventListener('pointerup',e=>{if(!drag)return;if(drag.clone){drag.clone.remove();let el=document.elementFromPoint(e.clientX,e.clientY);let zone=el?.closest('[data-zone]');if(zone)moveCard(drag.id,zone.dataset.zone);c.dataset.suppress='1';}drag=null;});
+ c.addEventListener('pointercancel',()=>{if(drag?.clone)drag.clone.remove();drag=null;});
+ });
+ document.querySelectorAll('[data-zone]').forEach(z=>{
+ z.addEventListener('dragover',e=>{e.preventDefault();z.classList.add('hover')});z.addEventListener('dragleave',()=>z.classList.remove('hover'));
+ z.addEventListener('drop',e=>{e.preventDefault();z.classList.remove('hover');moveCard(e.dataTransfer.getData('text/plain'),z.dataset.zone)});
+ z.addEventListener('click',e=>{if(e.target.closest('.card'))return;if(selected)moveCard(selected,z.dataset.zone)});
+ z.addEventListener('keydown',e=>{if(selected&&(e.key==='Enter'||e.key===' ')){e.preventDefault();moveCard(selected,z.dataset.zone)}});
+ });
+}
+const options2=[
+ 'До следующего квартала запрещаю обсуждать любые изменения. Мы всё решили.',
+ 'Мы давно передаём заявки на бумаге. Может, пока не будем ничего менять? Что в этом порядке вас не устраивает?',
+ 'Каждый обязан придумать по три улучшения до конца дня. За отсутствие идей спрошу отдельно.',
+ 'Я уже подготовил электронный журнал. Сегодня начнёте работать по нему.'
+];
+const options3=[
+ 'Хорошо, тогда вы и внедряйте новый журнал без обсуждения. За результат отвечаете лично.',
+ 'Если считаете порядок неудобным, предложите, как проверить альтернативу за две недели и по каким показателям оценим результат.',
+ 'Давайте не спорить: я рассчитывал, что команда поддержит моё предложение.',
+ 'Записываю вашу идею, но возвращаться к ней пока не будем.'
+];
+function choicesHTML(opts,val){return `<div class="options">${opts.map((t,i)=>`<label class="option" data-option="${i}"><input type="radio" name="answer" value="${i}" ${val===i?'checked':''}><span>${esc(t)}</span></label>`).join('')}</div><div id="feedback"></div>`}
+function drawChoice2(){content.innerHTML=part(2,'Как сформулировать антивызов?',`<div class="case">В «Контуре» сотрудники производственного подразделения передают заявки на плановый ремонт на бумаге. Иногда документы поступают в ремонтную службу с опозданием. Коллеги уже обсуждают рабочие проблемы без опасения возражать Олегу.</div><p><b>Какую реплику руководителю лучше выбрать, чтобы сотрудники сами начали обсуждать изменения?</b></p>`+choicesHTML(options2,choice2));document.querySelectorAll('input[name=answer]').forEach(r=>r.addEventListener('change',()=>{choice2=Number(r.value);resetChoice()}));}
+function drawChoice3(){content.innerHTML=part(3,'Как превратить возражение в предложение?',`<div class="case"><b>Мастер смены:</b> «А зачем оставлять всё как есть? Мы теряем время на передачу заявок. Можно попробовать общий журнал, где сразу видно, когда поступило обращение».</div><p><b>Как лучше ответить, чтобы инициатива осталась у сотрудника, а изменение можно было оценить?</b></p>`+choicesHTML(options3,choice3));document.querySelectorAll('input[name=answer]').forEach(r=>r.addEventListener('change',()=>{choice3=Number(r.value);resetChoice()}));}
+function resetChoice(){document.querySelectorAll('.option').forEach(x=>x.classList.remove('wrong','right'));$('feedback').innerHTML='';passed=false;checked=false;$('next').hidden=true;$('check').hidden=false;$('retry').hidden=true;}
+function drawPlan(){content.innerHTML=part(4,'Подготовьте свой антивызов',`<p>Выберите <b>один</b> повторяющийся рабочий процесс, который команда действительно может улучшить. Запишите вопрос для обсуждения и способ проверить предложение.</p><div class="inputs"><div class="field"><label for="phrase">1. Какую привычную процедуру вы предложите пока не менять?</label><textarea id="phrase" placeholder="Например: Может, оставим прежний порядок согласования заявок ещё на месяц?">${esc(notes.phrase)}</textarea></div><div class="field"><label for="question">2. Как вы пригласите сотрудников возразить?</label><textarea id="question" placeholder="Например: Что мы потеряем, если ничего не изменим?">${esc(notes.question)}</textarea></div><div class="field"><label for="trial">3. Как можно безопасно проверить одно предложение команды?</label><textarea id="trial" placeholder="Например: Проверим новый порядок две недели и сравним задержки и ошибки, не меняя обязательные проверки.">${esc(notes.trial)}</textarea></div></div><p class="hint">Приём не подходит для аварийных ситуаций, обязательных правил и решений, где руководитель уже не готов обсуждать альтернативы.</p><div id="feedback"></div>`);['phrase','question','trial'].forEach(k=>$(k).addEventListener('input',e=>{notes[k]=e.target.value;e.target.classList.remove('invalid');$('feedback').innerHTML='';}));}
+function showFeedback(good,message){$('feedback').innerHTML=`<div class="feedback ${good?'good':'bad'}">${esc(message)}</div>`;}
+function check(){if(step===0){let all=situations.every(x=>sort[x.id]!=='bank');if(!all){showFeedback(false,'Распределите все карточки по двум областям.');return;}passed=situations.every(x=>sort[x.id]===x.correct);document.querySelectorAll('.card').forEach(el=>{let x=situations.find(a=>a.id===el.dataset.id);el.classList.add(sort[x.id]===x.correct?'right':'wrong')});showFeedback(passed,passed?'Вы учли условия. Антивызов подходит там, где сотрудники могут открыто спорить и изменение не создаёт риска.':'Проверьте отмеченные ситуации: для антивызова нужны открытый диалог, возможность реального изменения и безопасный предмет обсуждения.');}
+ if(step===1){if(choice2===null){showFeedback(false,'Выберите одну реплику руководителя.');return;}passed=choice2===1;document.querySelector(`.option[data-option="${choice2}"]`).classList.add(passed?'right':'wrong');showFeedback(passed,passed?'Это предложение для обсуждения, а не настоящий запрет. Сотрудники могут назвать недостатки привычного порядка.':'Антивызов не должен становиться приказом, требованием выдать идеи или уже принятым решением.');}
+ if(step===2){if(choice3===null){showFeedback(false,'Выберите ответ руководителя.');return;}passed=choice3===1;document.querySelector(`.option[data-option="${choice3}"]`).classList.add(passed?'right':'wrong');showFeedback(passed,passed?'Руководитель помогает сотруднику превратить возражение в проверяемое предложение, не присваивая инициативу.':'Сначала уточните предложение сотрудника и договоритесь о небольшом тесте, а не передавайте всю ответственность или закрывайте обсуждение.');}
+ if(step===3){['phrase','question','trial'].forEach(k=>notes[k]=$(k).value.trim());passed=['phrase','question','trial'].every(k=>notes[k].length>=12);if(!passed){['phrase','question','trial'].forEach(k=>$(k).classList.toggle('invalid',notes[k].length<12));showFeedback(false,'Заполните все три поля: предложение сохранить порядок, открытый вопрос и способ проверки изменения.');return;}showFinal();return;}
+ if(passed){$('next').hidden=false;$('check').hidden=true;$('retry').hidden=true;}else{$('retry').hidden=false;}
+}
+function showFinal(){content.innerHTML=part(4,'План разговора готов',`<p>Вы сформулировали антивызов и наметили способ проверить результат. Используйте его как <b>вопрос для открытого обсуждения</b>, а не как распоряжение.</p><div class="question"><strong>Гипотеза: ничего не менять</strong>${esc(notes.phrase)}</div><div class="question"><strong>Вопрос команде</strong>${esc(notes.question)}</div><div class="question"><strong>Как проверить изменение</strong>${esc(notes.trial)}</div><div class="feedback good">Начните с фактов, выслушайте возражения и согласуйте один небольшой эксперимент. Затем обязательно вернитесь к команде с результатами.</div><p><button class="btn" id="save">Сохранить план (.txt)</button> <button class="btn secondary" id="restart">Пройти ещё раз</button></p>`);
+ $('check').hidden=true;$('retry').hidden=true;$('next').hidden=true;$('back').disabled=false;
+ $('save').onclick=()=>{let t=`Антивызов: план разговора\n\n1. Предложение сохранить порядок:\n${notes.phrase}\n\n2. Вопрос команде:\n${notes.question}\n\n3. Проверка улучшения:\n${notes.trial}\n\nВажно: не применять к безопасности и обязательным требованиям.\n`;let blob=new Blob([t],{type:'text/plain;charset=utf-8'});let u=URL.createObjectURL(blob),a=document.createElement('a');a.href=u;a.download='Антивызов_план_разговора.txt';document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),1000)};
+ $('restart').onclick=()=>{step=0;sort=Object.fromEntries(situations.map(x=>[x.id,'bank']));choice2=null;choice3=null;notes={phrase:'',question:'',trial:''};render()};}
+$('start').onclick=()=>{$('intro').hidden=true;render()};
+$('check').onclick=check;
+$('next').onclick=()=>{if(step<3){step++;render()}};
+$('back').onclick=()=>{if(step>0){step--;render()}};
+$('retry').onclick=()=>{if(step===0){sort=Object.fromEntries(situations.map(x=>[x.id,'bank']));}if(step===1)choice2=null;if(step===2)choice3=null;render()};
+$('fullscreen').onclick=()=>{if(!document.fullscreenElement){document.querySelector('.screen').requestFullscreen?.().catch(()=>{});}else{document.exitFullscreen?.().catch(()=>{})}};
+render();
+</script>
+</body>
+</html>
