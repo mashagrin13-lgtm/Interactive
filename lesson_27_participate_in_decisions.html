@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Участие в управленческих решениях — практикум</title>
+<style>
+:root{--ink:#172c45;--muted:#64748b;--teal:#087f83;--teall:#e5f5f4;--line:#d9e3eb;--pale:#f4f7fb;--red:#b91c1c;--redd:#fff1f1;--green:#13734d;--greend:#e6f7ed}
+*{box-sizing:border-box}html,body{margin:0}body{font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;background:#edf2f6;color:var(--ink);line-height:1.48}
+.shell{max-width:1100px;margin:20px auto;background:#fff;border:1px solid #dce5ed;border-radius:22px;overflow:hidden;box-shadow:0 10px 38px #1b32451c}
+header{background:linear-gradient(118deg,#152b45,#175d67);color:white;padding:24px 32px 22px} .topline{display:flex;align-items:center;justify-content:space-between;gap:12px}.eyebrow{color:#b9e9e5;font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase}.head-actions{display:flex;gap:9px;flex-wrap:wrap}
+h1{font-size:clamp(23px,3vw,32px);margin:8px 0 5px;line-height:1.2;font-weight:770}.sub{margin:0;color:#dbe8ec;font-size:14px;max-width:800px}
+button{font-family:inherit;cursor:pointer;font-weight:700}button:disabled{cursor:not-allowed;opacity:.5}.outline{background:#ffffff15;border:1px solid #ffffff60;color:white;border-radius:10px;padding:9px 12px;font-size:12px}.outline:hover{background:#ffffff30}.progress{display:flex;gap:6px;margin-top:20px}.bar{height:6px;flex:1;border-radius:10px;background:#ffffff34}.bar.on{background:#7ce0d7}
+main{padding:27px 32px 20px}.steplabel{font-size:12px;font-weight:800;color:var(--teal);text-transform:uppercase;letter-spacing:.065em}.stepname{font-size:24px;margin:5px 0 10px;line-height:1.2}.lead{color:#3e5063;font-size:15px;margin:0 0 16px}.context{padding:14px 17px;border-left:4px solid var(--teal);background:var(--pale);border-radius:0 10px 10px 0;margin:15px 0 20px;font-size:14px}.context strong{color:var(--ink)}
+.dropgrid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:14px 0}.dropzone,.bank{border:2px dashed #bdcedc;background:#f8fafc;border-radius:14px;padding:12px;min-height:180px;transition:.15s}.bank{min-height:135px;border-style:solid}.dropzone.over{background:var(--teall);border-color:var(--teal)}.zonehead{font-size:14px;font-weight:800;margin-bottom:9px}.zonehelp{font-size:12px;color:var(--muted);margin:-6px 0 10px}.items{display:flex;flex-direction:column;gap:7px}.taskcard{font-size:13px;line-height:1.35;padding:11px 12px;background:white;border:1px solid #d3dfe9;border-radius:11px;box-shadow:0 2px 3px #152b450b;cursor:grab;user-select:none;touch-action:none}.taskcard.picked{border-color:#087f83;box-shadow:0 0 0 2px #0f8b8d30}.taskcard.correct{border:2px solid #19865d;background:var(--greend)}.taskcard.wrong{border:2px solid var(--red);background:var(--redd)}.taskcard:focus-visible,.choice:focus-within{outline:3px solid #5bc6c3;outline-offset:2px}.bank .zonehead{display:flex;gap:8px;align-items:center}.zonecount{border-radius:12px;background:#e7edf3;color:#40566a;font-size:11px;padding:2px 7px}
+.choices{display:grid;gap:9px;margin:15px 0}.choice{display:flex;gap:12px;align-items:flex-start;border:1px solid #d5e1e9;padding:13px 15px;border-radius:11px;background:white;cursor:pointer;font-size:14px;line-height:1.44}.choice:hover{background:#f6fafb}.choice input{accent-color:var(--teal);margin-top:4px;transform:scale(1.15);flex-shrink:0}.choice.wrong{border:2px solid var(--red);background:var(--redd)}.choice.correct{border:2px solid var(--green);background:var(--greend)}
+.feedback{min-height:0;margin:12px 0 0;font-size:14px;padding:12px 14px;border-radius:10px;display:none}.feedback.visible{display:block}.feedback.error{color:#912626;background:var(--redd)}.feedback.success{color:#165a42;background:var(--greend)}
+footer{display:flex;align-items:center;gap:10px;justify-content:space-between;border-top:1px solid #e7edf2;padding:16px 32px;background:#fcfdff}.rightbuttons{display:flex;gap:9px;align-items:center;flex-wrap:wrap}.btn{padding:11px 18px;border-radius:10px;font-size:14px;border:1px solid transparent}.primary{background:var(--teal);color:white}.primary:hover{background:#076d71}.secondary{border-color:#d4e1e9;color:var(--ink);background:#fff}.secondary:hover{background:#f1f6f8}.status{font-size:13px;color:var(--muted)}
+.formgrid{display:grid;gap:12px}.field label{display:block;font-weight:700;font-size:13px;margin-bottom:5px}.field input,.field textarea{width:100%;border:1px solid #bfcedb;border-radius:10px;padding:11px 12px;font-family:inherit;color:var(--ink);font-size:14px;background:#fff}.field textarea{min-height:76px;resize:vertical}.field input:focus,.field textarea:focus{outline:2px solid #58c9c4;border-color:var(--teal)}.ghost{position:fixed;pointer-events:none;z-index:1000;width:min(320px,80vw);opacity:.9;transform:rotate(-1deg);box-shadow:0 18px 36px #14263a44}
+.overlay{position:fixed;inset:0;background:#0f2035cc;z-index:1500;display:flex;align-items:center;justify-content:center;padding:18px}.modal{background:white;border-radius:21px;max-width:575px;padding:29px 29px 26px;box-shadow:0 20px 60px #0005}.modal h2{font-size:25px;line-height:1.2;margin:0 0 12px}.modal p{font-size:15px;color:#44576b}.modal small{color:var(--muted)}.modal .btn{margin-top:15px}.hide{display:none!important}
+@media(max-width:650px){.shell{border-radius:0;margin:0;min-height:100vh}.topline{align-items:flex-start;flex-direction:column}header{padding:19px 18px}.sub{font-size:13px}main{padding:21px 16px}.dropgrid{grid-template-columns:1fr}.dropzone{min-height:130px}footer{padding:13px 16px;flex-wrap:wrap}.rightbuttons{width:100%;justify-content:flex-end}.btn{font-size:13px;padding:10px 13px}.status{font-size:12px} .modal{padding:22px}}
+</style>
+</head>
+<body>
+<section class="shell" id="shell">
+<header><div class="topline"><div class="eyebrow">Урок 27 · Практика руководителя</div><div class="head-actions"><button id="fullBtn" type="button" class="outline">⛶ На весь экран</button><button type="button" class="outline" id="restartTop">↺ Начать заново</button></div></div>
+<h1>Вовлеките команду в решение</h1><p class="sub">Проведите совет по изменению порядка обработки заказов в компании «Контур».</p><div class="progress" id="progress"></div></header>
+<main><div class="steplabel" id="steplabel"></div><h2 class="stepname" id="stepname"></h2><p class="lead" id="lead"></p><div id="work"></div><div class="feedback" id="feedback" aria-live="polite"></div></main>
+<footer><button type="button" id="prev" class="btn secondary">← Вернуться назад</button><div class="rightbuttons"><span class="status" id="status"></span><button type="button" class="btn secondary" id="check">Проверить</button><button type="button" class="btn primary" id="next" style="display:none">Продолжить →</button><button type="button" class="btn primary" id="download" style="display:none">Сохранить план ↓</button></div></footer>
+</section>
+<div class="overlay" id="intro"><div class="modal"><div class="eyebrow" style="color:#087f83">Практикум · 5 этапов</div><h2>Кто участвует в решении — тот лучше понимает, как его выполнять</h2><p>В «Контуре» необходимо уменьшить число повторных согласований при подготовке отгрузок. Марина Орлова хочет обсудить изменение не только с руководителями, но и с сотрудниками, которые ежедневно выполняют работу.</p><p>Вы определите участников обсуждения, обозначите границы решения, выберете действия после встречи и подготовите собственный небольшой план.</p><button type="button" id="start" class="btn primary">Начать практику →</button></div></div>
+<script>
+'use strict';
+const cards=[
+{id:'c1',text:'Координатор отгрузок: расскажет, когда документы приходится переделывать',zone:'people'},
+{id:'c2',text:'Сотрудник склада: покажет, какие сведения приходят слишком поздно',zone:'people'},
+{id:'c3',text:'Представитель продаж: объяснит, когда клиент меняет заказ',zone:'people'},
+{id:'c4',text:'Специалист производства: покажет влияние изменений на график сборки',zone:'people'},
+{id:'c5',text:'Обязательная проверка комплектности: её нельзя отменить ради ускорения',zone:'limits'},
+{id:'c6',text:'Утверждённая дата отгрузки: её изменение требует отдельного решения',zone:'limits'}
+];
+const data=[
+{title:'Соберите состав совета',intro:'Распределите карточки: кого важно подключить к обсуждению и какие ограничения необходимо сразу назвать.',kind:'drag'},
+{title:'Обозначьте границы участия',intro:'Выберите, как Марине объяснить сотрудникам, на что они могут повлиять.',kind:'radio',options:[
+'«Мы вместе можем отменить любые проверки и перенести обязательства перед заказчиком».',
+'«Мы обсуждаем порядок передачи изменений между службами. Проверку комплектности сохраняем; итоговое решение после проверки рисков принимаю я».',
+'«Можете высказать предложения, но новый порядок я уже утвердила».',
+'«Каждый участник обязан внедрить все решения, которые будут предложены на встрече».' ],answer:1},
+{title:'Не ограничивайтесь обсуждением',intro:'Какие действия помогут сотрудникам увидеть, что их участие повлияло на управление? Выберите все подходящие варианты.',kind:'multi',options:[
+'Записать предложения и сообщить, какие приняли, какие отклонили и почему.',
+'Согласовать короткий пилот и проверить число переделок и сроки обработки.',
+'Передать решение остальным сотрудникам, которых не было на встрече.',
+'Поблагодарить участников и не возвращаться к теме до следующего квартала.',
+'Объявить, что отныне любое предложение сотрудников обязательно к внедрению.',
+'Назначить одному автору предложения всю дополнительную работу без пересмотра нагрузки.' ],answers:[0,1,2]},
+{title:'Дайте обоснованный ответ',intro:'Представитель склада предлагает полностью отменить итоговую сверку комплектации. Выберите ответ руководителя.',kind:'radio',options:[
+'«Отлично, раз сотрудники предложили, отменяем проверку с завтрашнего дня».',
+'«Я не просила спорить с установленными правилами. Больше такие идеи не предлагайте».',
+'«Сверку отменить нельзя: она нужна для качества поставки. Но мы можем проверить ваше предложение о едином листе изменений и оценить, сколько времени оно сэкономит».',
+'«Пока не знаю. Если появится время, когда-нибудь вернёмся к обсуждению».' ],answer:2},
+{title:'Подготовьте своё управленческое решение',intro:'Выберите вопрос, по которому сотрудники действительно могут внести вклад, и зафиксируйте следующий шаг.',kind:'plan'}
+];
+let step=0, picked=null, checked=false;
+const placements=Object.fromEntries(cards.map(c=>[c.id,'bank']));
+const answers={1:null,2:[],3:null};
+const completed=[false,false,false,false,false];
+const $=id=>document.getElementById(id);
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function feedback(message,type){const e=$('feedback'); e.textContent=message;e.className='feedback visible '+type;}
+function clearFeedback(){$('feedback').textContent='';$('feedback').className='feedback';}
+function markCleared(){checked=false;completed[step]=false;clearFeedback();$('next').style.display='none';$('check').style.display='';}
+function render(){
+const d=data[step];$('progress').innerHTML=data.map((_,i)=>'<span class="bar '+(i<=step?'on':'')+'"></span>').join('');
+$('steplabel').textContent='Этап '+(step+1)+' из '+data.length;
+$('stepname').textContent=d.title; $('lead').textContent=d.intro;
+$('prev').disabled=step===0;$('status').textContent=completed[step]?'Этап завершён':' ';
+$('next').style.display=completed[step]&&step<4?'':'none';$('check').style.display=step===4?'none':'';$('download').style.display=step===4?'':'none';
+if(d.kind==='drag')renderDrag(); if(d.kind==='radio'||d.kind==='multi')renderChoices(d); if(d.kind==='plan')renderPlan();
+}
+function renderDrag(){
+$('work').innerHTML=`<div class="context"><strong>Ситуация:</strong> за две недели из-за поздних изменений заказов пришлось повторно подготовить шесть комплектов документов. Марина приглашает сотрудников участвовать в выборе нового порядка работы.</div><div class="bank" data-zone="bank"><div class="zonehead">Карточки для распределения <span class="zonecount" id="bankCount"></span></div><div class="items" data-items="bank"></div></div><div class="dropgrid"><div class="dropzone" data-zone="people"><div class="zonehead">Пригласить к обсуждению</div><div class="zonehelp">Люди, которые знают процесс из ежедневной работы</div><div class="items" data-items="people"></div></div><div class="dropzone" data-zone="limits"><div class="zonehead">Сразу обозначить как ограничение</div><div class="zonehelp">Условия, которые нельзя менять в рамках этой встречи</div><div class="items" data-items="limits"></div></div></div><p style="font-size:12px;color:#64748b">Перетащите карточки или выберите карточку и затем нажмите на нужную область. Карточку можно вернуть в верхнее поле.</p>`;
+for(const c of cards){const el=document.createElement('div');el.className='taskcard';el.draggable=true;el.tabIndex=0;el.setAttribute('role','button');el.dataset.card=c.id;el.textContent=c.text;
+if(checked&&placements[c.id]!=='bank'&&placements[c.id]!==c.zone)el.classList.add('wrong');
+if(completed[0]&&placements[c.id]===c.zone)el.classList.add('correct');
+if(picked===c.id)el.classList.add('picked');
+$('work').querySelector('[data-items="'+placements[c.id]+'"]').append(el);
+}
+$('bankCount').textContent=cards.filter(c=>placements[c.id]==='bank').length;
+attachDrag();
+}
+function moveCard(id,zone){if(!id||!['bank','people','limits'].includes(zone))return;placements[id]=zone;picked=null;markCleared();render();}
+let touch=null;
+function attachDrag(){const root=$('work');
+root.querySelectorAll('[data-zone]').forEach(z=>{
+z.addEventListener('dragover',e=>{e.preventDefault();z.classList.add('over')});z.addEventListener('dragleave',e=>z.classList.remove('over'));
+z.addEventListener('drop',e=>{e.preventDefault();z.classList.remove('over');let id=e.dataTransfer.getData('text/plain');moveCard(id,z.dataset.zone)});
+z.addEventListener('click',e=>{if(e.target.closest('[data-card]'))return;if(picked)moveCard(picked,z.dataset.zone)});
+});
+root.querySelectorAll('[data-card]').forEach(el=>{
+el.addEventListener('dragstart',e=>{e.dataTransfer.effectAllowed='move';e.dataTransfer.setData('text/plain',el.dataset.card)});
+el.addEventListener('click',()=>{picked=picked===el.dataset.card?null:el.dataset.card;root.querySelectorAll('[data-card]').forEach(x=>x.classList.toggle('picked',x.dataset.card===picked))});
+el.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();el.click()}});
+el.addEventListener('pointerdown',e=>{if(e.pointerType==='mouse')return;touch={id:el.dataset.card,sx:e.clientX,sy:e.clientY,ox:e.clientX,oy:e.clientY,ghost:null}});
+});
+}
+document.addEventListener('pointermove',e=>{if(!touch)return;const dist=Math.hypot(e.clientX-touch.sx,e.clientY-touch.sy);if(dist<8&&!touch.ghost)return;if(!touch.ghost){const c=cards.find(c=>c.id===touch.id);const ghost=document.createElement('div');ghost.className='taskcard ghost';ghost.textContent=c.text;document.body.appendChild(ghost);touch.ghost=ghost;}touch.ghost.style.left=(e.clientX+15)+'px';touch.ghost.style.top=(e.clientY+10)+'px';});
+document.addEventListener('pointerup',e=>{if(!touch)return;const t=touch;touch=null;if(t.ghost){t.ghost.remove();const hit=document.elementFromPoint(e.clientX,e.clientY);const z=hit?.closest?.('[data-zone]');if(z)moveCard(t.id,z.dataset.zone)}});
+function renderChoices(d){$('work').innerHTML='<div class="context"><strong>Ситуация:</strong> представители склада, продаж и производства обсуждают изменения в работе. Решение должно учитывать опыт сотрудников, требования к качеству и реальные полномочия руководителя.</div><div class="choices" role="group" aria-label="Варианты решения">'+d.options.map((o,i)=>{
+const on=d.kind==='multi'?answers[step].includes(i):answers[step]===i;
+let color='';if(checked&&on){const valid=d.kind==='multi'?d.answers.includes(i):d.answer===i;color=valid&&completed[step]?'correct':!valid?'wrong':'';}
+return `<label class="choice ${color}"><input type="${d.kind==='multi'?'checkbox':'radio'}" name="ans" value="${i}" ${on?'checked':''}><span><strong>${String.fromCharCode(1040+i)}.</strong> ${esc(o)}</span></label>`}).join('')+'</div>';
+$('work').querySelectorAll('input').forEach(el=>el.addEventListener('change',()=>{if(d.kind==='multi'){const i=+el.value; answers[step]=el.checked?[...answers[step],i]:answers[step].filter(x=>x!==i)} else answers[step]=+el.value;markCleared();render();}));}
+function renderPlan(){ $('work').innerHTML=`<div class="context"><strong>Ваш план:</strong> выберите одну тему, где решение руководителя может стать точнее благодаря мнению сотрудников, которые выполняют работу.</div><div class="formgrid">
+<div class="field"><label for="pQuestion">Какой управленческий вопрос хотите обсудить?</label><textarea id="pQuestion" placeholder="Например: как изменить передачу срочных обращений между отделами"></textarea></div>
+<div class="field"><label for="pWho">Чьё мнение важно услышать?</label><input id="pWho" placeholder="Представители каких функций и подразделений"></div>
+<div class="field"><label for="pBound">Какие рамки решения обозначите заранее?</label><input id="pBound" placeholder="Что можно менять, а что обязательно сохранить"></div>
+<div class="field"><label for="pReply">Когда и как вернётесь с ответом к команде?</label><input id="pReply" placeholder="Например: в пятницу на общей пятиминутке"></div></div><div style="margin-top:15px;font-size:13px;color:#64748b">После заполнения сохраните план. Его можно использовать как основу для ближайшего совета решений.</div>`;
+const saved=window._plan||{};for(const id of ['pQuestion','pWho','pBound','pReply']){if(saved[id])$(id).value=saved[id];$(id).addEventListener('input',()=>{window._plan=Object.fromEntries(['pQuestion','pWho','pBound','pReply'].map(k=>[k,$(k).value]));clearFeedback()})}
+}
+function check(){checked=true;const kind=data[step].kind;let valid=false;
+if(kind==='drag')valid=cards.every(c=>placements[c.id]===c.zone);
+if(kind==='radio')valid=answers[step]===data[step].answer;
+if(kind==='multi'){const sel=answers[step];valid=sel.length===data[step].answers.length&&sel.every(i=>data[step].answers.includes(i));}
+completed[step]=valid;render();$('check').style.display='';if(valid){feedback('Решение подходит. Вы учли участие сотрудников и ограничения управленческого решения.','success');$('next').style.display='';$('status').textContent='Этап завершён';}
+else{let msg=kind==='drag'?'Проверьте распределение карточек: часть информации относится к участникам обсуждения, а часть — к условиям, которые нельзя отменить.':kind==='multi'?'Проверьте выбранные действия. Для реального участия нужны ответ по предложениям и проверка результата, а не только обсуждение.':'Выбранный подход не даёт сотрудникам понятного влияния на решение. Сопоставьте его с задачей встречи.';feedback(msg,'error');}}
+function back(){if(step>0){step--;checked=false;clearFeedback();render();window.scrollTo({top:0,behavior:'smooth'})}}
+function next(){if(step<4&&completed[step]){step++;checked=false;clearFeedback();render();window.scrollTo({top:0,behavior:'smooth'})}}
+function reset(){step=0;picked=null;checked=false;cards.forEach(c=>placements[c.id]='bank');answers[1]=null;answers[2]=[];answers[3]=null;completed.fill(false);window._plan={};clearFeedback();render();window.scrollTo({top:0,behavior:'smooth'});}
+function save(){const inputs=['pQuestion','pWho','pBound','pReply'];const vals=inputs.map(id=>$(id).value.trim());if(vals.some(x=>x.length<5)){feedback('Заполните все четыре поля плана конкретными договорённостями.','error');return;}
+completed[4]=true;feedback('План готов. Сохраните его и используйте на ближайшем обсуждении с командой.','success');
+const text='УЧАСТИЕ СОТРУДНИКОВ В УПРАВЛЕНЧЕСКОМ РЕШЕНИИ\n\nВопрос: '+vals[0]+'\n\nКого пригласить: '+vals[1]+'\n\nГраницы решения: '+vals[2]+'\n\nКак и когда дать ответ: '+vals[3]+'\n\nПамятка: зафиксировать предложения, объяснить итоговое решение и проверить результат.\n';
+const blob=new Blob(['\uFEFF'+text],{type:'text/plain;charset=utf-8'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='plan_uchastiya_sotrudnikov.txt';a.click();setTimeout(()=>URL.revokeObjectURL(url),1500);}
+$('start').addEventListener('click',()=>{$('intro').classList.add('hide');render()});
+$('prev').addEventListener('click',back);$('next').addEventListener('click',next);$('check').addEventListener('click',check);$('download').addEventListener('click',save);
+$('restartTop').addEventListener('click',reset);
+$('fullBtn').addEventListener('click',async()=>{try{if(!document.fullscreenElement)await $('shell').requestFullscreen();else await document.exitFullscreen()}catch(e){}});
+render();
+</script>
+</body>
+</html>
